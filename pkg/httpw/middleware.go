@@ -25,7 +25,7 @@ func getToken(ctx echo.Context) (token *jwt.Token, err error) {
 	if itk != nil {
 		var ok bool
 		if token, ok = itk.(*jwt.Token); !ok {
-			err = fmt.Errorf("Invalid token found in context")
+			err = fmt.Errorf("invalid token found in context")
 		}
 	} else {
 		header := ctx.Request().Header.Get("Authorization")
@@ -35,10 +35,9 @@ func getToken(ctx echo.Context) (token *jwt.Token, err error) {
 			keyFunc := func(t *jwt.Token) (interface{}, error) {
 				return getJWTKey(), nil
 			}
-			token = new(jwt.Token)
 			token, err = jwt.Parse(tokStr, keyFunc)
 		} else {
-			err = fmt.Errorf("Unexpected auth scheme used to JWT")
+			err = fmt.Errorf("unexpected auth scheme used to JWT")
 		}
 	}
 	return token, err
@@ -64,17 +63,76 @@ func retrieveUserId(ctx echo.Context) (string, error) {
 	return userId, nil
 }
 
-func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(etx echo.Context) (err error) {
-		userId, err := retrieveUserId(etx)
-		if err != nil {
-			err = &echo.HTTPError{
-				Code:     http.StatusForbidden,
-				Message:  "invalid JWT information",
-				Internal: err,
+func getAuthMiddleware(server *Server) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(etx echo.Context) (err error) {
+			userId, err := retrieveUserId(etx)
+			if err != nil {
+				return &echo.HTTPError{
+					Code:     http.StatusForbidden,
+					Message:  "invalid JWT information",
+					Internal: err,
+				}
 			}
+
+			ep, ok := etx.Get("endpoint").(Endpoint)
+			if !ok {
+				return &echo.HTTPError{
+					Code:    http.StatusInternalServerError,
+					Message: "could not find endpoint information",
+				}
+			}
+
+			user, err := server.userRetriever(userId)
+			if err != nil {
+				return err
+			}
+
+			if !user.HasPerms(ep.Permission) || !user.HasRole(ep.Role) {
+				return &echo.HTTPError{
+					Code:    http.StatusUnauthorized,
+					Message: "permission to access resource is denied",
+				}
+			}
+
+			etx.Set("endpoint", ep)
+			etx.Set("user", user)
+			return next(etx)
 		}
-		etx.Set("userID", userId)
-		return next(etx)
+	}
+}
+
+func getAccessMiddleware(ep *Endpoint, server *Server) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(etx echo.Context) (err error) {
+			userId, err := retrieveUserId(etx)
+			if err != nil {
+				return &echo.HTTPError{
+					Code:     http.StatusForbidden,
+					Message:  "invalid JWT information",
+					Internal: err,
+				}
+			}
+
+			fmt.Fprintf(server.printer,
+				"ACCESS: %-3s %-5s %-40s %s\n",
+				ep.Version, ep.Route.Method, ep.Route.Path, ep.Category)
+
+			user, err := server.userRetriever(userId)
+			if err != nil {
+				return err
+			}
+
+			if !user.HasPerms(ep.Permission) || !user.HasRole(ep.Role) {
+				return &echo.HTTPError{
+					Code:    http.StatusUnauthorized,
+					Message: "permission to access resource is denied",
+				}
+			}
+
+			etx.Set("endpoint", ep)
+			etx.Set("user", user)
+			return next(etx)
+		}
 	}
 }

@@ -7,6 +7,7 @@ import (
 	_ "github.com/google/uuid"
 	_ "github.com/jmoiron/sqlx"
 	_ "github.com/labstack/echo/v4"
+	_ "github.com/labstack/echo/v4/middleware"
 	_ "github.com/rs/zerolog"
 	_ "github.com/urfave/cli/v2"
 )

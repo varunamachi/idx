@@ -20,6 +20,9 @@ func (pn *PermissionNode) AddChild(child *PermissionNode) {
 type PermissionSet map[string]struct{}
 
 func (pm PermissionSet) HasPerm(permId string) bool {
+	if permId == "" {
+		return true
+	}
 	_, found := pm[permId]
 	return found
 }
