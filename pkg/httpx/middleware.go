@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
+	"github.com/varunamachi/sause/pkg/env"
 	"github.com/varunamachi/sause/pkg/errx"
 )
 
@@ -110,6 +111,17 @@ func getAccessMiddleware(ep *Endpoint, server *Server) echo.MiddlewareFunc {
 		return func(etx echo.Context) error {
 			err := next(etx)
 			if err == nil {
+				if env.GetConfig().PrintAllAccess {
+					status := etx.Response().Status
+					log.Debug().
+						Int("statusCode", status).
+						Str("user", GetUserId(etx)).
+						Str("method", ep.Route.Method).
+						Str("path", ep.Route.Path).
+						Str("perm", ep.Permission).
+						Str("role", string(ep.Role)).
+						Msg(http.StatusText(status))
+				}
 				return nil
 			}
 
@@ -119,7 +131,7 @@ func getAccessMiddleware(ep *Endpoint, server *Server) echo.MiddlewareFunc {
 			}
 
 			log.Error().
-				Int("httpErrCode", httpErr.Code).
+				Int("statusCode", httpErr.Code).
 				Str("user", GetUserId(etx)).
 				Str("method", ep.Route.Method).
 				Str("path", ep.Route.Path).

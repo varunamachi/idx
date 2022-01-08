@@ -1,5 +1,8 @@
 package app
 
-type App struct {
-	Id int
+type AppInfo struct {
+	SeqId int
+	Id    string
+	Name  string
+	Desc  string
 }

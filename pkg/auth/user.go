@@ -27,8 +27,8 @@ func (r Role) EqualOrAbove(another Role) bool {
 }
 
 type User struct {
-	IdNum       int           `json:"idNum" db:"idNum"`
-	UserId      string        `json:"userId" db:"userId"`
+	SeqId       int           `json:"seqId" db:"seqId"`
+	Id          string        `json:"id" db:"id"`
 	EMail       string        `json:"email" db:"email"`
 	FirstName   string        `json:"firstName" db:"firstName"`
 	LastName    string        `json:"lastName" db:"lastName"`
@@ -51,9 +51,9 @@ func (u *User) HasPerms(permIds ...string) bool {
 }
 
 type Group struct {
-	IdNum   int    `json:"idNum" db:"idNum"`
-	GroupID string `json:"groupID" db:"groupID"`
-	Name    string `json:"name" db:"name"`
+	SeqId int    `json:"seqId" db:"seqId"`
+	Id    string `json:"id" db:"id"`
+	Name  string `json:"name" db:"name"`
 }
 
 func ToRole(roleStr string) Role {

@@ -5,11 +5,11 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/varunamachi/sause/pkg/auth"
 	"github.com/varunamachi/sause/pkg/errx"
+	"github.com/varunamachi/sause/pkg/libx"
 )
 
 var (
@@ -74,9 +74,9 @@ func (pm *ParamGetter) Float64(name string) float64 {
 
 func (pm *ParamGetter) BoolParam(name string) bool {
 	param := pm.etx.Param(name)
-	if EqFold(param, "true", "on") {
+	if libx.EqFold(param, "true", "on") {
 		return true
-	} else if EqFold(param, "false", "off") {
+	} else if libx.EqFold(param, "false", "off") {
 		return false
 	}
 	pm.errs[name] = "invalid string for bool param"
@@ -130,9 +130,9 @@ func (pm *ParamGetter) QueryFloat64(name string) float64 {
 
 func (pm *ParamGetter) QueryBool(name string) bool {
 	param := pm.etx.QueryParam(name)
-	if EqFold(param, "true", "on") {
+	if libx.EqFold(param, "true", "on") {
 		return true
-	} else if EqFold(param, "false", "off") {
+	} else if libx.EqFold(param, "false", "off") {
 		return false
 	}
 	pm.errs[name] = "invalid string for bool param"
@@ -186,9 +186,9 @@ func (pm *ParamGetter) QueryFloat64Or(name string, def float64) float64 {
 
 func (pm *ParamGetter) QueryBoolOr(name string, def bool) bool {
 	param := pm.etx.QueryParam(name)
-	if EqFold(param, "true", "on") {
+	if libx.EqFold(param, "true", "on") {
 		return true
-	} else if EqFold(param, "false", "off") {
+	} else if libx.EqFold(param, "false", "off") {
 		return false
 	}
 	return def
@@ -219,15 +219,6 @@ func (pm *ParamGetter) Error() error {
 	return errx.Errf(ErrHttpParam, "")
 }
 
-func EqFold(str string, targets ...string) bool {
-	for _, s := range targets {
-		if strings.EqualFold(str, s) {
-			return true
-		}
-	}
-	return false
-}
-
 func MustGetUser(etx echo.Context) *auth.User {
 	obj := etx.Get("user")
 	user, ok := obj.(*auth.User)
@@ -243,7 +234,7 @@ func GetUserId(etx echo.Context) string {
 	if !ok {
 		return ""
 	}
-	return user.UserId
+	return user.Id
 }
 
 func MustGetEndpoint(etx echo.Context) *Endpoint {
