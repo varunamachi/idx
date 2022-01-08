@@ -1,4 +1,4 @@
-package httpw
+package httpx
 
 import (
 	"fmt"
@@ -8,6 +8,8 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
+	"github.com/varunamachi/sause/pkg/errx"
 )
 
 //getJWTKey - gives a unique JWT key
@@ -65,7 +67,7 @@ func retrieveUserId(ctx echo.Context) (string, error) {
 
 func getAuthMiddleware(server *Server) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(etx echo.Context) (err error) {
+		return func(etx echo.Context) error {
 			userId, err := retrieveUserId(etx)
 			if err != nil {
 				return &echo.HTTPError{
@@ -89,6 +91,7 @@ func getAuthMiddleware(server *Server) echo.MiddlewareFunc {
 			}
 
 			if !user.HasPerms(ep.Permission) || !user.HasRole(ep.Role) {
+
 				return &echo.HTTPError{
 					Code:    http.StatusUnauthorized,
 					Message: "permission to access resource is denied",
@@ -104,35 +107,26 @@ func getAuthMiddleware(server *Server) echo.MiddlewareFunc {
 
 func getAccessMiddleware(ep *Endpoint, server *Server) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(etx echo.Context) (err error) {
-			userId, err := retrieveUserId(etx)
-			if err != nil {
-				return &echo.HTTPError{
-					Code:     http.StatusForbidden,
-					Message:  "invalid JWT information",
-					Internal: err,
-				}
+		return func(etx echo.Context) error {
+			err := next(etx)
+			if err == nil {
+				return nil
 			}
 
-			fmt.Fprintf(server.printer,
-				"ACCESS: %-3s %-5s %-40s %s\n",
-				ep.Version, ep.Route.Method, ep.Route.Path, ep.Category)
-
-			user, err := server.userRetriever(userId)
-			if err != nil {
-				return err
+			httpErr, ok := err.(*echo.HTTPError)
+			if !ok {
+				httpErr = errx.InternalServerErr(err)
 			}
 
-			if !user.HasPerms(ep.Permission) || !user.HasRole(ep.Role) {
-				return &echo.HTTPError{
-					Code:    http.StatusUnauthorized,
-					Message: "permission to access resource is denied",
-				}
-			}
-
-			etx.Set("endpoint", ep)
-			etx.Set("user", user)
-			return next(etx)
+			log.Error().
+				Int("httpErrCode", httpErr.Code).
+				Str("user", GetUserId(etx)).
+				Str("method", ep.Route.Method).
+				Str("path", ep.Route.Path).
+				Str("perm", ep.Permission).
+				Str("role", string(ep.Role)).
+				Msg(StrMsg(httpErr))
+			return err
 		}
 	}
 }

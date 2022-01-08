@@ -1,4 +1,4 @@
-package httpw
+package httpx
 
 import (
 	"fmt"
