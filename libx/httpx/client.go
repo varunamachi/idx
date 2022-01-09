@@ -12,7 +12,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
-	"github.com/varunamachi/sause/pkg/errx"
+	"github.com/varunamachi/sause/libx/errx"
 )
 
 var (

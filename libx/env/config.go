@@ -4,7 +4,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/varunamachi/sause/pkg/libx"
+	"github.com/varunamachi/sause/libx"
 )
 
 var config *Config

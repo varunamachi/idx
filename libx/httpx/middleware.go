@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
-	"github.com/varunamachi/sause/pkg/env"
-	"github.com/varunamachi/sause/pkg/errx"
+	"github.com/varunamachi/sause/libx/env"
+	"github.com/varunamachi/sause/libx/errx"
 )
 
 //getJWTKey - gives a unique JWT key

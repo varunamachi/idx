@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/labstack/echo/v4"
-	"github.com/varunamachi/sause/pkg/auth"
+	"github.com/varunamachi/sause/libx/auth"
 )
 
 type noopWriter struct{}

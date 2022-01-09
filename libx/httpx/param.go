@@ -7,9 +7,9 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/varunamachi/sause/pkg/auth"
-	"github.com/varunamachi/sause/pkg/errx"
-	"github.com/varunamachi/sause/pkg/libx"
+	"github.com/varunamachi/sause/libx"
+	"github.com/varunamachi/sause/libx/auth"
+	"github.com/varunamachi/sause/libx/errx"
 )
 
 var (

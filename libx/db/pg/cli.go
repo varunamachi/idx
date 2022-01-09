@@ -1,0 +1,40 @@
+package pg
+
+// func requirePostgres(ctx *cli.Context) (err error) {
+// 	defer teak.LogErrorX("t.pg", "Failed to initialize postgres", err)
+
+// 	ag := teak.NewArgGetter(ctx)
+// 	var opts ConnOpts
+
+// 	if !teak.GetConfig("postgresOpts", &opts) {
+// 		opts.Host = ag.GetRequiredString("pg-host")
+// 		opts.Port = ag.GetRequiredInt("pg-port")
+// 		opts.User = ag.GetRequiredString("pg-user")
+// 		opts.DBName = ag.GetRequiredString("pg-db")
+// 		opts.Password = ag.GetRequiredSecret("pg-pass")
+// 	} else {
+// 		teak.Info("t.pg", "Read postgresql options from app config")
+
+// 		// If an option is provided in commandline, it overrides the config
+// 		// parameter
+// 		opts.Host = ag.GetStringOr("pg-host", opts.Host)
+// 		opts.Port = ag.GetIntOr("pg-port", opts.Port)
+// 		opts.User = ag.GetStringOr("pg-user", opts.User)
+// 		opts.DBName = ag.GetStringOr("pg-db", opts.DBName)
+// 		opts.Password = ag.GetSecretOr("pg-pass", opts.Password)
+// 	}
+// 	db, err := ConnectWithOpts(&opts)
+// 	if err != nil {
+// 		err = teak.LogErrorX("t.pg", "Failed to open postgres connection", err)
+// 		return err
+// 	}
+// 	err = db.Ping()
+// 	if err != nil {
+// 		err = teak.LogErrorX("t.pg", "Failed to ping postgres DB", err)
+// 		return err
+// 	}
+// 	SetDefaultConn(db)
+// 	teak.Info("t.pg", "Connected to postgres server at %s:%d - to DB: %s",
+// 		opts.Host, opts.Port, opts.DBName)
+// 	return err
+// }
