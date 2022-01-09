@@ -1,10 +1,11 @@
 package pg
 
 import (
+	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 )
 
-func WithPostgresFlag(cmd *cli.Command) *cli.Command {
+func WithPostgresFlags(cmd *cli.Command) *cli.Command {
 	cmd.Flags = append(cmd.Flags,
 		&cli.StringFlag{
 			Name: "pg-url",
@@ -70,6 +71,7 @@ func requirePostgres(ctx *cli.Context) error {
 	if url != "" {
 		db, err := Connect(url)
 		if err != nil {
+			log.Fatal().Err(err).Msg("failed to connect to database")
 			return err
 		}
 		SetDefaultConn(db)
@@ -82,9 +84,13 @@ func requirePostgres(ctx *cli.Context) error {
 			Password: ctx.String("pg-pass"),
 		})
 		if err != nil {
+			log.Fatal().Err(err).Msg("failed to connect to database")
 			return err
 		}
 		SetDefaultConn(db)
+	}
+	if err := defDB.Ping(); err != nil {
+		log.Fatal().Err(err).Msg("failed to ping database")
 	}
 	return nil
 }

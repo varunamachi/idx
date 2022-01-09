@@ -176,11 +176,14 @@ func (client *Client) putOrPost(
 	url := client.createUrl(urlArgs...)
 	data, err := json.Marshal(content)
 	if err != nil {
-		return newErrorResult(nil, err, "Failed to marshal data")
+		return newErrorResult(nil, err, "failed to marshal data")
 	}
 
 	req, err := http.NewRequestWithContext(
 		gtx, method, url, bytes.NewBuffer(data))
+	if err != nil {
+		return newErrorResult(req, err, "failed to create http request")
+	}
 
 	// We assume JSON
 	req.Header.Set("Content-Type", "application/json")
@@ -191,7 +194,7 @@ func (client *Client) putOrPost(
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return newErrorResult(req, err, "Failed to perform http request")
+		return newErrorResult(req, err, "failed to perform http request")
 	}
 	return newApiResult(req, resp)
 }
