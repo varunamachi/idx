@@ -66,7 +66,7 @@ func retrieveUserId(ctx echo.Context) (string, error) {
 	return userId, nil
 }
 
-func getAuthMiddleware(ep *Endpoint, server *Server) echo.MiddlewareFunc {
+func getAuthzMiddleware(ep *Endpoint, server *Server) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(etx echo.Context) error {
 			userId, err := retrieveUserId(etx)

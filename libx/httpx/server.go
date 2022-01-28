@@ -95,7 +95,7 @@ func (s *Server) configure() {
 				ep.Method,
 				ep.Path,
 				ep.Handler,
-				getAuthMiddleware(ep, s))
+				getAuthzMiddleware(ep, s))
 
 		} else {
 			ep.Route = grp.Add(
