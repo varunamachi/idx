@@ -66,7 +66,7 @@ func retrieveUserId(ctx echo.Context) (string, error) {
 	return userId, nil
 }
 
-func getAuthMiddleware(server *Server) echo.MiddlewareFunc {
+func getAuthMiddleware(ep *Endpoint, server *Server) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(etx echo.Context) error {
 			userId, err := retrieveUserId(etx)
@@ -78,13 +78,13 @@ func getAuthMiddleware(server *Server) echo.MiddlewareFunc {
 				}
 			}
 
-			ep, ok := etx.Get("endpoint").(Endpoint)
-			if !ok {
-				return &echo.HTTPError{
-					Code:    http.StatusInternalServerError,
-					Message: "could not find endpoint information",
-				}
-			}
+			// ep, ok := etx.Get("endpoint").(Endpoint)
+			// if !ok {
+			// 	return &echo.HTTPError{
+			// 		Code:    http.StatusInternalServerError,
+			// 		Message: "could not find endpoint information",
+			// 	}
+			// }
 
 			user, err := server.userRetriever(userId)
 			if err != nil {
@@ -106,7 +106,7 @@ func getAuthMiddleware(server *Server) echo.MiddlewareFunc {
 	}
 }
 
-func getAccessMiddleware(ep *Endpoint, server *Server) echo.MiddlewareFunc {
+func getAccessMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(etx echo.Context) error {
 			err := next(etx)
@@ -116,10 +116,8 @@ func getAccessMiddleware(ep *Endpoint, server *Server) echo.MiddlewareFunc {
 					log.Debug().
 						Int("statusCode", status).
 						Str("user", GetUserId(etx)).
-						Str("method", ep.Route.Method).
-						Str("path", ep.Route.Path).
-						Str("perm", ep.Permission).
-						Str("role", string(ep.Role)).
+						Str("method", etx.Request().Method).
+						Str("path", etx.Request().URL.Path).
 						Msg(http.StatusText(status))
 				}
 				return nil
@@ -133,10 +131,8 @@ func getAccessMiddleware(ep *Endpoint, server *Server) echo.MiddlewareFunc {
 			log.Error().
 				Int("statusCode", httpErr.Code).
 				Str("user", GetUserId(etx)).
-				Str("method", ep.Route.Method).
-				Str("path", ep.Route.Path).
-				Str("perm", ep.Permission).
-				Str("role", string(ep.Role)).
+				Str("method", etx.Request().Method).
+				Str("path", etx.Request().URL.Path).
 				Msg(StrMsg(httpErr))
 			return err
 		}

@@ -33,7 +33,7 @@ func (ep *Endpoint) NeedsAuth() bool {
 type Server struct {
 	categories    map[string][]*Endpoint
 	endpoints     []*Endpoint
-	root          *echo.Echo
+	echo          *echo.Echo
 	printer       io.Writer
 	userRetriever auth.UserRetrieverFunc
 }
@@ -45,7 +45,7 @@ func NewServer(printer io.Writer, userGetter auth.UserRetrieverFunc) *Server {
 	return &Server{
 		categories:    make(map[string][]*Endpoint),
 		endpoints:     make([]*Endpoint, 0, 100),
-		root:          echo.New(),
+		echo:          echo.New(),
 		printer:       printer,
 		userRetriever: userGetter,
 	}
@@ -59,36 +59,47 @@ func (s *Server) AddEndpoints(ep ...*Endpoint) *Server {
 func (s *Server) Start(port uint32) error {
 	s.configure()
 	s.Print()
-	return s.root.Start(fmt.Sprintf(":%d", port))
+	return s.echo.Start(fmt.Sprintf(":%d", port))
 }
 
 func (s *Server) configure() {
 
-	type groupPair struct {
-		versionGrp *echo.Group
-		inGrp      *echo.Group
-	}
-	groups := map[string]*groupPair{}
+	// type groupPair struct {
+	// 	versionGrp *echo.Group
+	// 	inGrp      *echo.Group
+	// }
+	// authMw := getAuthMiddleware(s)
+	// groups := map[string]*groupPair{}
 
-	authMw := getAuthMiddleware(s)
+	s.echo.Use(getAccessMiddleware())
+	groups := map[string]*echo.Group{}
+
 	for _, ep := range s.endpoints {
 		ep := ep
-
 		grp := groups[ep.Version]
 		if grp == nil {
-			grp = &groupPair{}
-			grp.versionGrp = s.root.Group("api/" + ep.Version)
-			grp.inGrp = grp.versionGrp.Group("in")
-			grp.inGrp.Use(authMw)
+			grp = s.echo.Group("api/" + ep.Version)
+			groups[ep.Version] = grp
 		}
 
+		// grp := groups[ep.Version]
+		// if grp == nil {
+		// 	grp = &groupPair{}
+		// 	grp.versionGrp = s.root.Group("api/" + ep.Version)
+		// 	grp.inGrp = grp.versionGrp.Group("in")
+		// 	grp.inGrp.Use(authMw)
+		// }
+
 		if ep.NeedsAuth() {
-			ep.Route = grp.inGrp.Add(
-				ep.Method, ep.Path, ep.Handler, getAccessMiddleware(ep, s))
+			ep.Route = grp.Add(
+				ep.Method,
+				ep.Path,
+				ep.Handler,
+				getAuthMiddleware(ep, s))
 
 		} else {
-			ep.Route = grp.versionGrp.Add(
-				ep.Method, ep.Path, ep.Handler, getAccessMiddleware(ep, s))
+			ep.Route = grp.Add(
+				ep.Method, ep.Path, ep.Handler)
 		}
 
 		if _, found := s.categories[ep.Category]; !found {
