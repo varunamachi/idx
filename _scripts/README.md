@@ -1,0 +1,1 @@
+This directory will have all scripts related to the project
