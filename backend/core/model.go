@@ -7,19 +7,19 @@ import (
 	"github.com/varunamachi/libx/data"
 )
 
-//UserState - state of the user account
+// UserState - state of the user account
 type UserState string
 
-//Verfied - user account is verified by the user
+// Verfied - user account is verified by the user
 var Verfied UserState = "verified"
 
-//Active - user is active
+// Active - user is active
 var Active UserState = "active"
 
-//Disabled - user account is disabled by an admin
+// Disabled - user account is disabled by an admin
 var Disabled UserState = "disabled"
 
-//Flagged - user account is flagged by a user
+// Flagged - user account is flagged by a user
 var Flagged UserState = "flagged"
 
 type User struct {
@@ -72,4 +72,12 @@ func (u *User) AddProp(key string, value any) {
 
 func (u *User) Prop(key string) any {
 	return u.Props[key]
+}
+
+type UserStorage interface {
+	Save(user *User) (err error)
+	Update(user *User) (err error)
+	Get(id string) (user *User, err error)
+	SetState(id string, state UserState) error
+	Remove(id string) error
 }
