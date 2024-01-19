@@ -1,8 +1,6 @@
 package core
 
 import (
-	"time"
-
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 )
@@ -23,21 +21,22 @@ var Disabled UserState = "disabled"
 var Flagged UserState = "flagged"
 
 type User struct {
-	ID         uint64             `json:"id" db:"id"`
-	UserId     string             `json:"userId" db:"user_id"`
-	EmailId    string             `json:"email" db:"email"`
-	Auth       auth.Role          `json:"auth" db:"auth"`
-	FirstName  string             `json:"firstName" db:"first_name"`
-	LastName   string             `json:"lastName" db:"last_name"`
-	Title      string             `json:"title" db:"title"`
-	CreatedAt  time.Time          `json:"createdAt" db:"created_at"`
-	ModifiedAt time.Time          `json:"modifiedAt" db:"modified_at"`
-	Props      data.M             `json:"props,omitempty" db:"props"`
-	Perms      auth.PermissionSet `json:"perms,omitempty" db:"perms"`
+	// ID         uint64             `json:"id" db:"id"`
+	// CreatedAt  time.Time          `json:"createdAt" db:"created_at"`
+	// ModifiedAt time.Time          `json:"modifiedAt" db:"modified_at"`
+	DbItem
+	UserId    string             `json:"userId" db:"user_id"`
+	EmailId   string             `json:"email" db:"email"`
+	Auth      auth.Role          `json:"auth" db:"auth"`
+	FirstName string             `json:"firstName" db:"first_name"`
+	LastName  string             `json:"lastName" db:"last_name"`
+	Title     string             `json:"title" db:"title"`
+	Props     data.M             `json:"props,omitempty" db:"props"`
+	Perms     auth.PermissionSet `json:"perms,omitempty" db:"perms"`
 }
 
 func (u *User) SeqId() int {
-	return int(u.ID)
+	return int(u.DbItem.Id)
 }
 
 func (u *User) Id() string {
