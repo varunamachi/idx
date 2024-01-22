@@ -1,4 +1,4 @@
-package core
+package pg
 
 import (
 	"github.com/varunamachi/libx/data"
