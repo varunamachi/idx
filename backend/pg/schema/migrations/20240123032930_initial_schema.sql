@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS idx_user (
     created_by      VARCHAR NOT NULL,
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_by      VARCHAR NOT NULL,
-
     user_id         VARCHAR NOT NULL UNIQUE,      
     email           VARCHAR NOT NULL UNIQUE,      
     auth            VARCHAR NOT NULL,             

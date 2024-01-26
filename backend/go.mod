@@ -1,4 +1,4 @@
-module github.com/varunamachi/sause
+module github.com/varunamachi/idx
 
 // replace github.com/varunamachi/libx => ../../libx
 

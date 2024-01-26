@@ -1,6 +1,8 @@
 package core
 
 import (
+	"context"
+
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 )
@@ -75,10 +77,12 @@ func (u *User) Prop(key string) any {
 }
 
 type UserStorage interface {
-	Save(user *User) (err error)
-	Update(user *User) (err error)
-	GetOne(id string) (user *User, err error)
-	SetState(id string, state UserState) error
-	Remove(id string) error
-	Get(params data.CommonParams) ([]*User, error)
+	Save(gtx context.Context, user *User) error
+	Update(gtx context.Context, user *User) error
+	GetOne(gtx context.Context, id string) (*User, error)
+	SetState(gtx context.Context, id string, state UserState) error
+	Remove(gtx context.Context, id string) error
+	Get(gtx context.Context, params data.CommonParams) ([]*User, error)
+	AddToGroup(gtx context.Context, userId, groupId int) error
+	RemoveFromGroup(gtx context.Context, userId, groupId int) error
 }
