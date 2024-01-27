@@ -4,10 +4,11 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
+	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/libx"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/rt"
-	"github.com/varunamachi/marukatte-server/core"
 )
 
 func main() {
@@ -16,19 +17,14 @@ func main() {
 	gtx, cancel := rt.Gtx()
 	defer cancel()
 
-	bi := libx.BuildInfo{
-		GitTag:    core.GitTag,
-		GitHash:   core.GitHash,
-		GitBranch: core.GitBranch,
-		BuildTime: core.BuildTime,
-		BuildHost: core.BuildHost,
-		BuildUser: core.BuildUser,
-	}
-
 	app := libx.NewApp(
-		"mks", "Marukatte Server", "0.3.0", "varunamachi@gmail.com").
-		WithBuildInfo(&bi).
+		"idx", "Identity Service", "0.1.0", "varunamachi@gmail.com").
+		WithBuildInfo(core.GetBuildInfo()).
 		WithCommands()
+
+	if err := schema.Init(gtx, "onServerStart"); err != nil {
+		log.Fatal().Err(err).Msg("DB init failed")
+	}
 
 	if err := app.RunContext(gtx, os.Args); err != nil {
 		errx.PrintSomeStack(err)
