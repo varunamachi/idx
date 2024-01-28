@@ -97,7 +97,16 @@ func (pgu *UserStorage) GetOne(
 		return nil, err
 	}
 
-	// get groups and permissions
+	// TODO - get groups and and permissions
+	// query := `
+	// 	SELECT
+	// 		perm_id
+	// 	FROM group_to_perm g2p
+	// 	JOIN idx_group g ON g.id = g2p.group_id
+	// 	JOIN user_to_group u2g ON g.id = u2g.group_id
+	// 	JOIN idx_user u ON u.id = u2g.id
+	// 	WHERE u.user_id = $1
+	// `
 
 	return &user, nil
 }

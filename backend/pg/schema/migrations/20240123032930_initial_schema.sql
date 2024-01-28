@@ -58,9 +58,9 @@ CREATE TABLE IF NOT EXISTS idx_event(
 	metadata		JSONB
 );
 
-CREATE TABLE IF NOT EXISTS groups_to_users (
-    user_id         INT NOT NULL,
+CREATE TABLE IF NOT EXISTS user_to_group (
     group_id        INT NOT NULL,
+    user_id         INT NOT NULL,
 
     PRIMARY KEY(user_id, group_id),
     CONSTRAINT fk_g2u_user FOREIGN KEY(user_id) REFERENCES idx_user(id),
@@ -68,14 +68,14 @@ CREATE TABLE IF NOT EXISTS groups_to_users (
         ON DELETE CASCADE
 )
 
-CREATE TABLE IF NOT EXISTS user_to_perm (
-    user_id         INT NOT NULL,
-    perm_id        VARCHAR NOT NULL,
+-- CREATE TABLE IF NOT EXISTS user_to_perm (
+--     user_id         INT NOT NULL,
+--     perm_id         VARCHAR NOT NULL,
 
-    PRIMARY KEY(user_id, perm_id),
-    CONSTRAINT fk_u2p_user FOREIGN KEY(user_id) REFERENCES idx_user(id)
-    ON DELETE CASCADE
-)
+--     PRIMARY KEY(user_id, perm_id),
+--     CONSTRAINT fk_u2p_user FOREIGN KEY(user_id) REFERENCES idx_user(id)
+--     ON DELETE CASCADE
+-- )
 
 CREATE TABLE IF NOT EXISTS group_to_perm (
     group_id         INT NOT NULL,
@@ -99,8 +99,8 @@ CREATE TABLE IF NOT EXISTS user_to_pw (
 -- +goose StatementBegin
 DROP TABLE user_to_pw
 DROP TABLE group_to_perm
-DROP TABLE user_to_perm
-DROP TABLE groups_to_users
+-- DROP TABLE user_to_perm
+DROP TABLE user_to_group
 DROP TABLE idx_event
 DROP TABLE user_pass
 DROP TABLE idx_service

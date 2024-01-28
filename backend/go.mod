@@ -6,7 +6,8 @@ go 1.21.5
 
 require (
 	github.com/pressly/goose/v3 v3.17.0
-	github.com/varunamachi/libx v0.0.0-20240122171905-c1b22f263b53
+	github.com/rs/zerolog v1.31.0
+	github.com/varunamachi/libx v0.0.0-20240127162320-6671bc25c6ab
 )
 
 require (
@@ -22,7 +23,6 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/urfave/cli/v2 v2.27.1 // indirect
