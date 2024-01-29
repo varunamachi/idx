@@ -59,12 +59,12 @@ CREATE TABLE IF NOT EXISTS idx_event(
 );
 
 CREATE TABLE IF NOT EXISTS user_to_group (
-    group_id        INT NOT NULL,
     user_id         INT NOT NULL,
+    group_id        INT NOT NULL,
 
     PRIMARY KEY(user_id, group_id),
-    CONSTRAINT fk_g2u_user FOREIGN KEY(user_id) REFERENCES idx_user(id),
     CONSTRAINT fk_g2u_group FOREIGN KEY(group_id) REFERENCES idx_group(id)
+    CONSTRAINT fk_g2u_user FOREIGN KEY(user_id) REFERENCES idx_user(id),
         ON DELETE CASCADE
 )
 
@@ -83,7 +83,18 @@ CREATE TABLE IF NOT EXISTS group_to_perm (
 
     PRIMARY KEY(group_id, perm_id),
     CONSTRAINT fk_g2p_group FOREIGN KEY(group_id) REFERENCES idx_group(id)
-    ON DELETE CASCADE
+        ON DELETE CASCADE
+)
+
+CREATE TABLE IF NOT EXISTS service_to_group (
+    service_id         INT NOT NULL,
+    group_id        VARCHAR NOT NULL,
+
+    PRIMARY KEY(service_id, group_id),
+    CONSTRAINT fk_s2g_service FOREIGN KEY(service_id) REFERENCES idx_service(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_s2g_group FOREIGN KEY(group_id) REFERENCES idx_group(id)
+        ON DELETE CASCADE
 )
 
 CREATE TABLE IF NOT EXISTS user_to_pw (
@@ -97,9 +108,10 @@ CREATE TABLE IF NOT EXISTS user_to_pw (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE user_to_pw
-DROP TABLE group_to_perm
 -- DROP TABLE user_to_perm
+DROP TABLE user_to_pw
+DROP TABLE service_to_group
+DROP TABLE group_to_perm
 DROP TABLE user_to_group
 DROP TABLE idx_event
 DROP TABLE user_pass
