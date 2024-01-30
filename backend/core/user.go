@@ -77,14 +77,12 @@ func (u *User) Prop(key string) any {
 type UserStorage interface {
 	Save(gtx context.Context, user *User) error
 	Update(gtx context.Context, user *User) error
-	GetOne(gtx context.Context, id string) (*User, error)
-	SetState(gtx context.Context, id string, state UserState) error
-	Remove(gtx context.Context, id string) error
+	GetOne(gtx context.Context, id int) (*User, error)
+	SetState(gtx context.Context, id int, state UserState) error
+	Remove(gtx context.Context, id int) error
 	Get(gtx context.Context, params data.CommonParams) ([]*User, error)
 	AddToGroup(gtx context.Context, userId, groupId int) error
 	RemoveFromGroup(gtx context.Context, userId, groupId int) error
 	GetPermissionForService(
-		gtx context.Context,
-		userId string,
-		serviceId string) ([]string, error)
+		gtx context.Context, userId, serviceId int) ([]string, error)
 }

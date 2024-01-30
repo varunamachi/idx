@@ -91,7 +91,7 @@ func (pgu *UserStorage) Update(
 }
 
 func (pgu *UserStorage) GetOne(
-	gtx context.Context, id string) (*core.User, error) {
+	gtx context.Context, id int) (*core.User, error) {
 	var user core.User
 	err := pgu.gd.GetOne(gtx, "idx_user", "user_id", id, &user)
 	if err != nil {
@@ -102,7 +102,7 @@ func (pgu *UserStorage) GetOne(
 }
 
 func (pgu *UserStorage) SetState(
-	gtx context.Context, id string, state core.UserState) error {
+	gtx context.Context, id int, state core.UserState) error {
 	query := `
 		UPDATE idx_user SET
 			state = $1,
@@ -118,7 +118,7 @@ func (pgu *UserStorage) SetState(
 	return nil
 }
 
-func (pgu *UserStorage) Remove(gtx context.Context, id string) error {
+func (pgu *UserStorage) Remove(gtx context.Context, id int) error {
 	query := `DELETE FROM idx_user WHERE id = $2`
 
 	_, err := pg.Conn().ExecContext(gtx, query, id)
@@ -179,9 +179,7 @@ func (pgu *UserStorage) RemoveFromGroup(
 }
 
 func (pgu *UserStorage) GetPermissionForService(
-	gtx context.Context,
-	userId string,
-	serviceId string) ([]string, error) {
+	gtx context.Context, userId, serviceId int) ([]string, error) {
 	query := `
 		SELECT
 			perm_id

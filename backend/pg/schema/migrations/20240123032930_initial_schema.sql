@@ -24,9 +24,12 @@ CREATE TABLE IF NOT EXISTS idx_group (
     updated_by      VARCHAR NOT NULL,
 
     name            VARCHAR NOT NULL UNIQUE, 
+    service_id      INT NOT NULL,
     display_name    VARCHAR NOT NULL,
     description     VARCHAR NOT NULL,
-    -- perms           VARCHAR[]
+
+    CONSTRAINT fk FOREIGN KEY
+
 );
 
 CREATE TABLE IF NOT EXISTS idx_service (
@@ -86,16 +89,16 @@ CREATE TABLE IF NOT EXISTS group_to_perm (
         ON DELETE CASCADE
 )
 
-CREATE TABLE IF NOT EXISTS service_to_group (
-    service_id         INT NOT NULL,
-    group_id        VARCHAR NOT NULL,
+-- CREATE TABLE IF NOT EXISTS service_to_group (
+--     service_id         INT NOT NULL,
+--     group_id        VARCHAR NOT NULL,
 
-    PRIMARY KEY(service_id, group_id),
-    CONSTRAINT fk_s2g_service FOREIGN KEY(service_id) REFERENCES idx_service(id)
-        ON DELETE CASCADE,
-    CONSTRAINT fk_s2g_group FOREIGN KEY(group_id) REFERENCES idx_group(id)
-        ON DELETE CASCADE
-)
+--     PRIMARY KEY(service_id, group_id),
+--     CONSTRAINT fk_s2g_service FOREIGN KEY(service_id) REFERENCES idx_service(id)
+--         ON DELETE CASCADE,
+--     CONSTRAINT fk_s2g_group FOREIGN KEY(group_id) REFERENCES idx_group(id)
+--         ON DELETE CASCADE
+-- )
 
 CREATE TABLE IF NOT EXISTS user_to_pw (
     id INT PRIMARY KEY,
