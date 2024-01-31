@@ -40,8 +40,12 @@ CREATE TABLE IF NOT EXISTS idx_service (
     updated_by      VARCHAR NOT NULL,
 
     name            VARCHAR NOT NULL,
+    owner_id        INT NOT NULL,
     display_name    VARCHAR NOT NULL,
-    permissions     JSONB NOT NULL
+    permissions     JSONB NOT NULL,
+
+    CONSTRAINT fk_service_owner FOREIGN KEY(owner_id)
+        REFERENCES idx_service(id) ON DELETE CASCADEs
 );
 
 CREATE TABLE IF NOT EXISTS user_pass(

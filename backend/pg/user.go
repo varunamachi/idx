@@ -10,10 +10,10 @@ import (
 )
 
 type UserStorage struct {
-	gd *pg.GetterDeleter
+	gd data.GetterDeleter
 }
 
-func NewUserStorage(gd *pg.GetterDeleter) core.UserStorage {
+func NewUserStorage(gd data.GetterDeleter) core.UserStorage {
 	return &UserStorage{
 		gd: gd,
 	}
@@ -84,7 +84,7 @@ func (pgu *UserStorage) Update(
 	`
 	if _, err := pg.Conn().NamedExecContext(gtx, query, user); err != nil {
 		return errx.Errf(
-			err, "failed to insert user '%s' to database", user.Id())
+			err, "failed to update user '%s' to database", user.Id())
 	}
 
 	return nil
@@ -93,11 +93,10 @@ func (pgu *UserStorage) Update(
 func (pgu *UserStorage) GetOne(
 	gtx context.Context, id int) (*core.User, error) {
 	var user core.User
-	err := pgu.gd.GetOne(gtx, "idx_user", "user_id", id, &user)
+	err := pgu.gd.GetOne(gtx, "idx_user", "id", id, &user)
 	if err != nil {
 		return nil, err
 	}
-
 	return &user, nil
 }
 

@@ -9,9 +9,17 @@ import (
 	"github.com/varunamachi/libx/errx"
 )
 
-type PgGroupStorage struct{}
+type GroupStorage struct {
+	gd data.GetterDeleter
+}
 
-func (pgs PgGroupStorage) Save(gtx context.Context, group *core.Group) error {
+func NewGroupStorage(gd data.GetterDeleter) core.GroupStorage {
+	return &GroupStorage{
+		gd: gd,
+	}
+}
+
+func (pgs GroupStorage) Save(gtx context.Context, group *core.Group) error {
 	query := `
 		INSERT INTO idx_user (
 			created_by,
@@ -44,19 +52,49 @@ func (pgs PgGroupStorage) Save(gtx context.Context, group *core.Group) error {
 	return nil
 }
 
-func (pgs PgGroupStorage) Update(gtx context.Context, group *core.Group) error {
+func (pgs GroupStorage) Update(gtx context.Context, group *core.Group) error {
+	query := `
+		UPDATE idx_group SET
+			created_by = :created_by,
+			updated_by = :updated_by,
+			service_id = :service_id,
+			name = :name,
+			display_name = :display_name,
+			description = :description
+		WHERE id = :id
+	`
+	if _, err := pg.Conn().NamedExecContext(gtx, query, group); err != nil {
+		return errx.Errf(
+			err, "failed to insert user '%s' to database", group.Id)
+	}
+
 	return nil
 }
 
-func (pgs PgGroupStorage) GetOne(
+func (pgs GroupStorage) GetOne(
 	gtx context.Context, id int) (*core.Group, error) {
-	return nil, nil
+	var group core.Group
+	err := pgs.gd.GetOne(gtx, "idx_group", "id", id, &group)
+	if err != nil {
+		return nil, err
+	}
+	return &group, nil
 }
 
-func (pgs PgGroupStorage) Remove(gtx context.Context, id int) error {
+func (pgs GroupStorage) Remove(gtx context.Context, id int) error {
+	err := pgs.gd.Delete(gtx, "idx_group", "id", id)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (pgs PgGroupStorage) Get(params data.CommonParams) ([]*core.Group, error) {
-	return nil, nil
+func (pgs GroupStorage) Get(
+	gtx context.Context, params data.CommonParams) ([]*core.Group, error) {
+	groups := make([]*core.Group, 0, params.PageSize)
+	err := pgs.gd.Get(gtx, "idx_group", &params, &groups)
+	if err != nil {
+		return nil, err
+	}
+	return groups, nil
 }
