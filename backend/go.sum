@@ -142,8 +142,6 @@ github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6Kllzaw
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.2.2 h1:lxLXG0uE3Qnshl9QyaK6XJxMXlQZELvChBOCmQD0Loo=
 github.com/valyala/fasttemplate v1.2.2/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
-github.com/varunamachi/libx v0.0.0-20240122171905-c1b22f263b53 h1:b40Wk0/aJyzQ18hO9VgdV6BsTsDHEZ4sVBX0TBfONVQ=
-github.com/varunamachi/libx v0.0.0-20240122171905-c1b22f263b53/go.mod h1:9pdc1WNe3XuSKCnuXjuq2duNvZGZO8v9qmtEX8C0LRU=
 github.com/varunamachi/libx v0.0.0-20240127162320-6671bc25c6ab h1:p1D1gdgQgB2VrLj493Yssqwd2BIq/Z2Qh7zYbAI4+Dw=
 github.com/varunamachi/libx v0.0.0-20240127162320-6671bc25c6ab/go.mod h1:9pdc1WNe3XuSKCnuXjuq2duNvZGZO8v9qmtEX8C0LRU=
 github.com/vertica/vertica-sql-go v1.3.3 h1:fL+FKEAEy5ONmsvya2WH5T8bhkvY27y/Ik3ReR2T+Qw=

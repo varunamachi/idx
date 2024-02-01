@@ -9,17 +9,17 @@ import (
 	"github.com/varunamachi/libx/errx"
 )
 
-type PgServiceStorage struct {
+type ServiceStorage struct {
 	gd data.GetterDeleter
 }
 
 func NewServiceStorage(gd data.GetterDeleter) core.ServiceStorage {
-	return &PgServiceStorage{
+	return &ServiceStorage{
 		gd: gd,
 	}
 }
 
-func (pss *PgServiceStorage) Save(
+func (pss *ServiceStorage) Save(
 	gtx context.Context, service *core.Service) error {
 	query := `
 		INSERT INTO idx_service (
@@ -52,7 +52,7 @@ func (pss *PgServiceStorage) Save(
 	return nil
 }
 
-func (pss *PgServiceStorage) Update(
+func (pss *ServiceStorage) Update(
 	gtx context.Context,
 	service *core.Service) error {
 	query := `
@@ -72,7 +72,7 @@ func (pss *PgServiceStorage) Update(
 	return nil
 }
 
-func (pss *PgServiceStorage) GetOne(
+func (pss *ServiceStorage) GetOne(
 	gtx context.Context,
 	id int) (*core.Service, error) {
 	var service core.Service
@@ -83,7 +83,7 @@ func (pss *PgServiceStorage) GetOne(
 	return &service, nil
 }
 
-func (pss *PgServiceStorage) Remove(
+func (pss *ServiceStorage) Remove(
 	gtx context.Context,
 	id int) error {
 	if err := pss.gd.Delete(gtx, "idx_service", "id"); err != nil {
@@ -92,7 +92,7 @@ func (pss *PgServiceStorage) Remove(
 	return nil
 }
 
-func (pss *PgServiceStorage) Get(
+func (pss *ServiceStorage) Get(
 	gtx context.Context,
 	params data.CommonParams) ([]*core.Service, error) {
 	out := make([]*core.Service, 0, params.PageSize)

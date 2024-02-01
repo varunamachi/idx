@@ -1,10 +1,9 @@
 module github.com/varunamachi/idx
 
-// replace github.com/varunamachi/libx => ../../libx
-
 go 1.21.5
 
 require (
+	github.com/labstack/echo/v4 v4.11.4
 	github.com/pressly/goose/v3 v3.17.0
 	github.com/rs/zerolog v1.31.0
 	github.com/varunamachi/libx v0.0.0-20240127162320-6671bc25c6ab
@@ -16,7 +15,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jmoiron/sqlx v1.3.5 // indirect
-	github.com/labstack/echo/v4 v4.11.4 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
