@@ -80,7 +80,7 @@ type UserStorage interface {
 	GetOne(gtx context.Context, id int) (*User, error)
 	SetState(gtx context.Context, id int, state UserState) error
 	Remove(gtx context.Context, id int) error
-	Get(gtx context.Context, params data.CommonParams) ([]*User, error)
+	Get(gtx context.Context, params *data.CommonParams) ([]*User, error)
 	AddToGroup(gtx context.Context, userId, groupId int) error
 	RemoveFromGroup(gtx context.Context, userId, groupId int) error
 	GetPermissionForService(

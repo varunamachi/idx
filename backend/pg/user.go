@@ -130,11 +130,11 @@ func (pgu *UserStorage) Remove(gtx context.Context, id int) error {
 }
 
 func (pgu *UserStorage) Get(
-	gtx context.Context, params data.CommonParams) ([]*core.User, error) {
+	gtx context.Context, params *data.CommonParams) ([]*core.User, error) {
 
 	out := make([]*core.User, 0, params.PageSize)
 
-	if err := pgu.gd.Get(gtx, "idx_user", &params, &out); err != nil {
+	if err := pgu.gd.Get(gtx, "idx_user", params, &out); err != nil {
 		return nil, err
 	}
 
