@@ -90,9 +90,9 @@ func (pgs GroupStorage) Remove(gtx context.Context, id int) error {
 }
 
 func (pgs GroupStorage) Get(
-	gtx context.Context, params data.CommonParams) ([]*core.Group, error) {
+	gtx context.Context, params *data.CommonParams) ([]*core.Group, error) {
 	groups := make([]*core.Group, 0, params.PageSize)
-	err := pgs.gd.Get(gtx, "idx_group", &params, &groups)
+	err := pgs.gd.Get(gtx, "idx_group", params, &groups)
 	if err != nil {
 		return nil, err
 	}

@@ -20,5 +20,5 @@ type GroupStorage interface {
 	Update(gtx context.Context, group *Group) error
 	GetOne(gtx context.Context, id int) (*Group, error)
 	Remove(gtx context.Context, id int) error
-	Get(gtx context.Context, params data.CommonParams) ([]*Group, error)
+	Get(gtx context.Context, params *data.CommonParams) ([]*Group, error)
 }
