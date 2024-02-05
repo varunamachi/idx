@@ -94,10 +94,10 @@ func (pss *ServiceStorage) Remove(
 
 func (pss *ServiceStorage) Get(
 	gtx context.Context,
-	params data.CommonParams) ([]*core.Service, error) {
+	params *data.CommonParams) ([]*core.Service, error) {
 	out := make([]*core.Service, 0, params.PageSize)
 
-	if err := pss.gd.Get(gtx, "idx_service", &params, &out); err != nil {
+	if err := pss.gd.Get(gtx, "idx_service", params, &out); err != nil {
 		return nil, err
 	}
 	return out, nil

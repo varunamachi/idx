@@ -20,5 +20,5 @@ type ServiceStorage interface {
 	Update(gtx context.Context, service *Service) error
 	GetOne(gtx context.Context, id int) (*Service, error)
 	Remove(gtx context.Context, id int) error
-	Get(gtx context.Context, params data.CommonParams) ([]*Service, error)
+	Get(gtx context.Context, params *data.CommonParams) ([]*Service, error)
 }
