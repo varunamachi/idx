@@ -100,6 +100,16 @@ func (pgu *UserStorage) GetOne(
 	return &user, nil
 }
 
+func (pgu *UserStorage) GetByUserId(
+	gtx context.Context, id string) (*core.User, error) {
+	var user core.User
+	err := pgu.gd.GetOne(gtx, "idx_user", "user_id", id, &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (pgu *UserStorage) SetState(
 	gtx context.Context, id int, state core.UserState) error {
 	query := `
@@ -201,4 +211,19 @@ func (pgu *UserStorage) GetPermissionForService(
 
 	}
 	return perms, nil
+}
+
+func (us *UserStorage) SetPassword(userId, password string) error {
+	// TODO - implement
+	return nil
+}
+
+func (us *UserStorage) UpdatePassword(userId, oldPw, newPw string) error {
+	// TODO - implement
+	return nil
+}
+
+func (us *UserStorage) Verify(userId, password string) error {
+	// TODO - implement
+	return nil
 }
