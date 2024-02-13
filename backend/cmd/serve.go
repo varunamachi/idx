@@ -37,7 +37,6 @@ func ServeCommand() *cli.Command {
 					return err
 				}
 			}
-
 			return nil
 		},
 	})
