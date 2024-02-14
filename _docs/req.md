@@ -27,4 +27,13 @@ Simple identity provider
 
 
 ### Permissions
-  
+
+### Authentication
+- At present only key and secret authentication is supported
+- User authenticates with idx with user-name and password
+- Service authenticates with its name and a secret token (this can be roatated automatically)
+
+### Authorization
+- Authorization happens per service
+- Service asks idx about permissions a authenticated user has WRT that service
+- 

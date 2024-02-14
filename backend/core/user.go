@@ -86,16 +86,4 @@ type UserStorage interface {
 	RemoveFromGroup(gtx context.Context, userId, groupId int) error
 	GetPermissionForService(
 		gtx context.Context, userId, serviceId int) ([]string, error)
-
-	SetPassword(userId, password string) error
-	UpdatePassword(userId, oldPw, newPw string) error
-	Verify(userId, password string) error
-}
-
-type Authenticator interface {
-	Authenticate(gtx context.Context, creds map[string]any) error
-}
-
-type Authorizor interface {
-	Authorize(gtx context.Context, serviceId, userId int) (*User, error)
 }

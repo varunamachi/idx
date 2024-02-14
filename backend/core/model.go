@@ -33,3 +33,9 @@ type DbItem struct {
 func GetBuildInfo() *libx.BuildInfo {
 	return &bi
 }
+
+type CredentialStorage interface {
+	SetPassword(itemType, id, password string) error
+	UpdatePassword(itemType, id, oldPw, newPw string) error
+	Verify(itemType, id, password string) error
+}
