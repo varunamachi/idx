@@ -111,11 +111,19 @@ CREATE TABLE IF NOT EXISTS user_to_pw (
         ON DELETE CASCADE    
 )
 
+CREATE TABLE IF NOT EXISTS service_secret (
+    id INT PRIMARY KEY,
+    password_hash VARCHAR NOT NULL,
+    CONSTRAINT fk_s2p FOREIGN KEY(id) REFERENCES idx_service(id)
+        ON DELETE CASCADE
+)
+
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 -- DROP TABLE user_to_perm
+DROP TABLE service_to_pw
 DROP TABLE user_to_pw
 DROP TABLE service_to_group
 DROP TABLE group_to_perm

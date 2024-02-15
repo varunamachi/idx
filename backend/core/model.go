@@ -34,6 +34,11 @@ func GetBuildInfo() *libx.BuildInfo {
 	return &bi
 }
 
+type Hasher interface {
+	Hash(pw string) string
+	Verify(hash string) bool
+}
+
 type CredentialStorage interface {
 	SetPassword(itemType, id, password string) error
 	UpdatePassword(itemType, id, oldPw, newPw string) error
