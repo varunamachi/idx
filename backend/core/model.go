@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"time"
 
 	"github.com/varunamachi/libx"
@@ -36,11 +37,11 @@ func GetBuildInfo() *libx.BuildInfo {
 
 type Hasher interface {
 	Hash(pw string) string
-	Verify(hash string) bool
+	Verify(pw, hash string) bool
 }
 
 type CredentialStorage interface {
-	SetPassword(itemType, id, password string) error
-	UpdatePassword(itemType, id, oldPw, newPw string) error
-	Verify(itemType, id, password string) error
+	SetPassword(gtx context.Context, itemType, id, password string) error
+	UpdatePassword(gtx context.Context, itemType, id, oldPw, newPw string) error
+	Verify(gtx context.Context, itemType, id, password string) error
 }

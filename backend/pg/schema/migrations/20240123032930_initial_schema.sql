@@ -104,27 +104,27 @@ CREATE TABLE IF NOT EXISTS group_to_perm (
 --         ON DELETE CASCADE
 -- )
 
-CREATE TABLE IF NOT EXISTS user_to_pw (
-    id INT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS credential (
+    id VARCHAR,
+    item_type VARCHAR
     password_hash VARCHAR NOT NULL,
-    CONSTRAINT fk_u2pw FOREIGN KEY(id) REFERENCES idx_user(id)
-        ON DELETE CASCADE    
+    PRIMARY KEY(id, item_type)
 )
 
-CREATE TABLE IF NOT EXISTS service_secret (
-    id INT PRIMARY KEY,
-    password_hash VARCHAR NOT NULL,
-    CONSTRAINT fk_s2p FOREIGN KEY(id) REFERENCES idx_service(id)
-        ON DELETE CASCADE
-)
+-- CREATE TABLE IF NOT EXISTS service_secret (
+--     id INT PRIMARY KEY,
+--     password_hash VARCHAR NOT NULL,
+--     CONSTRAINT fk_s2p FOREIGN KEY(id) REFERENCES idx_service(id)
+--         ON DELETE CASCADE
+-- )
 
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 -- DROP TABLE user_to_perm
-DROP TABLE service_to_pw
-DROP TABLE user_to_pw
+-- DROP TABLE service_to_pw
+DROP TABLE credential
 DROP TABLE service_to_group
 DROP TABLE group_to_perm
 DROP TABLE user_to_group
