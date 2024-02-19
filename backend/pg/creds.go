@@ -20,7 +20,10 @@ func NewCredentialStorage(hasher core.Hasher) core.CredentialStorage {
 
 func (pcs *CredentialStorage) SetPassword(
 	gtx context.Context, itemType, id, password string) error {
-	hash := pcs.hasher.Hash(password)
+	hash, err := pcs.hasher.Hash(password)
+	if err != nil {
+		return err
+	}
 	const query = `
 		INSERT INTO credential (
 			id,
@@ -34,7 +37,7 @@ func (pcs *CredentialStorage) SetPassword(
 			UPDATE SET password_hash = EXCLUDED.password_hash;
 	
 	`
-	_, err := pg.Conn().ExecContext(gtx, query, id, itemType, hash)
+	_, err = pg.Conn().ExecContext(gtx, query, id, itemType, hash)
 	if err != nil {
 		return errx.Errf(err,
 			"failed to update password hash for '%s - %s' in DB",
@@ -50,7 +53,10 @@ func (pcs *CredentialStorage) UpdatePassword(
 		return err
 	}
 
-	hash := pcs.hasher.Hash(newPw)
+	hash, err := pcs.hasher.Hash(newPw)
+	if err != nil {
+		return err
+	}
 	const query = `
 			UPDATE credential SET
 				password_hash = $1
@@ -59,7 +65,7 @@ func (pcs *CredentialStorage) UpdatePassword(
 				item_id = $3
 			;
 		`
-	_, err := pg.Conn().ExecContext(gtx, query, id, itemType, hash)
+	_, err = pg.Conn().ExecContext(gtx, query, id, itemType, hash)
 	if err != nil {
 		return errx.Errf(err,
 			"failed to update password hash for '%s (%s)' in DB",
@@ -83,7 +89,11 @@ func (pcs *CredentialStorage) Verify(
 		return errx.Errf(err, "failed to get password info from DB")
 	}
 
-	if !pcs.hasher.Verify(password, hash) {
+	ok, err := pcs.hasher.Verify(password, hash)
+	if err != nil {
+		return err
+	}
+	if !ok {
 		return errx.Errf(err,
 			"failed to verify password for '%s (%s)'", id, itemType)
 	}

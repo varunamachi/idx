@@ -36,8 +36,8 @@ func GetBuildInfo() *libx.BuildInfo {
 }
 
 type Hasher interface {
-	Hash(pw string) string
-	Verify(pw, hash string) bool
+	Hash(pw string) (string, error)
+	Verify(pw, hash string) (bool, error)
 }
 
 type CredentialStorage interface {
