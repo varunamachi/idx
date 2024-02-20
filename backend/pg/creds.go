@@ -19,8 +19,8 @@ func NewCredentialStorage(hasher core.Hasher) core.CredentialStorage {
 }
 
 func (pcs *CredentialStorage) SetPassword(
-	gtx context.Context, itemType, id, password string) error {
-	hash, err := pcs.hasher.Hash(password)
+	gtx context.Context, creds *core.Creds) error {
+	hash, err := pcs.hasher.Hash(creds.Password)
 	if err != nil {
 		return err
 	}
@@ -37,19 +37,19 @@ func (pcs *CredentialStorage) SetPassword(
 			UPDATE SET password_hash = EXCLUDED.password_hash;
 	
 	`
-	_, err = pg.Conn().ExecContext(gtx, query, id, itemType, hash)
+	_, err = pg.Conn().ExecContext(gtx, query, creds.Id, creds.Type, hash)
 	if err != nil {
 		return errx.Errf(err,
 			"failed to update password hash for '%s - %s' in DB",
-			id, itemType)
+			creds.Id, creds.Type)
 	}
 	return nil
 }
 
 func (pcs *CredentialStorage) UpdatePassword(
-	gtx context.Context, itemType, id, oldPw, newPw string) error {
+	gtx context.Context, creds *core.Creds, newPw string) error {
 
-	if err := pcs.Verify(gtx, itemType, id, oldPw); err != nil {
+	if err := pcs.Verify(gtx, creds); err != nil {
 		return err
 	}
 
@@ -65,17 +65,17 @@ func (pcs *CredentialStorage) UpdatePassword(
 				item_id = $3
 			;
 		`
-	_, err = pg.Conn().ExecContext(gtx, query, id, itemType, hash)
+	_, err = pg.Conn().ExecContext(gtx, query, hash, creds.Id, creds.Type)
 	if err != nil {
 		return errx.Errf(err,
 			"failed to update password hash for '%s (%s)' in DB",
-			id, itemType)
+			creds.Id, creds.Type)
 	}
 	return nil
 }
 
 func (pcs *CredentialStorage) Verify(
-	gtx context.Context, itemType, id, password string) error {
+	gtx context.Context, creds *core.Creds) error {
 	const query = `
 		SELECT password_hash 
 		FROM credential
@@ -84,18 +84,18 @@ func (pcs *CredentialStorage) Verify(
 			item_type = $2
 	`
 	hash := ""
-	err := pg.Conn().GetContext(gtx, &hash, query, id, itemType)
+	err := pg.Conn().GetContext(gtx, &hash, query, creds.Id, creds.Type)
 	if err != nil {
 		return errx.Errf(err, "failed to get password info from DB")
 	}
 
-	ok, err := pcs.hasher.Verify(password, hash)
+	ok, err := pcs.hasher.Verify(creds.Password, hash)
 	if err != nil {
 		return err
 	}
 	if !ok {
 		return errx.Errf(err,
-			"failed to verify password for '%s (%s)'", id, itemType)
+			"failed to verify password for '%s (%s)'", creds.Id, creds.Type)
 	}
 
 	return nil

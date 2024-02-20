@@ -23,6 +23,10 @@ var bi = libx.BuildInfo{
 	BuildUser: BuildUser,
 }
 
+func GetBuildInfo() *libx.BuildInfo {
+	return &bi
+}
+
 type DbItem struct {
 	Id        uint64    `db:"id" json:"id"`
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
@@ -31,8 +35,10 @@ type DbItem struct {
 	UpdatedBy uint64    `db:"updated_by" json:"updatedBy"`
 }
 
-func GetBuildInfo() *libx.BuildInfo {
-	return &bi
+type Creds struct {
+	Id       string `json:"id"`
+	Password string `json:"password"`
+	Type     string `json:"type"`
 }
 
 type Hasher interface {
@@ -41,7 +47,7 @@ type Hasher interface {
 }
 
 type CredentialStorage interface {
-	SetPassword(gtx context.Context, itemType, id, password string) error
-	UpdatePassword(gtx context.Context, itemType, id, oldPw, newPw string) error
-	Verify(gtx context.Context, itemType, id, password string) error
+	SetPassword(gtx context.Context, creds *Creds) error
+	UpdatePassword(gtx context.Context, creds *Creds, newPw string) error
+	Verify(gtx context.Context, creds *Creds) error
 }
