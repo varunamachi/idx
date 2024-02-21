@@ -1,12 +1,17 @@
 package cmd
 
 import (
+	"context"
 	"net/http"
+
+	idxpg "github.com/varunamachi/idx/pg"
+	"github.com/varunamachi/libx/auth"
+	"github.com/varunamachi/libx/data/pg"
 
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
+	"github.com/varunamachi/idx/restapi"
 	"github.com/varunamachi/libx"
-	"github.com/varunamachi/libx/data/pg"
 )
 
 func ServeCommand() *cli.Command {
@@ -23,8 +28,17 @@ func ServeCommand() *cli.Command {
 		},
 		Action: func(ctx *cli.Context) error {
 
+			gd := pg.NewGetterDeleter()
+			userStore := idxpg.NewUserStorage(gd)
+			groupStore := idxpg.NewGroupStorage(gd)
+			serviceStore := idxpg.NewServiceStorage(gd)
+
 			gtx := ctx.Context
-			app := libx.MustGetApp(ctx)
+			app := libx.MustGetApp(ctx).
+				WithServer(8080, userGetter).
+				WithEndpoints(restapi.UserEndpoints(userStore)...).
+				WithEndpoints(restapi.GroupEndpoints(groupStore)...).
+				WithEndpoints(restapi.ServiceEndpoints(serviceStore)...)
 
 			go func() {
 				<-gtx.Done()
@@ -40,4 +54,8 @@ func ServeCommand() *cli.Command {
 			return nil
 		},
 	})
+}
+
+func userGetter(gtx context.Context, userId string) (auth.User, error) {
+	return nil, nil
 }
