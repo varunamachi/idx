@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	idxAuth "github.com/varunamachi/idx/auth"
 	idxpg "github.com/varunamachi/idx/pg"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data/pg"
@@ -33,9 +34,14 @@ func ServeCommand() *cli.Command {
 			groupStore := idxpg.NewGroupStorage(gd)
 			serviceStore := idxpg.NewServiceStorage(gd)
 
+			hasher := idxAuth.NewArgon2Hasher()
+			credStorage := idxpg.NewCredentialStorage(hasher)
+			authr := idxAuth.NewAuthenticator(credStorage)
+
 			gtx := ctx.Context
 			app := libx.MustGetApp(ctx).
 				WithServer(8080, userGetter).
+				WithEndpoints(restapi.AuthEndpoints(authr)...).
 				WithEndpoints(restapi.UserEndpoints(userStore)...).
 				WithEndpoints(restapi.GroupEndpoints(groupStore)...).
 				WithEndpoints(restapi.ServiceEndpoints(serviceStore)...)
