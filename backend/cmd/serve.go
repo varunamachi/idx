@@ -6,6 +6,7 @@ import (
 
 	idxAuth "github.com/varunamachi/idx/auth"
 	idxpg "github.com/varunamachi/idx/pg"
+	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data/pg"
 
@@ -29,6 +30,10 @@ func ServeCommand() *cli.Command {
 		},
 		Action: func(ctx *cli.Context) error {
 
+			gtx := ctx.Context
+
+			schema.Init(gtx, "onServerStart")
+
 			gd := pg.NewGetterDeleter()
 			userStore := idxpg.NewUserStorage(gd)
 			groupStore := idxpg.NewGroupStorage(gd)
@@ -38,9 +43,8 @@ func ServeCommand() *cli.Command {
 			credStorage := idxpg.NewCredentialStorage(hasher)
 			authr := idxAuth.NewAuthenticator(credStorage)
 
-			gtx := ctx.Context
 			app := libx.MustGetApp(ctx).
-				WithServer(8080, userGetter).
+				WithServer(8080, &userRetriever{}).
 				WithEndpoints(restapi.AuthEndpoints(authr)...).
 				WithEndpoints(restapi.UserEndpoints(userStore)...).
 				WithEndpoints(restapi.GroupEndpoints(groupStore)...).
@@ -62,6 +66,10 @@ func ServeCommand() *cli.Command {
 	})
 }
 
-func userGetter(gtx context.Context, userId string) (auth.User, error) {
+type userRetriever struct {
+}
+
+func (ug *userRetriever) GetUser(
+	gtx context.Context, userId string) (auth.User, error) {
 	return nil, nil
 }
