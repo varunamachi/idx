@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/model"
 	"github.com/varunamachi/libx/auth"
 )
 
@@ -18,10 +18,10 @@ type cred struct {
 }
 
 type authenticator struct {
-	cs core.CredentialStorage
+	cs model.CredentialStorage
 }
 
-func NewAuthenticator(cs core.CredentialStorage) auth.Authenticator {
+func NewAuthenticator(cs model.CredentialStorage) auth.Authenticator {
 	return &authenticator{
 		cs: cs,
 	}
@@ -30,7 +30,7 @@ func NewAuthenticator(cs core.CredentialStorage) auth.Authenticator {
 // Authenticate implements auth.Authenticator.
 func (athn *authenticator) Authenticate(
 	gtx context.Context, authData auth.AuthData) error {
-	var creds core.Creds
+	var creds model.Creds
 	if err := authData.Decode(&creds); err != nil {
 		return err
 	}

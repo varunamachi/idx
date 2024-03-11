@@ -5,13 +5,13 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/model"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 	"github.com/varunamachi/libx/utils/rest"
 )
 
-func GroupEndpoints(gs core.GroupStorage) []*httpx.Endpoint {
+func GroupEndpoints(gs model.GroupStorage) []*httpx.Endpoint {
 	return []*httpx.Endpoint{
 		createGroupEp(gs),
 		updateGroupEp(gs),
@@ -21,9 +21,9 @@ func GroupEndpoints(gs core.GroupStorage) []*httpx.Endpoint {
 	}
 }
 
-func createGroupEp(gs core.GroupStorage) *httpx.Endpoint {
+func createGroupEp(gs model.GroupStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var group core.Group
+		var group model.Group
 		if err := etx.Bind(&group); err != nil {
 			return errx.BadReq("failed to read group info from request", err)
 		}
@@ -40,14 +40,14 @@ func createGroupEp(gs core.GroupStorage) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Create a group",
 		Version:     "v1",
-		Permissions: []string{core.PermCreateUser},
+		Permissions: []string{model.PermCreateUser},
 		Handler:     handler,
 	}
 }
 
-func updateGroupEp(gs core.GroupStorage) *httpx.Endpoint {
+func updateGroupEp(gs model.GroupStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var group core.Group
+		var group model.Group
 		if err := etx.Bind(&group); err != nil {
 			return errx.BadReq("failed to read group info from request", err)
 		}
@@ -64,12 +64,12 @@ func updateGroupEp(gs core.GroupStorage) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Update a group",
 		Version:     "v1",
-		Permissions: []string{core.PermCreateGroup},
+		Permissions: []string{model.PermCreateGroup},
 		Handler:     handler,
 	}
 }
 
-func getGroup(gs core.GroupStorage) *httpx.Endpoint {
+func getGroup(gs model.GroupStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")
@@ -91,12 +91,12 @@ func getGroup(gs core.GroupStorage) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Get info for a group",
 		Version:     "v1",
-		Permissions: []string{core.PermGetGroup},
+		Permissions: []string{model.PermGetGroup},
 		Handler:     handler,
 	}
 }
 
-func getGroups(gs core.GroupStorage) *httpx.Endpoint {
+func getGroups(gs model.GroupStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -117,12 +117,12 @@ func getGroups(gs core.GroupStorage) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Get group list",
 		Version:     "v1",
-		Permissions: []string{core.PermGetGroup},
+		Permissions: []string{model.PermGetGroup},
 		Handler:     handler,
 	}
 }
 
-func deleteGroup(gs core.GroupStorage) *httpx.Endpoint {
+func deleteGroup(gs model.GroupStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")
@@ -144,7 +144,7 @@ func deleteGroup(gs core.GroupStorage) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Delete a group",
 		Version:     "v1",
-		Permissions: []string{core.PermDeleteGroup},
+		Permissions: []string{model.PermDeleteGroup},
 		Handler:     handler,
 	}
 }

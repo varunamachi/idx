@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/model"
 	"github.com/varunamachi/libx/errx"
 	"golang.org/x/crypto/argon2"
 )
@@ -27,7 +27,7 @@ type argon2Hasher struct {
 	config *Argon2Config
 }
 
-func NewArgon2Hasher() core.Hasher {
+func NewArgon2Hasher() model.Hasher {
 	return NewArgon2HasherWithConfig(&Argon2Config{
 		Memory:     64 * 1024,
 		Iterations: 3,
@@ -37,7 +37,7 @@ func NewArgon2Hasher() core.Hasher {
 	})
 }
 
-func NewArgon2HasherWithConfig(config *Argon2Config) core.Hasher {
+func NewArgon2HasherWithConfig(config *Argon2Config) model.Hasher {
 	return &argon2Hasher{
 		config: config,
 	}

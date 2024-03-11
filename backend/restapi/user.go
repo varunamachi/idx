@@ -5,13 +5,13 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/model"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 	"github.com/varunamachi/libx/utils/rest"
 )
 
-func UserEndpoints(us core.UserStorage) []*httpx.Endpoint {
+func UserEndpoints(us model.UserStorage) []*httpx.Endpoint {
 	return []*httpx.Endpoint{
 		createUserEp(us),
 		updateUserEp(us),
@@ -21,9 +21,9 @@ func UserEndpoints(us core.UserStorage) []*httpx.Endpoint {
 	}
 }
 
-func createUserEp(us core.UserStorage) *httpx.Endpoint {
+func createUserEp(us model.UserStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var user core.User
+		var user model.User
 		if err := etx.Bind(&user); err != nil {
 			return errx.BadReq("failed to read user info from request", err)
 		}
@@ -40,14 +40,14 @@ func createUserEp(us core.UserStorage) *httpx.Endpoint {
 		Category:    "idx.user",
 		Desc:        "Create a user",
 		Version:     "v1",
-		Permissions: []string{core.PermCreateUser},
+		Permissions: []string{model.PermCreateUser},
 		Handler:     handler,
 	}
 }
 
-func updateUserEp(us core.UserStorage) *httpx.Endpoint {
+func updateUserEp(us model.UserStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var user core.User
+		var user model.User
 		if err := etx.Bind(&user); err != nil {
 			return errx.BadReq("failed to read user info from request", err)
 		}
@@ -64,12 +64,12 @@ func updateUserEp(us core.UserStorage) *httpx.Endpoint {
 		Category:    "idx.user",
 		Desc:        "Update a user",
 		Version:     "v1",
-		Permissions: []string{core.PermCreateUser},
+		Permissions: []string{model.PermCreateUser},
 		Handler:     handler,
 	}
 }
 
-func getUser(us core.UserStorage) *httpx.Endpoint {
+func getUser(us model.UserStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")
@@ -91,12 +91,12 @@ func getUser(us core.UserStorage) *httpx.Endpoint {
 		Category:    "idx.user",
 		Desc:        "Get info for a user",
 		Version:     "v1",
-		Permissions: []string{core.PermGetUser},
+		Permissions: []string{model.PermGetUser},
 		Handler:     handler,
 	}
 }
 
-func getUsers(us core.UserStorage) *httpx.Endpoint {
+func getUsers(us model.UserStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -117,12 +117,12 @@ func getUsers(us core.UserStorage) *httpx.Endpoint {
 		Category:    "idx.user",
 		Desc:        "Get user list",
 		Version:     "v1",
-		Permissions: []string{core.PermGetUser},
+		Permissions: []string{model.PermGetUser},
 		Handler:     handler,
 	}
 }
 
-func deleteUser(us core.UserStorage) *httpx.Endpoint {
+func deleteUser(us model.UserStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")
@@ -144,7 +144,7 @@ func deleteUser(us core.UserStorage) *httpx.Endpoint {
 		Category:    "idx.user",
 		Desc:        "Delete a user",
 		Version:     "v1",
-		Permissions: []string{core.PermGetUser},
+		Permissions: []string{model.PermGetUser},
 		Handler:     handler,
 	}
 }

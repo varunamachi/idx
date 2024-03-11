@@ -1,4 +1,4 @@
-package core
+package model
 
 const (
 	PermCreateUser       = "idx.createUser"
