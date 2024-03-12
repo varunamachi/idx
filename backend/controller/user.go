@@ -5,10 +5,12 @@ import (
 
 	"github.com/varunamachi/idx/model"
 	"github.com/varunamachi/libx/data"
+	"github.com/varunamachi/libx/data/event"
 )
 
 type UserController struct {
-	storage model.UserStorage
+	storage      model.UserStorage
+	eventStorage event.Service
 }
 
 func (uc *UserController) Register(user *model.User, password string) error {
@@ -20,37 +22,53 @@ func (uc *UserController) Verify(userId, verToken string) error {
 }
 
 func (uc *UserController) Update(gtx context.Context, user *model.User) error {
-	return uc.storage.Update(gtx, user)
+	err := uc.storage.Update(gtx, user)
+	return err
 }
 
 func (uc *UserController) GetOne(
 	gtx context.Context, id int) (*model.User, error) {
-	return uc.storage.GetOne(gtx, id)
+	out, err := uc.storage.GetOne(gtx, id)
+	return out, err
 }
+
 func (uc *UserController) GetByUserId(
 	gtx context.Context, id string) (*model.User, error) {
-	return uc.storage.GetByUserId(gtx, id)
+	out, err := uc.storage.GetByUserId(gtx, id)
+	return out, err
 }
+
 func (uc *UserController) SetState(
 	gtx context.Context, id int, state model.UserState) error {
-	return nil
+	err := uc.storage.SetState(gtx, id, state)
+	return err
 }
+
 func (uc *UserController) Remove(gtx context.Context, id int) error {
-	return nil
+	err := uc.storage.Remove(gtx, id)
+	return err
 }
+
 func (uc *UserController) Get(
 	gtx context.Context, params *data.CommonParams) ([]*model.User, error) {
-	return nil, nil
+	out, err := uc.storage.Get(gtx, params)
+	return out, err
 }
+
 func (uc *UserController) AddToGroup(
 	gtx context.Context, userId, groupId int) error {
-	return nil
+	err := uc.storage.AddToGroup(gtx, userId, groupId)
+	return err
 }
+
 func (uc *UserController) RemoveFromGroup(
 	gtx context.Context, userId, groupId int) error {
-	return nil
+	err := uc.storage.RemoveFromGroup(gtx, userId, groupId)
+	return err
 }
+
 func (uc *UserController) GetPermissionForService(
 	gtx context.Context, userId, serviceId int) ([]string, error) {
-	return nil, nil
+	perms, err := uc.storage.GetPermissionForService(gtx, userId, serviceId)
+	return perms, err
 }
