@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"github.com/varunamachi/idx/model"
+	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/libx"
 	"github.com/varunamachi/libx/errx"
@@ -19,7 +19,7 @@ func main() {
 
 	app := libx.NewApp(
 		"idx", "Identity Service", "0.1.0", "varunamachi@gmail.com").
-		WithBuildInfo(model.GetBuildInfo()).
+		WithBuildInfo(core.GetBuildInfo()).
 		WithCommands()
 
 	if err := schema.Init(gtx, "onServerStart"); err != nil {

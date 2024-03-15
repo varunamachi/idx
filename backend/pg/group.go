@@ -3,7 +3,7 @@ package pg
 import (
 	"context"
 
-	"github.com/varunamachi/idx/model"
+	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
@@ -13,13 +13,13 @@ type GroupStorage struct {
 	gd data.GetterDeleter
 }
 
-func NewGroupStorage(gd data.GetterDeleter) model.GroupStorage {
+func NewGroupStorage(gd data.GetterDeleter) core.GroupStorage {
 	return &GroupStorage{
 		gd: gd,
 	}
 }
 
-func (pgs GroupStorage) Save(gtx context.Context, group *model.Group) error {
+func (pgs GroupStorage) Save(gtx context.Context, group *core.Group) error {
 	query := `
 		INSERT INTO idx_user (
 			created_by,
@@ -52,7 +52,7 @@ func (pgs GroupStorage) Save(gtx context.Context, group *model.Group) error {
 	return nil
 }
 
-func (pgs GroupStorage) Update(gtx context.Context, group *model.Group) error {
+func (pgs GroupStorage) Update(gtx context.Context, group *core.Group) error {
 	query := `
 		UPDATE idx_group SET
 			created_by = :created_by,
@@ -72,8 +72,8 @@ func (pgs GroupStorage) Update(gtx context.Context, group *model.Group) error {
 }
 
 func (pgs GroupStorage) GetOne(
-	gtx context.Context, id int) (*model.Group, error) {
-	var group model.Group
+	gtx context.Context, id int) (*core.Group, error) {
+	var group core.Group
 	err := pgs.gd.GetOne(gtx, "idx_group", "id", id, &group)
 	if err != nil {
 		return nil, err
@@ -90,8 +90,8 @@ func (pgs GroupStorage) Remove(gtx context.Context, id int) error {
 }
 
 func (pgs GroupStorage) Get(
-	gtx context.Context, params *data.CommonParams) ([]*model.Group, error) {
-	groups := make([]*model.Group, 0, params.PageSize)
+	gtx context.Context, params *data.CommonParams) ([]*core.Group, error) {
+	groups := make([]*core.Group, 0, params.PageSize)
 	err := pgs.gd.Get(gtx, "idx_group", params, &groups)
 	if err != nil {
 		return nil, err

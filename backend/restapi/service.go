@@ -5,13 +5,13 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/varunamachi/idx/model"
+	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 	"github.com/varunamachi/libx/utils/rest"
 )
 
-func ServiceEndpoints(us model.ServiceStorage) []*httpx.Endpoint {
+func ServiceEndpoints(us core.ServiceStorage) []*httpx.Endpoint {
 	return []*httpx.Endpoint{
 		createServiceEp(us),
 		updateServiceEp(us),
@@ -21,9 +21,9 @@ func ServiceEndpoints(us model.ServiceStorage) []*httpx.Endpoint {
 	}
 }
 
-func createServiceEp(us model.ServiceStorage) *httpx.Endpoint {
+func createServiceEp(us core.ServiceStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var service model.Service
+		var service core.Service
 		if err := etx.Bind(&service); err != nil {
 			return errx.BadReq("failed to read service info from request", err)
 		}
@@ -40,14 +40,14 @@ func createServiceEp(us model.ServiceStorage) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Create a service",
 		Version:     "v1",
-		Permissions: []string{model.PermCreateService},
+		Permissions: []string{core.PermCreateService},
 		Handler:     handler,
 	}
 }
 
-func updateServiceEp(us model.ServiceStorage) *httpx.Endpoint {
+func updateServiceEp(us core.ServiceStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var service model.Service
+		var service core.Service
 		if err := etx.Bind(&service); err != nil {
 			return errx.BadReq("failed to read service info from request", err)
 		}
@@ -64,12 +64,12 @@ func updateServiceEp(us model.ServiceStorage) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Update a service",
 		Version:     "v1",
-		Permissions: []string{model.PermCreateService},
+		Permissions: []string{core.PermCreateService},
 		Handler:     handler,
 	}
 }
 
-func getService(us model.ServiceStorage) *httpx.Endpoint {
+func getService(us core.ServiceStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")
@@ -91,12 +91,12 @@ func getService(us model.ServiceStorage) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Get info for a service",
 		Version:     "v1",
-		Permissions: []string{model.PermGetService},
+		Permissions: []string{core.PermGetService},
 		Handler:     handler,
 	}
 }
 
-func getServices(us model.ServiceStorage) *httpx.Endpoint {
+func getServices(us core.ServiceStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -117,12 +117,12 @@ func getServices(us model.ServiceStorage) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Get service list",
 		Version:     "v1",
-		Permissions: []string{model.PermGetService},
+		Permissions: []string{core.PermGetService},
 		Handler:     handler,
 	}
 }
 
-func deleteService(us model.ServiceStorage) *httpx.Endpoint {
+func deleteService(us core.ServiceStorage) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")
@@ -144,7 +144,7 @@ func deleteService(us model.ServiceStorage) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Delete a service",
 		Version:     "v1",
-		Permissions: []string{model.PermGetService},
+		Permissions: []string{core.PermGetService},
 		Handler:     handler,
 	}
 }

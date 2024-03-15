@@ -3,23 +3,23 @@ package pg
 import (
 	"context"
 
-	"github.com/varunamachi/idx/model"
+	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
 )
 
 type CredentialStorage struct {
-	hasher model.Hasher
+	hasher core.Hasher
 }
 
-func NewCredentialStorage(hasher model.Hasher) model.CredentialStorage {
+func NewCredentialStorage(hasher core.Hasher) core.CredentialStorage {
 	return &CredentialStorage{
 		hasher: hasher,
 	}
 }
 
 func (pcs *CredentialStorage) SetPassword(
-	gtx context.Context, creds *model.Creds) error {
+	gtx context.Context, creds *core.Creds) error {
 	hash, err := pcs.hasher.Hash(creds.Password)
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (pcs *CredentialStorage) SetPassword(
 }
 
 func (pcs *CredentialStorage) UpdatePassword(
-	gtx context.Context, creds *model.Creds, newPw string) error {
+	gtx context.Context, creds *core.Creds, newPw string) error {
 
 	if err := pcs.Verify(gtx, creds); err != nil {
 		return err
@@ -75,7 +75,7 @@ func (pcs *CredentialStorage) UpdatePassword(
 }
 
 func (pcs *CredentialStorage) Verify(
-	gtx context.Context, creds *model.Creds) error {
+	gtx context.Context, creds *core.Creds) error {
 	const query = `
 		SELECT password_hash 
 		FROM credential
