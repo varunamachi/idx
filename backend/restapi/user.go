@@ -1,6 +1,7 @@
 package restapi
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -11,7 +12,9 @@ import (
 	"github.com/varunamachi/libx/utils/rest"
 )
 
-func UserEndpoints(us core.UserStorage) []*httpx.Endpoint {
+func UserEndpoints(gtx context.Context) []*httpx.Endpoint {
+
+	us := core.UserCtlr(gtx)
 	return []*httpx.Endpoint{
 		createUserEp(us),
 		updateUserEp(us),
@@ -21,7 +24,7 @@ func UserEndpoints(us core.UserStorage) []*httpx.Endpoint {
 	}
 }
 
-func createUserEp(us core.UserStorage) *httpx.Endpoint {
+func createUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		var user core.User
 		if err := etx.Bind(&user); err != nil {
@@ -45,7 +48,7 @@ func createUserEp(us core.UserStorage) *httpx.Endpoint {
 	}
 }
 
-func updateUserEp(us core.UserStorage) *httpx.Endpoint {
+func updateUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		var user core.User
 		if err := etx.Bind(&user); err != nil {
@@ -69,7 +72,7 @@ func updateUserEp(us core.UserStorage) *httpx.Endpoint {
 	}
 }
 
-func getUser(us core.UserStorage) *httpx.Endpoint {
+func getUser(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")
@@ -96,7 +99,7 @@ func getUser(us core.UserStorage) *httpx.Endpoint {
 	}
 }
 
-func getUsers(us core.UserStorage) *httpx.Endpoint {
+func getUsers(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -122,7 +125,7 @@ func getUsers(us core.UserStorage) *httpx.Endpoint {
 	}
 }
 
-func deleteUser(us core.UserStorage) *httpx.Endpoint {
+func deleteUser(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")

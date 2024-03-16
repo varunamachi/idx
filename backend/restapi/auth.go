@@ -1,13 +1,17 @@
 package restapi
 
 import (
+	"context"
+
 	"github.com/labstack/echo/v4"
+	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 )
 
-func AuthEndpoints(athr auth.Authenticator) []*httpx.Endpoint {
+func AuthEndpoints(gtx context.Context) []*httpx.Endpoint {
+	athr := core.Authenticator(gtx)
 	return []*httpx.Endpoint{
 		authenticateEp(athr),
 		logout(athr),

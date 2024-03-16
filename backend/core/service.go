@@ -21,4 +21,12 @@ type ServiceStorage interface {
 	GetOne(gtx context.Context, id int) (*Service, error)
 	Remove(gtx context.Context, id int) error
 	Get(gtx context.Context, params *data.CommonParams) ([]*Service, error)
+
+	Exists(gtx context.Context, id int) (bool, error)
+	Count(gtx context.Context, filter *data.Filter) (int64, error)
+}
+
+type ServiceController interface {
+	ServiceStorage
+	Storage() ServiceStorage
 }

@@ -98,3 +98,13 @@ func (pgs GroupStorage) Get(
 	}
 	return groups, nil
 }
+
+func (pgs *GroupStorage) Exists(
+	gtx context.Context, id int) (bool, error) {
+	return pgs.gd.Exists(gtx, "idx_group", "id", id)
+}
+
+func (pgs *GroupStorage) Count(
+	gtx context.Context, filter *data.Filter) (int64, error) {
+	return pgs.gd.Count(gtx, "idx_group", filter)
+}

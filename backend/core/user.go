@@ -86,4 +86,21 @@ type UserStorage interface {
 	RemoveFromGroup(gtx context.Context, userId, groupId int) error
 	GetPermissionForService(
 		gtx context.Context, userId, serviceId int) ([]string, error)
+
+	Exists(gtx context.Context, id string) (bool, error)
+	Count(gtx context.Context, filter *data.Filter) (int64, error)
+}
+
+type UserController interface {
+	UserStorage
+
+	Storage() UserStorage
+	CredentialStorage() CredentialStorage
+	Register(gtx context.Context, user *User, password string) error
+	Verify(gtx context.Context, userId, verToken string) error
+	Approve(gtx context.Context, userId string) error
+	InitResetPassword(gtx context.Context, userId string) error
+	ResetPassword(gtx context.Context, userId, token, newPassword string) error
+	UpdatePassword(
+		gtx context.Context, userId, oldPassword, newPassword string) error
 }

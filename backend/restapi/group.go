@@ -1,6 +1,7 @@
 package restapi
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -11,7 +12,8 @@ import (
 	"github.com/varunamachi/libx/utils/rest"
 )
 
-func GroupEndpoints(gs core.GroupStorage) []*httpx.Endpoint {
+func GroupEndpoints(gtx context.Context) []*httpx.Endpoint {
+	gs := core.GroupCtlr(gtx)
 	return []*httpx.Endpoint{
 		createGroupEp(gs),
 		updateGroupEp(gs),
@@ -21,7 +23,7 @@ func GroupEndpoints(gs core.GroupStorage) []*httpx.Endpoint {
 	}
 }
 
-func createGroupEp(gs core.GroupStorage) *httpx.Endpoint {
+func createGroupEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		var group core.Group
 		if err := etx.Bind(&group); err != nil {
@@ -45,7 +47,7 @@ func createGroupEp(gs core.GroupStorage) *httpx.Endpoint {
 	}
 }
 
-func updateGroupEp(gs core.GroupStorage) *httpx.Endpoint {
+func updateGroupEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		var group core.Group
 		if err := etx.Bind(&group); err != nil {
@@ -69,7 +71,7 @@ func updateGroupEp(gs core.GroupStorage) *httpx.Endpoint {
 	}
 }
 
-func getGroup(gs core.GroupStorage) *httpx.Endpoint {
+func getGroup(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")
@@ -96,7 +98,7 @@ func getGroup(gs core.GroupStorage) *httpx.Endpoint {
 	}
 }
 
-func getGroups(gs core.GroupStorage) *httpx.Endpoint {
+func getGroups(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -122,7 +124,7 @@ func getGroups(gs core.GroupStorage) *httpx.Endpoint {
 	}
 }
 
-func deleteGroup(gs core.GroupStorage) *httpx.Endpoint {
+func deleteGroup(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")

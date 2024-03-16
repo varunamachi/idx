@@ -102,3 +102,13 @@ func (pss *ServiceStorage) Get(
 	}
 	return out, nil
 }
+
+func (pss *ServiceStorage) Exists(
+	gtx context.Context, id int) (bool, error) {
+	return pss.gd.Exists(gtx, "idx_service", "id", id)
+}
+
+func (pss *ServiceStorage) Count(
+	gtx context.Context, filter *data.Filter) (int64, error) {
+	return pss.gd.Count(gtx, "idx_service", filter)
+}

@@ -1,6 +1,7 @@
 package restapi
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -11,24 +12,25 @@ import (
 	"github.com/varunamachi/libx/utils/rest"
 )
 
-func ServiceEndpoints(us core.ServiceStorage) []*httpx.Endpoint {
+func ServiceEndpoints(gtx context.Context) []*httpx.Endpoint {
+	ss := core.ServiceCtlr(gtx)
 	return []*httpx.Endpoint{
-		createServiceEp(us),
-		updateServiceEp(us),
-		getService(us),
-		getServices(us),
-		deleteService(us),
+		createServiceEp(ss),
+		updateServiceEp(ss),
+		getService(ss),
+		getServices(ss),
+		deleteService(ss),
 	}
 }
 
-func createServiceEp(us core.ServiceStorage) *httpx.Endpoint {
+func createServiceEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		var service core.Service
 		if err := etx.Bind(&service); err != nil {
 			return errx.BadReq("failed to read service info from request", err)
 		}
 
-		if err := us.Save(etx.Request().Context(), &service); err != nil {
+		if err := ss.Save(etx.Request().Context(), &service); err != nil {
 			return err
 		}
 		return nil
@@ -45,14 +47,14 @@ func createServiceEp(us core.ServiceStorage) *httpx.Endpoint {
 	}
 }
 
-func updateServiceEp(us core.ServiceStorage) *httpx.Endpoint {
+func updateServiceEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		var service core.Service
 		if err := etx.Bind(&service); err != nil {
 			return errx.BadReq("failed to read service info from request", err)
 		}
 
-		if err := us.Update(etx.Request().Context(), &service); err != nil {
+		if err := ss.Update(etx.Request().Context(), &service); err != nil {
 			return err
 		}
 		return nil
@@ -69,7 +71,7 @@ func updateServiceEp(us core.ServiceStorage) *httpx.Endpoint {
 	}
 }
 
-func getService(us core.ServiceStorage) *httpx.Endpoint {
+func getService(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")
@@ -77,7 +79,7 @@ func getService(us core.ServiceStorage) *httpx.Endpoint {
 			return prmg.BadReqError()
 		}
 
-		service, err := us.GetOne(etx.Request().Context(), id)
+		service, err := ss.GetOne(etx.Request().Context(), id)
 		if err != nil {
 			return err
 		}
@@ -96,14 +98,14 @@ func getService(us core.ServiceStorage) *httpx.Endpoint {
 	}
 }
 
-func getServices(us core.ServiceStorage) *httpx.Endpoint {
+func getServices(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
 			return err
 		}
 
-		services, err := us.Get(etx.Request().Context(), cmnParams)
+		services, err := ss.Get(etx.Request().Context(), cmnParams)
 		if err != nil {
 			return err
 		}
@@ -122,7 +124,7 @@ func getServices(us core.ServiceStorage) *httpx.Endpoint {
 	}
 }
 
-func deleteService(us core.ServiceStorage) *httpx.Endpoint {
+func deleteService(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int("id")
@@ -130,7 +132,7 @@ func deleteService(us core.ServiceStorage) *httpx.Endpoint {
 			return prmg.BadReqError()
 		}
 
-		err := us.Remove(etx.Request().Context(), id)
+		err := ss.Remove(etx.Request().Context(), id)
 		if err != nil {
 			return err
 		}

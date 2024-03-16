@@ -148,7 +148,7 @@ func (pgu *UserStorage) Get(
 		return nil, err
 	}
 
-	// TODO:  What about permissions
+	// Note: Get permissions per user per service on demand
 
 	return out, nil
 }
@@ -213,17 +213,27 @@ func (pgu *UserStorage) GetPermissionForService(
 	return perms, nil
 }
 
-func (us *UserStorage) SetPassword(userId, password string) error {
-	// TODO - implement
-	return nil
+func (pgu *UserStorage) Exists(
+	gtx context.Context, userId string) (bool, error) {
+	return pgu.gd.Exists(gtx, "idx_user", "user_id", userId)
 }
 
-func (us *UserStorage) UpdatePassword(userId, oldPw, newPw string) error {
-	// TODO - implement
-	return nil
+func (pgu *UserStorage) Count(
+	gtx context.Context, filter *data.Filter) (int64, error) {
+	return pgu.gd.Count(gtx, "idx_user", filter)
 }
 
-func (us *UserStorage) Verify(userId, password string) error {
-	// TODO - implement
-	return nil
-}
+// func (us *UserStorage) SetPassword(userId, password string) error {
+// 	// TODO - implement
+// 	return nil
+// }
+
+// func (us *UserStorage) UpdatePassword(userId, oldPw, newPw string) error {
+// 	// TODO - implement
+// 	return nil
+// }
+
+// func (us *UserStorage) Verify(userId, password string) error {
+// 	// TODO - implement
+// 	return nil
+// }

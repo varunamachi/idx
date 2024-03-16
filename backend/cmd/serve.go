@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	idxAuth "github.com/varunamachi/idx/auth"
-	idxpg "github.com/varunamachi/idx/pg"
 	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data/pg"
@@ -31,24 +29,13 @@ func ServeCommand() *cli.Command {
 		Action: func(ctx *cli.Context) error {
 
 			gtx := ctx.Context
-
 			schema.Init(gtx, "onServerStart")
-
-			gd := pg.NewGetterDeleter()
-			userStore := idxpg.NewUserStorage(gd)
-			groupStore := idxpg.NewGroupStorage(gd)
-			serviceStore := idxpg.NewServiceStorage(gd)
-
-			hasher := idxAuth.NewArgon2Hasher()
-			credStorage := idxpg.NewCredentialStorage(hasher)
-			authr := idxAuth.NewAuthenticator(credStorage)
-
 			app := libx.MustGetApp(ctx).
 				WithServer(8080, &userRetriever{}).
-				WithEndpoints(restapi.AuthEndpoints(authr)...).
-				WithEndpoints(restapi.UserEndpoints(userStore)...).
-				WithEndpoints(restapi.GroupEndpoints(groupStore)...).
-				WithEndpoints(restapi.ServiceEndpoints(serviceStore)...)
+				WithEndpoints(restapi.AuthEndpoints(gtx)...).
+				WithEndpoints(restapi.UserEndpoints(gtx)...).
+				WithEndpoints(restapi.GroupEndpoints(gtx)...).
+				WithEndpoints(restapi.ServiceEndpoints(gtx)...)
 
 			go func() {
 				<-gtx.Done()

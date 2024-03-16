@@ -6,21 +6,22 @@ import (
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/event"
+	"github.com/varunamachi/libx/email"
+	"github.com/varunamachi/libx/httpx"
 )
 
 type Services struct {
-	userStorage    UserStorage
-	serviceStorage ServiceStorage
-	groupStorage   GroupStorage
-	authenticator  auth.Authenticator
-	eventService   event.Service
+	UserCtlr      UserController
+	ServiceCtlr   ServiceController
+	GroupCtlr     GroupController
+	Authenticator auth.Authenticator
+	EventService  event.Service
+	MailProvider  email.Provider
 }
 
 type serviceHolderKey string
-type userHolderKey string
 
 const servicesKey = serviceHolderKey("services")
-const userKey = userHolderKey("user")
 
 func NewContext(gtx context.Context, services *Services) context.Context {
 	return context.WithValue(gtx, servicesKey, services)
@@ -35,33 +36,37 @@ func services(gtx context.Context) *Services {
 
 }
 
-func UserStore(gtx context.Context) UserStorage {
-	return services(gtx).userStorage
+func UserCtlr(gtx context.Context) UserController {
+	return services(gtx).UserCtlr
 }
 
-func ServiceStore(gtx context.Context) ServiceStorage {
-	return services(gtx).serviceStorage
+func ServiceCtlr(gtx context.Context) ServiceController {
+	return services(gtx).ServiceCtlr
 }
 
-func GroupStore(gtx context.Context) GroupStorage {
-	return services(gtx).groupStorage
+func GroupCtlr(gtx context.Context) GroupController {
+	return services(gtx).GroupCtlr
 }
 
 func Authenticator(gtx context.Context) auth.Authenticator {
-	return services(gtx).authenticator
+	return services(gtx).Authenticator
 }
 
 func EventService(gtx context.Context) event.Service {
-	return services(gtx).eventService
+	return services(gtx).EventService
+}
+
+func MailProvider(gtx context.Context) email.Provider {
+	return services(gtx).MailProvider
 }
 
 func NewEventAdder(gtx context.Context, op string, data data.M) *event.Adder {
-
-	return event.NewAdder(gtx, EventService(gtx), op, GetUser(gtx).Id(), data)
+	return event.NewAdder(
+		gtx, EventService(gtx), op, MustGetUser(gtx).Id(), data)
 }
 
-func GetUser(gtx context.Context) *User {
-	user := gtx.Value(userKey).(*User)
+func MustGetUser(gtx context.Context) *User {
+	user := httpx.GetUser[*User](gtx)
 	if user == nil {
 		panic("failed get user from context")
 	}
