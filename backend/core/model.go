@@ -46,8 +46,12 @@ type Hasher interface {
 	Verify(pw, hash string) (bool, error)
 }
 
-type CredentialStorage interface {
+type SecretStorage interface {
 	SetPassword(gtx context.Context, creds *Creds) error
 	UpdatePassword(gtx context.Context, creds *Creds, newPw string) error
 	Verify(gtx context.Context, creds *Creds) error
+
+	// TODO - add token related stuff
+	// StoreToken() error
+	// VerifyToken() error
 }

@@ -75,15 +75,6 @@ CREATE TABLE IF NOT EXISTS user_to_group (
         ON DELETE CASCADE
 )
 
--- CREATE TABLE IF NOT EXISTS user_to_perm (
---     user_id         INT NOT NULL,
---     perm_id         VARCHAR NOT NULL,
-
---     PRIMARY KEY(user_id, perm_id),
---     CONSTRAINT fk_u2p_user FOREIGN KEY(user_id) REFERENCES idx_user(id)
---     ON DELETE CASCADE
--- )
-
 CREATE TABLE IF NOT EXISTS group_to_perm (
     group_id         INT NOT NULL,
     perm_id        VARCHAR NOT NULL,
@@ -93,16 +84,6 @@ CREATE TABLE IF NOT EXISTS group_to_perm (
         ON DELETE CASCADE
 )
 
--- CREATE TABLE IF NOT EXISTS service_to_group (
---     service_id         INT NOT NULL,
---     group_id        VARCHAR NOT NULL,
-
---     PRIMARY KEY(service_id, group_id),
---     CONSTRAINT fk_s2g_service FOREIGN KEY(service_id) REFERENCES idx_service(id)
---         ON DELETE CASCADE,
---     CONSTRAINT fk_s2g_group FOREIGN KEY(group_id) REFERENCES idx_group(id)
---         ON DELETE CASCADE
--- )
 
 CREATE TABLE IF NOT EXISTS credential (
     id VARCHAR,
@@ -111,12 +92,15 @@ CREATE TABLE IF NOT EXISTS credential (
     PRIMARY KEY(id, item_type)
 )
 
--- CREATE TABLE IF NOT EXISTS service_secret (
---     id INT PRIMARY KEY,
---     password_hash VARCHAR NOT NULL,
---     CONSTRAINT fk_s2p FOREIGN KEY(id) REFERENCES idx_service(id)
---         ON DELETE CASCADE
--- )
+CREATE TABLE IF NOT EXISTS euph_tokens (
+    token       VARCHAR NOT NULL,
+    id          VARCHAR NOT NULL,
+    assoc_type  VARCHAR NOT NULL, -- user or service
+    operation   VARCHAR NOT NULL,
+    created     TIMESTAMPTZ NOT NULL DEFAULT NOW,
+    PRIMARY KEY(token),
+    UNIQUE(token, id, assoc_type, operation)
+)
 
 -- +goose StatementEnd
 

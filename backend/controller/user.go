@@ -5,10 +5,16 @@ import (
 	"errors"
 
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/email"
 	"github.com/varunamachi/libx/errx"
 )
+
+func IsSuperUser(userId string) bool {
+	// TODO - get from environment variable
+	return false
+}
 
 var (
 	ErrUserExists = errors.New("user.exists")
@@ -16,13 +22,13 @@ var (
 
 type User struct {
 	ustore        core.UserStorage
-	credStore     core.CredentialStorage
+	credStore     core.SecretStorage
 	emailProvider email.Provider
 }
 
 func NewUserController(
 	ustore core.UserStorage,
-	credStore core.CredentialStorage,
+	credStore core.SecretStorage,
 	emailProvider email.Provider) *User {
 	return &User{
 		ustore:        ustore,
@@ -35,22 +41,54 @@ func (uc *User) Storage() core.UserStorage {
 	return uc.ustore
 }
 
-func (uc *User) CredentialStorage() core.CredentialStorage {
+func (uc *User) CredentialStorage() core.SecretStorage {
 	return uc.credStore
 }
 
 func (uc *User) Register(
 	gtx context.Context, user *core.User, password string) error {
 
+	evAdder := core.NewEventAdder(gtx, "user.register", data.M{
+		"user": user,
+	})
 	exists, err := uc.ustore.Exists(gtx, user.UserId)
 	if err != nil {
-		return err
+		return evAdder.Commit(err)
 	}
 	if exists {
-		return errx.Errf(ErrUserExists, "user %s exists", user.UserId)
+		err = errx.Errf(ErrUserExists, "user '%s' exists", user.UserId)
+		evAdder.Commit(err)
 	}
-	// TODO - implement
-	return nil
+
+	// Enable configured super user immediately
+	if IsSuperUser(user.UserId) {
+		user.State = core.Active
+		user.AuthzRole = auth.Super
+	} else {
+		user.State = core.Created
+		user.AuthzRole = auth.Normal
+	}
+
+	if err := uc.ustore.Save(gtx, user); err != nil {
+		return evAdder.Commit(err)
+	}
+
+	creds := &core.Creds{
+		Id:       user.UserId,
+		Password: password,
+		Type:     "user",
+	}
+	if err := uc.credStore.SetPassword(gtx, creds); err != nil {
+		return evAdder.Commit(err)
+	}
+
+	// TODO -
+	// - Generate token
+	// - Store token
+	// - Generate link to verify the token
+	// - Send the link in the email
+
+	return evAdder.Commit(nil)
 }
 
 func (uc *User) Verify(

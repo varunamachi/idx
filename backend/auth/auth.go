@@ -18,10 +18,10 @@ type cred struct {
 }
 
 type authenticator struct {
-	cs core.CredentialStorage
+	cs core.SecretStorage
 }
 
-func NewAuthenticator(cs core.CredentialStorage) auth.Authenticator {
+func NewAuthenticator(cs core.SecretStorage) auth.Authenticator {
 	return &authenticator{
 		cs: cs,
 	}

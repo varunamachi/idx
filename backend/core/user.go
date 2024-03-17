@@ -10,6 +10,9 @@ import (
 // UserState - state of the user account
 type UserState string
 
+// Created - user account is created but not verified
+var Created UserState = "created"
+
 // Verfied - user account is verified by the user
 var Verfied UserState = "verified"
 
@@ -26,7 +29,7 @@ type User struct {
 	DbItem
 	UserId    string    `json:"userId" db:"user_id"`
 	EmailId   string    `json:"email" db:"email"`
-	Auth      auth.Role `json:"auth" db:"auth"`
+	AuthzRole auth.Role `json:"auth" db:"auth"`
 	State     UserState `json:"state" bson:"state"`
 	FirstName string    `json:"firstName" db:"first_name"`
 	LastName  string    `json:"lastName" db:"last_name"`
@@ -52,7 +55,7 @@ func (u *User) FullName() string {
 }
 
 func (u *User) Role() auth.Role {
-	return u.Auth
+	return u.AuthzRole
 }
 
 func (u *User) GroupIds() []string {
@@ -95,7 +98,7 @@ type UserController interface {
 	UserStorage
 
 	Storage() UserStorage
-	CredentialStorage() CredentialStorage
+	CredentialStorage() SecretStorage
 	Register(gtx context.Context, user *User, password string) error
 	Verify(gtx context.Context, userId, verToken string) error
 	Approve(gtx context.Context, userId string) error

@@ -12,7 +12,7 @@ type CredentialStorage struct {
 	hasher core.Hasher
 }
 
-func NewCredentialStorage(hasher core.Hasher) core.CredentialStorage {
+func NewCredentialStorage(hasher core.Hasher) core.SecretStorage {
 	return &CredentialStorage{
 		hasher: hasher,
 	}
