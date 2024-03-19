@@ -8,17 +8,18 @@ import (
 	"github.com/varunamachi/libx/errx"
 )
 
-type CredentialStorage struct {
+type SecretStorage struct {
 	hasher core.Hasher
 }
 
-func NewCredentialStorage(hasher core.Hasher) core.SecretStorage {
-	return &CredentialStorage{
+func NewCredentialStorage(
+	hasher core.Hasher) core.SecretStorage {
+	return &SecretStorage{
 		hasher: hasher,
 	}
 }
 
-func (pcs *CredentialStorage) SetPassword(
+func (pcs *SecretStorage) SetPassword(
 	gtx context.Context, creds *core.Creds) error {
 	hash, err := pcs.hasher.Hash(creds.Password)
 	if err != nil {
@@ -46,7 +47,7 @@ func (pcs *CredentialStorage) SetPassword(
 	return nil
 }
 
-func (pcs *CredentialStorage) UpdatePassword(
+func (pcs *SecretStorage) UpdatePassword(
 	gtx context.Context, creds *core.Creds, newPw string) error {
 
 	if err := pcs.Verify(gtx, creds); err != nil {
@@ -74,8 +75,7 @@ func (pcs *CredentialStorage) UpdatePassword(
 	return nil
 }
 
-func (pcs *CredentialStorage) Verify(
-	gtx context.Context, creds *core.Creds) error {
+func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
 	const query = `
 		SELECT password_hash 
 		FROM credential
@@ -98,5 +98,49 @@ func (pcs *CredentialStorage) Verify(
 			"failed to verify password for '%s (%s)'", creds.Id, creds.Type)
 	}
 
+	return nil
+}
+
+func (pcs *SecretStorage) StoreToken(
+	gtx context.Context, token *core.Token) error {
+	const query = `
+		INSERT INTO idx_token(
+			token,
+			id,
+			assoc_type,
+			operation		
+		) VALUES (
+			:token,
+			:id,
+			:assoc_type,
+			:operation					
+		) 
+	`
+
+	if _, err := pg.Conn().NamedExecContext(gtx, query, token); err != nil {
+		return errx.Errf(err, "failed to create token for '%s:%s:%s",
+			token.AssocType, token.Operation, token.Id)
+	}
+	return nil
+}
+
+func (pcs *SecretStorage) VerifyToken(
+	gtx context.Context, token, id, operation string) error {
+	const query = `
+		SELECT EXISTS( 
+			SELECT 1 
+			FROM idx_token 
+			WHERE 
+				token = $1 AND 
+				id = $2 AND 
+				operation = $3
+			)
+	`
+	exists := false
+	err := pg.Conn().GetContext(gtx, &exists, query, token, id, operation)
+	if err != nil {
+		return errx.Errf(err,
+			"failed to verify toke for %s (%s)", id, operation)
+	}
 	return nil
 }

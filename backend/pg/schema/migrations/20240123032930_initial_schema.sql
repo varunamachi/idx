@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS credential (
     PRIMARY KEY(id, item_type)
 )
 
-CREATE TABLE IF NOT EXISTS euph_tokens (
+CREATE TABLE IF NOT EXISTS euph_token (
     token       VARCHAR NOT NULL,
     id          VARCHAR NOT NULL,
     assoc_type  VARCHAR NOT NULL, -- user or service

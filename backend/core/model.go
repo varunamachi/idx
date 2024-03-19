@@ -35,6 +35,14 @@ type DbItem struct {
 	UpdatedBy uint64    `db:"updated_by" json:"updatedBy"`
 }
 
+type Token struct {
+	Token     string `db:"token" json:"token"`
+	Id        string `db:"id" json:"id"`
+	AssocType string `db:"assoc_type" json:"assocType"`
+	Operation string `db:"operation" json:"operation"`
+	Created   string `db:"created" json:"created"`
+}
+
 type Creds struct {
 	Id       string `json:"id"`
 	Password string `json:"password"`
@@ -51,7 +59,6 @@ type SecretStorage interface {
 	UpdatePassword(gtx context.Context, creds *Creds, newPw string) error
 	Verify(gtx context.Context, creds *Creds) error
 
-	// TODO - add token related stuff
-	// StoreToken() error
-	// VerifyToken() error
+	StoreToken(gtx context.Context, token *Token) error
+	VerifyToken(gtx context.Context, token, id, operation string) error
 }
