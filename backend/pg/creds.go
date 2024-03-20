@@ -2,7 +2,9 @@ package pg
 
 import (
 	"context"
+	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
@@ -142,5 +144,27 @@ func (pcs *SecretStorage) VerifyToken(
 		return errx.Errf(err,
 			"failed to verify toke for %s (%s)", id, operation)
 	}
+
+	const dquery = `
+		DELETE FROM idx_token 
+		WHERE 
+			token = $1 AND 
+			id = $2 AND 
+			operation = $3`
+	_, err = pg.Conn().ExecContext(gtx, dquery, token, id, operation)
+	if err != nil {
+		id := id + ":" + operation
+		slog.Error("failed to delete verified token", "tokenId", id)
+	}
+
 	return nil
+}
+
+func NewToken(assocType, id, operation string) *core.Token {
+	return &core.Token{
+		Token:     uuid.NewString(),
+		Id:        id,
+		AssocType: assocType,
+		Operation: operation,
+	}
 }

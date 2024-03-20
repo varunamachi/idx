@@ -82,6 +82,7 @@ func (uc *User) Register(
 		return evAdder.Commit(err)
 	}
 
+	// tok := core.NewToken()
 	// TODO -
 	// - Generate token
 	// - Store token
