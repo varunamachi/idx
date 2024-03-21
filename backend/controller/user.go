@@ -82,11 +82,26 @@ func (uc *User) Register(
 		return evAdder.Commit(err)
 	}
 
-	// tok := core.NewToken()
-	// TODO -
-	// - Generate token
-	// - Store token
-	// - Generate link to verify the token
+	tok := core.NewToken(user.UserId, "verfiy_account", "idx_user")
+
+	if err := uc.credStore.StoreToken(gtx, tok); err != nil {
+		return errx.Errf(err, "failed to store user verification token")
+	}
+
+	// link := core.ToFullUrl("verify", tok.Id, tok.Token)
+	// mailTemplate, err := mailtmpl.UserAccountVerificationTemplate()
+	// if err != nil {
+	// 	return err
+	// }
+
+	// core.MailProvider(gtx).Send(&email.Message{
+	// 	From:       "example@idx.com",
+	// 	To:         []string{
+	// 		user.EmailId,
+	// 	},
+	// 	Content:    str.SimpleTemplateExpand(),
+	// }, true)
+
 	// - Send the link in the email
 
 	return evAdder.Commit(nil)

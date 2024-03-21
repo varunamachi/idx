@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/varunamachi/libx"
 )
 
@@ -61,4 +62,13 @@ type SecretStorage interface {
 
 	StoreToken(gtx context.Context, token *Token) error
 	VerifyToken(gtx context.Context, token, id, operation string) error
+}
+
+func NewToken(id, operation, assocType string) *Token {
+	return &Token{
+		Id:        id,
+		Operation: operation,
+		AssocType: assocType,
+		Token:     uuid.NewString(),
+	}
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/google/uuid"
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
@@ -158,13 +157,4 @@ func (pcs *SecretStorage) VerifyToken(
 	}
 
 	return nil
-}
-
-func NewToken(assocType, id, operation string) *core.Token {
-	return &core.Token{
-		Token:     uuid.NewString(),
-		Id:        id,
-		AssocType: assocType,
-		Operation: operation,
-	}
 }
