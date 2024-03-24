@@ -7,6 +7,7 @@ import (
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/event"
 	"github.com/varunamachi/libx/email"
+	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 )
 
@@ -71,4 +72,12 @@ func MustGetUser(gtx context.Context) *User {
 		panic("failed get user from context")
 	}
 	return user
+}
+
+func GetUser(gtx context.Context) (*User, error) {
+	user := httpx.GetUser[*User](gtx)
+	if user == nil {
+		return nil, errx.Fmt("failed get user from context")
+	}
+	return user, nil
 }

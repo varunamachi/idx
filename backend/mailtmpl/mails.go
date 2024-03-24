@@ -21,12 +21,16 @@ func UserAccountVerificationTemplate() (string, error) {
 	return readTemplate("verify_user_account")
 }
 
-func UserAccountVerificationSuccessTemplate() (string, error) {
-	return readTemplate("user_account_verified")
+func UserAccountApprovedTemplate() (string, error) {
+	return readTemplate("user_account_approved")
 }
 
 func UserAccountLockedTemplate() (string, error) {
 	return readTemplate("user_account_locked")
+}
+
+func PasswordResetInitTemplate() (string, error) {
+	return readTemplate("pw_reset_init")
 }
 
 func readTemplate(name string) (string, error) {

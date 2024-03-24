@@ -74,7 +74,17 @@ func (u *User) AddProp(key string, value any) {
 }
 
 func (u *User) Prop(key string) any {
+	if u.Props == nil {
+		return nil
+	}
 	return u.Props[key]
+}
+
+func (u *User) SetProp(key string, value any) {
+	if u.Props == nil {
+		u.Props = data.M{}
+	}
+	u.Props[key] = value
 }
 
 type UserStorage interface {
@@ -85,7 +95,7 @@ type UserStorage interface {
 	SetState(gtx context.Context, id int, state UserState) error
 	Remove(gtx context.Context, id int) error
 	Get(gtx context.Context, params *data.CommonParams) ([]*User, error)
-	AddToGroup(gtx context.Context, userId, groupId int) error
+	AddToGroups(gtx context.Context, userId int, groupIds ...int) error
 	RemoveFromGroup(gtx context.Context, userId, groupId int) error
 	GetPermissionForService(
 		gtx context.Context, userId, serviceId int) ([]string, error)
@@ -99,9 +109,11 @@ type UserController interface {
 
 	Storage() UserStorage
 	CredentialStorage() SecretStorage
+
 	Register(gtx context.Context, user *User, password string) error
-	Verify(gtx context.Context, userId, verToken string) error
-	Approve(gtx context.Context, userId string) error
+	Verify(gtx context.Context, operation, userId, verToken string) error
+	Approve(
+		gtx context.Context, userId string, role auth.Role, groups ...int) error
 	InitResetPassword(gtx context.Context, userId string) error
 	ResetPassword(gtx context.Context, userId, token, newPassword string) error
 	UpdatePassword(

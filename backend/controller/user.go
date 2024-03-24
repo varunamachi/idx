@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/mailtmpl"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/email"
@@ -57,13 +58,14 @@ func (uc *User) Register(
 	}
 	if exists {
 		err = errx.Errf(ErrUserExists, "user '%s' exists", user.UserId)
-		evAdder.Commit(err)
+		return evAdder.Commit(err)
 	}
 
 	// Enable configured super user immediately
 	if IsSuperUser(user.UserId) {
 		user.State = core.Active
 		user.AuthzRole = auth.Super
+		user.SetProp("autoApproved", true)
 	} else {
 		user.State = core.Created
 		user.AuthzRole = auth.Normal
@@ -83,55 +85,202 @@ func (uc *User) Register(
 	}
 
 	tok := core.NewToken(user.UserId, "verfiy_account", "idx_user")
-
 	if err := uc.credStore.StoreToken(gtx, tok); err != nil {
-		return errx.Errf(err, "failed to store user verification token")
+		err = errx.Errf(err, "failed to store user verification token")
+		return evAdder.Commit(err)
 	}
 
-	// link := core.ToFullUrl("verify", tok.Id, tok.Token)
-	// mailTemplate, err := mailtmpl.UserAccountVerificationTemplate()
-	// if err != nil {
-	// 	return err
-	// }
+	mailTemplate, err := mailtmpl.UserAccountVerificationTemplate()
+	if err != nil {
+		return evAdder.Commit(err)
+	}
 
-	// core.MailProvider(gtx).Send(&email.Message{
-	// 	From:       "example@idx.com",
-	// 	To:         []string{
-	// 		user.EmailId,
-	// 	},
-	// 	Content:    str.SimpleTemplateExpand(),
-	// }, true)
-
-	// - Send the link in the email
+	verificationUrl := core.ToFullUrl("user/verify", tok.Id, tok.Token)
+	err = core.SendSimpleMail(gtx, user.EmailId, mailTemplate, data.M{
+		"url": verificationUrl,
+	})
+	if err != nil {
+		return evAdder.Commit(err)
+	}
 
 	return evAdder.Commit(nil)
 }
 
 func (uc *User) Verify(
-	gtx context.Context, userId, verToken string) error {
-	return nil
+	gtx context.Context, operation, userId, verToken string) error {
+	evtAdder := core.NewEventAdder(gtx, "user.verify", data.M{
+		"userId": userId,
+	})
+
+	err := uc.credStore.VerifyToken(gtx, "verify_account", userId, verToken)
+	if err != nil {
+		return evtAdder.Commit(err)
+	}
+
+	// Is a mail required here?
+	return evtAdder.Commit(nil)
 }
 
-func (uc *User) Approve(gtx context.Context, userId string) error {
-	return nil
+func (uc *User) Approve(
+	gtx context.Context,
+	userId string,
+	role auth.Role,
+	groups ...int) error {
+
+	approver, err := core.GetUser(gtx)
+	ev := core.NewEventAdder(gtx, "user.approve", data.M{
+		"approver": data.Qop(approver != nil, approver.UserId, "N/A"),
+		"userId":   userId,
+	})
+	if err != nil {
+		err := errx.Errf(err, "failed to get approver information")
+		ev.Commit(err)
+	}
+
+	if role == auth.Super {
+		err = errx.Errf(core.ErrInvalidRole,
+			"role 'Super' cannot be assigned manually")
+		return ev.Commit(err)
+	}
+
+	if !auth.HasRole(approver, auth.Admin) {
+		err = errx.Errf(
+			core.ErrUnauthorized,
+			"expect role 'admin' for approver, found '%v'",
+			approver.Role())
+		ev.Commit(err)
+	}
+
+	user, err := uc.ustore.GetByUserId(gtx, userId)
+	if err != nil {
+		return ev.Commit(err)
+	}
+
+	if user.State != core.Verfied {
+		err := errx.Errf(core.ErrInvalidState,
+			"only user with state 'Verified' can be approved, found %v",
+			user.State)
+		return ev.Commit(err)
+	}
+
+	user.State = core.Active
+	user.AuthzRole = role
+	if err := uc.ustore.Update(gtx, user); err != nil {
+		return ev.Commit(errx.Errf(err, "failed to approve user"))
+	}
+
+	if err := uc.ustore.AddToGroups(gtx, user.SeqId(), groups...); err != nil {
+		return ev.Commit(errx.Errf(err, "failed to approve user with groups"))
+	}
+
+	mt, err := mailtmpl.UserAccountApprovedTemplate()
+	if err != nil {
+		return ev.Commit(err)
+	}
+	err = core.SendSimpleMail(gtx, user.EmailId, mt, data.M{
+		"loginUrl": core.ToFullUrl("/login"),
+	})
+	if err != nil {
+		return errx.Errf(err, "failed to notify (email) user about approval")
+	}
+
+	return ev.Commit(nil)
 }
 
 func (uc *User) InitResetPassword(
 	gtx context.Context, userId string) error {
-	// TODO - implement
+	ev := core.NewEventAdder(gtx, "user.pwReset.init", data.M{
+		"userId": userId,
+	})
+
+	// Get user
+	user, err := uc.ustore.GetByUserId(gtx, userId)
+	if err != nil {
+		return ev.Commit(err)
+	}
+
+	// Make sure user is in a state that allows password reset
+	if !data.OneOf(user.State, core.Active, core.Disabled) {
+		return ev.Errf(core.ErrInvalidState,
+			"expected user state to be one of 'Active' or 'Disabled',"+
+				" found '%s'",
+			user.State)
+	}
+
+	// Generate a password reset token
+	tok := core.NewToken(user.UserId, "password_reset", "idx_user")
+	if err := uc.credStore.StoreToken(gtx, tok); err != nil {
+		return ev.Errf(err, "failed to store user password reset token")
+	}
+
+	// Get mail template
+	tmpl, err := mailtmpl.PasswordResetInitTemplate()
+	if err != nil {
+		return ev.Errf(err, "failed to load password reset init mail")
+	}
+
+	// Send the verification mail
+	verificationUrl := core.ToFullUrl("user/pw/reset", tok.Id, tok.Token)
+	err = core.SendSimpleMail(gtx, user.EmailId, tmpl, data.M{
+		"url": verificationUrl,
+	})
+	if err != nil {
+		return ev.Errf(err, "failed to send password reset init mail")
+	}
+
 	return nil
 }
 
 func (uc *User) ResetPassword(
 	gtx context.Context, userId, token, newPassword string) error {
-	// TODO - implement
-	return nil
+	evtAdder := core.NewEventAdder(gtx, "user.pw.reset", data.M{
+		"userId": userId,
+	})
+
+	err := uc.credStore.VerifyToken(gtx, "password_reset", userId, token)
+	if err != nil {
+		return evtAdder.Commit(err)
+	}
+
+	err = uc.credStore.SetPassword(gtx, &core.Creds{
+		Id:       userId,
+		Password: newPassword,
+		Type:     "user",
+	})
+	if err != nil {
+		return evtAdder.Commit(err)
+	}
+
+	// Is a mail required here?
+	return evtAdder.Commit(nil)
 }
 
 func (uc *User) UpdatePassword(gtx context.Context,
 	userId, oldPassword, newPassword string) error {
-	// TODO - implement
-	return nil
+	evtAdder := core.NewEventAdder(gtx, "user.pw.update", data.M{
+		"userId": userId,
+	})
+
+	err := uc.credStore.Verify(gtx, &core.Creds{
+		Id:       userId,
+		Password: oldPassword,
+		Type:     "user",
+	})
+	if err != nil {
+		return evtAdder.Commit(err)
+	}
+
+	err = uc.credStore.SetPassword(gtx, &core.Creds{
+		Id:       userId,
+		Password: newPassword,
+		Type:     "user",
+	})
+	if err != nil {
+		return evtAdder.Commit(err)
+	}
+
+	// Is a mail required here?
+	return evtAdder.Commit(nil)
 }
 
 func (uc *User) Save(gtx context.Context, user *core.User) error {
@@ -195,9 +344,9 @@ func (uc *User) Get(
 	return out, err
 }
 
-func (uc *User) AddToGroup(
-	gtx context.Context, userId, groupId int) error {
-	err := uc.ustore.AddToGroup(gtx, userId, groupId)
+func (uc *User) AddToGroups(
+	gtx context.Context, userId int, groupId ...int) error {
+	err := uc.ustore.AddToGroups(gtx, userId, groupId...)
 	return core.NewEventAdder(gtx, "user.addToGroup", data.M{
 		"userId":  userId,
 		"groupId": groupId,

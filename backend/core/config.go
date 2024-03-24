@@ -18,5 +18,4 @@ func ToFullUrl(pathElements ...string) string {
 
 	url.Path = path.Join(pathElements...)
 	return url.String()
-
 }

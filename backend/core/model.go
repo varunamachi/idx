@@ -61,7 +61,7 @@ type SecretStorage interface {
 	Verify(gtx context.Context, creds *Creds) error
 
 	StoreToken(gtx context.Context, token *Token) error
-	VerifyToken(gtx context.Context, token, id, operation string) error
+	VerifyToken(gtx context.Context, operation, id, token string) error
 }
 
 func NewToken(id, operation, assocType string) *Token {

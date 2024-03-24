@@ -2,7 +2,10 @@ package pg
 
 import (
 	"context"
+	"database/sql"
+	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/pg"
@@ -68,10 +71,11 @@ func (pgu *UserStorage) Save(
 func (pgu *UserStorage) Update(
 	gtx context.Context, user *core.User) error {
 
+	user.UpdatedAt = time.Now()
 	query := `
 		UPDATE idx_user SET
-			created_by = :created_by,
 			updated_by = :updated_by,
+			updated_at = :updated_at,
 			user_id = :user_id,
 			email = :email,
 			auth = :auth,
@@ -153,8 +157,8 @@ func (pgu *UserStorage) Get(
 	return out, nil
 }
 
-func (pgu *UserStorage) AddToGroup(
-	gtx context.Context, userId, groupId int) error {
+func (pgu *UserStorage) AddToGroups(
+	gtx context.Context, userId int, groupIds ...int) error {
 
 	query := `
 		INSERT INTO user_to_group (
@@ -166,11 +170,31 @@ func (pgu *UserStorage) AddToGroup(
 			$2 
 		)	
 	`
-	_, err := pg.Conn().ExecContext(gtx, query, userId, groupId)
+
+	tx, err := pg.Conn().BeginTxx(gtx, &sql.TxOptions{})
 	if err != nil {
-		return errx.Errf(
-			err, "failed to add user '%s' to group '%s'", userId, groupId)
+		return errx.Errf(err, "failed to initilize DB transaction")
 	}
+	ef := func(err error, fmtStr string, args ...any) error {
+		if e := tx.Rollback(); e != nil {
+			log.Error().Err(err).
+				Msg("transaction rollback failed for fake users table")
+		}
+		return errx.Errf(err, fmtStr, args...)
+	}
+
+	for _, gid := range groupIds {
+		_, err := tx.ExecContext(gtx, query, userId, gid)
+		if err != nil {
+			return ef(
+				err, "failed to add user '%s' to group '%s'", userId, gid)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return ef(err, "failed commit DB transaction: user id '%s'", userId)
+	}
+
 	return nil
 }
 

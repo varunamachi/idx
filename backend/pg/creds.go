@@ -126,7 +126,7 @@ func (pcs *SecretStorage) StoreToken(
 }
 
 func (pcs *SecretStorage) VerifyToken(
-	gtx context.Context, token, id, operation string) error {
+	gtx context.Context, operation, id, token string) error {
 	const query = `
 		SELECT EXISTS( 
 			SELECT 1 
