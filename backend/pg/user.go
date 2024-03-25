@@ -95,7 +95,7 @@ func (pgu *UserStorage) Update(
 }
 
 func (pgu *UserStorage) GetOne(
-	gtx context.Context, id int) (*core.User, error) {
+	gtx context.Context, id int64) (*core.User, error) {
 	var user core.User
 	err := pgu.gd.GetOne(gtx, "idx_user", "id", id, &user)
 	if err != nil {
@@ -115,7 +115,7 @@ func (pgu *UserStorage) GetByUserId(
 }
 
 func (pgu *UserStorage) SetState(
-	gtx context.Context, id int, state core.UserState) error {
+	gtx context.Context, id int64, state core.UserState) error {
 	query := `
 		UPDATE idx_user SET
 			state = $1,
@@ -131,7 +131,7 @@ func (pgu *UserStorage) SetState(
 	return nil
 }
 
-func (pgu *UserStorage) Remove(gtx context.Context, id int) error {
+func (pgu *UserStorage) Remove(gtx context.Context, id int64) error {
 	query := `DELETE FROM idx_user WHERE id = $2`
 
 	_, err := pg.Conn().ExecContext(gtx, query, id)
@@ -158,7 +158,7 @@ func (pgu *UserStorage) Get(
 }
 
 func (pgu *UserStorage) AddToGroups(
-	gtx context.Context, userId int, groupIds ...int) error {
+	gtx context.Context, userId int64, groupIds ...int64) error {
 
 	query := `
 		INSERT INTO user_to_group (
@@ -199,7 +199,7 @@ func (pgu *UserStorage) AddToGroups(
 }
 
 func (pgu *UserStorage) RemoveFromGroup(
-	gtx context.Context, userId, groupId int) error {
+	gtx context.Context, userId, groupId int64) error {
 	query := `
 		DELETE FROM user_to_group WHERE user_id = $1 AND group_id = $2 	
 	`
@@ -212,7 +212,7 @@ func (pgu *UserStorage) RemoveFromGroup(
 }
 
 func (pgu *UserStorage) GetPermissionForService(
-	gtx context.Context, userId, serviceId int) ([]string, error) {
+	gtx context.Context, userId, serviceId int64) ([]string, error) {
 	query := `
 		SELECT
 			perm_id

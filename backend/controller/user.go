@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"errors"
 
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/idx/mailtmpl"
@@ -17,10 +16,6 @@ func IsSuperUser(userId string) bool {
 	return false
 }
 
-var (
-	ErrUserExists = errors.New("user.exists")
-)
-
 type User struct {
 	ustore        core.UserStorage
 	credStore     core.SecretStorage
@@ -30,7 +25,7 @@ type User struct {
 func NewUserController(
 	ustore core.UserStorage,
 	credStore core.SecretStorage,
-	emailProvider email.Provider) *User {
+	emailProvider email.Provider) core.UserController {
 	return &User{
 		ustore:        ustore,
 		credStore:     credStore,
@@ -57,7 +52,7 @@ func (uc *User) Register(
 		return evAdder.Commit(err)
 	}
 	if exists {
-		err = errx.Errf(ErrUserExists, "user '%s' exists", user.UserId)
+		err = errx.Errf(core.ErrEntityExists, "user '%s' exists", user.UserId)
 		return evAdder.Commit(err)
 	}
 
@@ -125,7 +120,7 @@ func (uc *User) Approve(
 	gtx context.Context,
 	userId string,
 	role auth.Role,
-	groups ...int) error {
+	groups ...int64) error {
 
 	approver, err := core.GetUser(gtx)
 	ev := core.NewEventAdder(gtx, "user.approve", data.M{
@@ -296,7 +291,7 @@ func (uc *User) Update(gtx context.Context, user *core.User) error {
 }
 
 func (uc *User) GetOne(
-	gtx context.Context, id int) (*core.User, error) {
+	gtx context.Context, id int64) (*core.User, error) {
 	out, err := uc.ustore.GetOne(gtx, id)
 	if err != nil {
 		core.NewEventAdder(gtx, "user.getOne", data.M{"userId": id}).
@@ -318,7 +313,7 @@ func (uc *User) GetByUserId(
 }
 
 func (uc *User) SetState(
-	gtx context.Context, id int, state core.UserState) error {
+	gtx context.Context, id int64, state core.UserState) error {
 	err := uc.ustore.SetState(gtx, id, state)
 	return core.NewEventAdder(gtx, "user.setState", data.M{
 		"userId": id,
@@ -327,7 +322,7 @@ func (uc *User) SetState(
 
 }
 
-func (uc *User) Remove(gtx context.Context, id int) error {
+func (uc *User) Remove(gtx context.Context, id int64) error {
 	err := uc.ustore.Remove(gtx, id)
 	return core.NewEventAdder(gtx, "user.delete", data.M{
 		"userId": id,
@@ -345,7 +340,7 @@ func (uc *User) Get(
 }
 
 func (uc *User) AddToGroups(
-	gtx context.Context, userId int, groupId ...int) error {
+	gtx context.Context, userId int64, groupId ...int64) error {
 	err := uc.ustore.AddToGroups(gtx, userId, groupId...)
 	return core.NewEventAdder(gtx, "user.addToGroup", data.M{
 		"userId":  userId,
@@ -354,7 +349,7 @@ func (uc *User) AddToGroups(
 }
 
 func (uc *User) RemoveFromGroup(
-	gtx context.Context, userId, groupId int) error {
+	gtx context.Context, userId, groupId int64) error {
 	err := uc.ustore.RemoveFromGroup(gtx, userId, groupId)
 	return core.NewEventAdder(gtx, "user.removeFromGroup", data.M{
 		"userId":  userId,
@@ -363,7 +358,7 @@ func (uc *User) RemoveFromGroup(
 }
 
 func (uc *User) GetPermissionForService(
-	gtx context.Context, userId, serviceId int) ([]string, error) {
+	gtx context.Context, userId, serviceId int64) ([]string, error) {
 	perms, err := uc.ustore.GetPermissionForService(gtx, userId, serviceId)
 	if err != nil {
 		core.NewEventAdder(gtx, "user.getPerms", data.M{

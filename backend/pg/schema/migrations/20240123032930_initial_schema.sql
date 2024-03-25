@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS idx_service (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_by      VARCHAR NOT NULL,
 
-    name            VARCHAR NOT NULL,
+    name            VARCHAR NOT NULL UNIQUE,
     owner_id        INT NOT NULL,
     display_name    VARCHAR NOT NULL,
     permissions     JSONB NOT NULL,

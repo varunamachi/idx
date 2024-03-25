@@ -74,7 +74,7 @@ func updateServiceEp(ss core.ServiceController) *httpx.Endpoint {
 func getService(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
-		id := prmg.Int("id")
+		id := prmg.Int64("id")
 		if prmg.HasError() {
 			return prmg.BadReqError()
 		}
@@ -127,7 +127,7 @@ func getServices(ss core.ServiceController) *httpx.Endpoint {
 func deleteService(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
-		id := prmg.Int("id")
+		id := prmg.Int64("id")
 		if prmg.HasError() {
 			return prmg.BadReqError()
 		}
@@ -137,7 +137,7 @@ func deleteService(ss core.ServiceController) *httpx.Endpoint {
 			return err
 		}
 
-		return etx.String(http.StatusOK, strconv.Itoa(id))
+		return etx.String(http.StatusOK, strconv.FormatInt(id, 10))
 	}
 
 	return &httpx.Endpoint{

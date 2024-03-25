@@ -62,8 +62,14 @@ func MailProvider(gtx context.Context) email.Provider {
 }
 
 func NewEventAdder(gtx context.Context, op string, data data.M) *event.Adder {
+	userId := "N/A"
+	user, err := GetUser(gtx)
+	if err == nil {
+		userId = user.UserId
+	}
+
 	return event.NewAdder(
-		gtx, EventService(gtx), op, MustGetUser(gtx).Id(), data)
+		gtx, EventService(gtx), op, userId, data)
 }
 
 func MustGetUser(gtx context.Context) *User {

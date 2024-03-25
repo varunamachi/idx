@@ -74,7 +74,7 @@ func updateGroupEp(gs core.GroupController) *httpx.Endpoint {
 func getGroup(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
-		id := prmg.Int("id")
+		id := prmg.Int64("id")
 		if prmg.HasError() {
 			return prmg.BadReqError()
 		}
@@ -127,7 +127,7 @@ func getGroups(gs core.GroupController) *httpx.Endpoint {
 func deleteGroup(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
-		id := prmg.Int("id")
+		id := prmg.Int64("id")
 		if prmg.HasError() {
 			return prmg.BadReqError()
 		}
@@ -137,7 +137,7 @@ func deleteGroup(gs core.GroupController) *httpx.Endpoint {
 			return err
 		}
 
-		return etx.String(http.StatusOK, strconv.Itoa(id))
+		return etx.String(http.StatusOK, strconv.FormatInt(id, 10))
 	}
 
 	return &httpx.Endpoint{

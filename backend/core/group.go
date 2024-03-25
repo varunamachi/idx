@@ -18,11 +18,11 @@ type Group struct {
 type GroupStorage interface {
 	Save(gtx context.Context, group *Group) error
 	Update(gtx context.Context, group *Group) error
-	GetOne(gtx context.Context, id int) (*Group, error)
-	Remove(gtx context.Context, id int) error
+	GetOne(gtx context.Context, id int64) (*Group, error)
+	Remove(gtx context.Context, id int64) error
 	Get(gtx context.Context, params *data.CommonParams) ([]*Group, error)
 
-	Exists(gtx context.Context, id int) (bool, error)
+	Exists(gtx context.Context, id int64) (bool, error)
 	Count(gtx context.Context, filter *data.Filter) (int64, error)
 }
 

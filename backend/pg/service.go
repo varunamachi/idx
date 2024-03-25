@@ -74,7 +74,7 @@ func (pss *ServiceStorage) Update(
 
 func (pss *ServiceStorage) GetOne(
 	gtx context.Context,
-	id int) (*core.Service, error) {
+	id int64) (*core.Service, error) {
 	var service core.Service
 	err := pss.gd.GetOne(gtx, "idx_service", "id", id, &service)
 	if err != nil {
@@ -85,7 +85,7 @@ func (pss *ServiceStorage) GetOne(
 
 func (pss *ServiceStorage) Remove(
 	gtx context.Context,
-	id int) error {
+	id int64) error {
 	if err := pss.gd.Delete(gtx, "idx_service", "id"); err != nil {
 		return err
 	}
@@ -104,11 +104,38 @@ func (pss *ServiceStorage) Get(
 }
 
 func (pss *ServiceStorage) Exists(
-	gtx context.Context, id int) (bool, error) {
-	return pss.gd.Exists(gtx, "idx_service", "id", id)
+	gtx context.Context, name string) (bool, error) {
+	return pss.gd.Exists(gtx, "idx_service", "name", name)
 }
 
 func (pss *ServiceStorage) Count(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	return pss.gd.Count(gtx, "idx_service", filter)
+}
+
+func (pss *ServiceStorage) GetByName(
+	gtx context.Context, name string) (*core.Service, error) {
+	var service core.Service
+	err := pss.gd.GetOne(gtx, "idx_service", "name", name, &service)
+	if err != nil {
+		return nil, errx.Errf(err, "failed to get service with name '%s'", name)
+	}
+	return &service, nil
+}
+
+func (pss *ServiceStorage) GetForOwner(
+	gtx context.Context, ownerId string) ([]*core.Service, error) {
+	const query = `
+		SELECT * 
+		FROM idx_service
+		WHERE owner_id = $1
+		ORDER BY updated_at DESC
+	`
+
+	services := make([]*core.Service, 0, 100)
+	err := pg.Conn().SelectContext(gtx, &services, query, ownerId)
+	if err != nil {
+		return nil, errx.Errf(err, "failed to get services for owner '%s'")
+	}
+	return services, nil
 }

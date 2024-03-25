@@ -72,7 +72,7 @@ func (pgs GroupStorage) Update(gtx context.Context, group *core.Group) error {
 }
 
 func (pgs GroupStorage) GetOne(
-	gtx context.Context, id int) (*core.Group, error) {
+	gtx context.Context, id int64) (*core.Group, error) {
 	var group core.Group
 	err := pgs.gd.GetOne(gtx, "idx_group", "id", id, &group)
 	if err != nil {
@@ -81,7 +81,7 @@ func (pgs GroupStorage) GetOne(
 	return &group, nil
 }
 
-func (pgs GroupStorage) Remove(gtx context.Context, id int) error {
+func (pgs GroupStorage) Remove(gtx context.Context, id int64) error {
 	err := pgs.gd.Delete(gtx, "idx_group", "id", id)
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func (pgs GroupStorage) Get(
 }
 
 func (pgs *GroupStorage) Exists(
-	gtx context.Context, id int) (bool, error) {
+	gtx context.Context, id int64) (bool, error) {
 	return pgs.gd.Exists(gtx, "idx_group", "id", id)
 }
 

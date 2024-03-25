@@ -8,12 +8,16 @@ import (
 )
 
 type Group struct {
-	gstore core.GroupStorage
+	gstore   core.GroupStorage
+	svcStore core.ServiceStorage
 }
 
-func NewGroupController(gstore core.GroupStorage) *Group {
+func NewGroupController(
+	gstore core.GroupStorage,
+	svcStore core.ServiceStorage) *Group {
 	return &Group{
-		gstore: gstore,
+		gstore:   gstore,
+		svcStore: svcStore,
 	}
 }
 
@@ -23,17 +27,21 @@ func (gc *Group) Storage() core.GroupStorage {
 
 func (gc *Group) Save(gtx context.Context, group *core.Group) error {
 	return nil
+	// ev := core.NewEventAdder(gtx, "group.save", data.M{
+	// 	"group": group,
+	// })
+	// gc.gstore.Save()
 }
 
 func (gc *Group) Update(gtx context.Context, group *core.Group) error {
 	return nil
 }
 
-func (gc *Group) GetOne(gtx context.Context, id int) (*core.Group, error) {
+func (gc *Group) GetOne(gtx context.Context, id int64) (*core.Group, error) {
 	return nil, nil
 }
 
-func (gc *Group) Remove(gtx context.Context, id int) error {
+func (gc *Group) Remove(gtx context.Context, id int64) error {
 	return nil
 }
 
@@ -42,7 +50,7 @@ func (gc *Group) Get(
 	return nil, nil
 }
 
-func (gc *Group) Exists(gtx context.Context, id int) (bool, error) {
+func (gc *Group) Exists(gtx context.Context, id int64) (bool, error) {
 	return false, nil
 }
 

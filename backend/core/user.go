@@ -38,8 +38,8 @@ type User struct {
 	// Perms     auth.PermissionSet `json:"perms,omitempty" db:"perms"`
 }
 
-func (u *User) SeqId() int {
-	return int(u.DbItem.Id)
+func (u *User) SeqId() int64 {
+	return u.DbItem.Id
 }
 
 func (u *User) Id() string {
@@ -90,15 +90,15 @@ func (u *User) SetProp(key string, value any) {
 type UserStorage interface {
 	Save(gtx context.Context, user *User) error
 	Update(gtx context.Context, user *User) error
-	GetOne(gtx context.Context, id int) (*User, error)
+	GetOne(gtx context.Context, id int64) (*User, error)
 	GetByUserId(gtx context.Context, id string) (*User, error)
-	SetState(gtx context.Context, id int, state UserState) error
-	Remove(gtx context.Context, id int) error
+	SetState(gtx context.Context, id int64, state UserState) error
+	Remove(gtx context.Context, id int64) error
 	Get(gtx context.Context, params *data.CommonParams) ([]*User, error)
-	AddToGroups(gtx context.Context, userId int, groupIds ...int) error
-	RemoveFromGroup(gtx context.Context, userId, groupId int) error
+	AddToGroups(gtx context.Context, userId int64, groupIds ...int64) error
+	RemoveFromGroup(gtx context.Context, userId, groupId int64) error
 	GetPermissionForService(
-		gtx context.Context, userId, serviceId int) ([]string, error)
+		gtx context.Context, userId, serviceId int64) ([]string, error)
 
 	Exists(gtx context.Context, id string) (bool, error)
 	Count(gtx context.Context, filter *data.Filter) (int64, error)
@@ -112,8 +112,10 @@ type UserController interface {
 
 	Register(gtx context.Context, user *User, password string) error
 	Verify(gtx context.Context, operation, userId, verToken string) error
-	Approve(
-		gtx context.Context, userId string, role auth.Role, groups ...int) error
+	Approve(gtx context.Context,
+		userId string,
+		role auth.Role,
+		groups ...int64) error
 	InitResetPassword(gtx context.Context, userId string) error
 	ResetPassword(gtx context.Context, userId, token, newPassword string) error
 	UpdatePassword(

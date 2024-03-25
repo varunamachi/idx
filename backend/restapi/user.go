@@ -75,7 +75,7 @@ func updateUserEp(us core.UserController) *httpx.Endpoint {
 func getUser(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
-		id := prmg.Int("id")
+		id := prmg.Int64("id")
 		if prmg.HasError() {
 			return prmg.BadReqError()
 		}
@@ -128,7 +128,7 @@ func getUsers(us core.UserController) *httpx.Endpoint {
 func deleteUser(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
-		id := prmg.Int("id")
+		id := prmg.Int64("id")
 		if prmg.HasError() {
 			return prmg.BadReqError()
 		}
@@ -138,7 +138,7 @@ func deleteUser(us core.UserController) *httpx.Endpoint {
 			return err
 		}
 
-		return etx.String(http.StatusOK, strconv.Itoa(id))
+		return etx.String(http.StatusOK, strconv.FormatInt(id, 10))
 	}
 
 	return &httpx.Endpoint{
