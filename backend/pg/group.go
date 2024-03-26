@@ -9,17 +9,17 @@ import (
 	"github.com/varunamachi/libx/errx"
 )
 
-type GroupStorage struct {
+type groupPgStorage struct {
 	gd data.GetterDeleter
 }
 
 func NewGroupStorage(gd data.GetterDeleter) core.GroupStorage {
-	return &GroupStorage{
+	return &groupPgStorage{
 		gd: gd,
 	}
 }
 
-func (pgs GroupStorage) Save(gtx context.Context, group *core.Group) error {
+func (pgs groupPgStorage) Save(gtx context.Context, group *core.Group) error {
 	query := `
 		INSERT INTO idx_user (
 			created_by,
@@ -52,7 +52,7 @@ func (pgs GroupStorage) Save(gtx context.Context, group *core.Group) error {
 	return nil
 }
 
-func (pgs GroupStorage) Update(gtx context.Context, group *core.Group) error {
+func (pgs groupPgStorage) Update(gtx context.Context, group *core.Group) error {
 	query := `
 		UPDATE idx_group SET
 			created_by = :created_by,
@@ -71,7 +71,7 @@ func (pgs GroupStorage) Update(gtx context.Context, group *core.Group) error {
 	return nil
 }
 
-func (pgs GroupStorage) GetOne(
+func (pgs groupPgStorage) GetOne(
 	gtx context.Context, id int64) (*core.Group, error) {
 	var group core.Group
 	err := pgs.gd.GetOne(gtx, "idx_group", "id", id, &group)
@@ -81,7 +81,7 @@ func (pgs GroupStorage) GetOne(
 	return &group, nil
 }
 
-func (pgs GroupStorage) Remove(gtx context.Context, id int64) error {
+func (pgs groupPgStorage) Remove(gtx context.Context, id int64) error {
 	err := pgs.gd.Delete(gtx, "idx_group", "id", id)
 	if err != nil {
 		return err
@@ -89,7 +89,7 @@ func (pgs GroupStorage) Remove(gtx context.Context, id int64) error {
 	return nil
 }
 
-func (pgs GroupStorage) Get(
+func (pgs groupPgStorage) Get(
 	gtx context.Context, params *data.CommonParams) ([]*core.Group, error) {
 	groups := make([]*core.Group, 0, params.PageSize)
 	err := pgs.gd.Get(gtx, "idx_group", params, &groups)
@@ -99,12 +99,12 @@ func (pgs GroupStorage) Get(
 	return groups, nil
 }
 
-func (pgs *GroupStorage) Exists(
+func (pgs *groupPgStorage) Exists(
 	gtx context.Context, id int64) (bool, error) {
 	return pgs.gd.Exists(gtx, "idx_group", "id", id)
 }
 
-func (pgs *GroupStorage) Count(
+func (pgs *groupPgStorage) Count(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	return pgs.gd.Count(gtx, "idx_group", filter)
 }

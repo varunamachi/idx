@@ -7,25 +7,25 @@ import (
 	"github.com/varunamachi/libx/data"
 )
 
-type Group struct {
+type groupCtl struct {
 	gstore   core.GroupStorage
 	svcStore core.ServiceStorage
 }
 
 func NewGroupController(
 	gstore core.GroupStorage,
-	svcStore core.ServiceStorage) *Group {
-	return &Group{
+	svcStore core.ServiceStorage) *groupCtl {
+	return &groupCtl{
 		gstore:   gstore,
 		svcStore: svcStore,
 	}
 }
 
-func (gc *Group) Storage() core.GroupStorage {
+func (gc *groupCtl) Storage() core.GroupStorage {
 	return gc.gstore
 }
 
-func (gc *Group) Save(gtx context.Context, group *core.Group) error {
+func (gc *groupCtl) Save(gtx context.Context, group *core.Group) error {
 	return nil
 	// ev := core.NewEventAdder(gtx, "group.save", data.M{
 	// 	"group": group,
@@ -33,28 +33,28 @@ func (gc *Group) Save(gtx context.Context, group *core.Group) error {
 	// gc.gstore.Save()
 }
 
-func (gc *Group) Update(gtx context.Context, group *core.Group) error {
+func (gc *groupCtl) Update(gtx context.Context, group *core.Group) error {
 	return nil
 }
 
-func (gc *Group) GetOne(gtx context.Context, id int64) (*core.Group, error) {
+func (gc *groupCtl) GetOne(gtx context.Context, id int64) (*core.Group, error) {
 	return nil, nil
 }
 
-func (gc *Group) Remove(gtx context.Context, id int64) error {
+func (gc *groupCtl) Remove(gtx context.Context, id int64) error {
 	return nil
 }
 
-func (gc *Group) Get(
+func (gc *groupCtl) Get(
 	gtx context.Context, params *data.CommonParams) ([]*core.Group, error) {
 	return nil, nil
 }
 
-func (gc *Group) Exists(gtx context.Context, id int64) (bool, error) {
+func (gc *groupCtl) Exists(gtx context.Context, id int64) (bool, error) {
 	return false, nil
 }
 
-func (gc *Group) Count(
+func (gc *groupCtl) Count(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	return 0, nil
 }

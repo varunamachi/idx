@@ -9,17 +9,17 @@ import (
 	"github.com/varunamachi/libx/errx"
 )
 
-type ServiceStorage struct {
+type svcPgStorage struct {
 	gd data.GetterDeleter
 }
 
 func NewServiceStorage(gd data.GetterDeleter) core.ServiceStorage {
-	return &ServiceStorage{
+	return &svcPgStorage{
 		gd: gd,
 	}
 }
 
-func (pss *ServiceStorage) Save(
+func (pss *svcPgStorage) Save(
 	gtx context.Context, service *core.Service) error {
 	query := `
 		INSERT INTO idx_service (
@@ -52,7 +52,7 @@ func (pss *ServiceStorage) Save(
 	return nil
 }
 
-func (pss *ServiceStorage) Update(
+func (pss *svcPgStorage) Update(
 	gtx context.Context,
 	service *core.Service) error {
 	query := `
@@ -72,7 +72,7 @@ func (pss *ServiceStorage) Update(
 	return nil
 }
 
-func (pss *ServiceStorage) GetOne(
+func (pss *svcPgStorage) GetOne(
 	gtx context.Context,
 	id int64) (*core.Service, error) {
 	var service core.Service
@@ -83,7 +83,7 @@ func (pss *ServiceStorage) GetOne(
 	return &service, nil
 }
 
-func (pss *ServiceStorage) Remove(
+func (pss *svcPgStorage) Remove(
 	gtx context.Context,
 	id int64) error {
 	if err := pss.gd.Delete(gtx, "idx_service", "id"); err != nil {
@@ -92,7 +92,7 @@ func (pss *ServiceStorage) Remove(
 	return nil
 }
 
-func (pss *ServiceStorage) Get(
+func (pss *svcPgStorage) Get(
 	gtx context.Context,
 	params *data.CommonParams) ([]*core.Service, error) {
 	out := make([]*core.Service, 0, params.PageSize)
@@ -103,17 +103,17 @@ func (pss *ServiceStorage) Get(
 	return out, nil
 }
 
-func (pss *ServiceStorage) Exists(
+func (pss *svcPgStorage) Exists(
 	gtx context.Context, name string) (bool, error) {
 	return pss.gd.Exists(gtx, "idx_service", "name", name)
 }
 
-func (pss *ServiceStorage) Count(
+func (pss *svcPgStorage) Count(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	return pss.gd.Count(gtx, "idx_service", filter)
 }
 
-func (pss *ServiceStorage) GetByName(
+func (pss *svcPgStorage) GetByName(
 	gtx context.Context, name string) (*core.Service, error) {
 	var service core.Service
 	err := pss.gd.GetOne(gtx, "idx_service", "name", name, &service)
@@ -123,7 +123,7 @@ func (pss *ServiceStorage) GetByName(
 	return &service, nil
 }
 
-func (pss *ServiceStorage) GetForOwner(
+func (pss *svcPgStorage) GetForOwner(
 	gtx context.Context, ownerId string) ([]*core.Service, error) {
 	const query = `
 		SELECT * 
@@ -138,4 +138,84 @@ func (pss *ServiceStorage) GetForOwner(
 		return nil, errx.Errf(err, "failed to get services for owner '%s'")
 	}
 	return services, nil
+}
+
+func (pss *svcPgStorage) AddAdmin(
+	gtx context.Context, serviceId, userId int64) error {
+	const query = `
+		INSERT INTO service_to_owner(
+			user_id,
+			group_id
+		) VALUES (
+			$1,
+			$2
+		)
+	`
+	_, err := pg.Conn().ExecContext(gtx, query, serviceId, userId)
+	if err != nil {
+		return errx.Errf(err,
+			"failed to add admin '%d' to '%d'", userId, serviceId)
+	}
+
+	return nil
+}
+
+func (pss *svcPgStorage) GetAdmins(
+	gtx context.Context, serviceId int64) ([]*core.User, error) {
+	const query = `
+		SELECT u.* 
+		FROM idx_user u
+		JOIN service_to_owner so ON u.id = so.admin_id
+		WHERE service_id = $1
+		ORDER BY admin_id DESC
+	`
+
+	admins := make([]*core.User, 0, 100)
+	err := pg.Conn().SelectContext(gtx, &admins, query, serviceId)
+	if err != nil {
+		return nil, errx.Errf(err, "failed to get admins for %d", serviceId)
+	}
+
+	return nil, nil
+}
+
+func (pss *svcPgStorage) RemoveAdmin(
+	gtx context.Context, serviceId, userId int64) error {
+	const query = `
+		DELETE FROM service_to_owner WHERE service_id = $1 AND admin_id = $2
+	`
+	_, err := pg.Conn().ExecContext(gtx, query, serviceId, userId)
+	if err != nil {
+		return errx.Errf(err,
+			"failed to remove admin '%d' from service '%d'",
+			userId,
+			serviceId,
+		)
+	}
+
+	return nil
+}
+
+func (pss *svcPgStorage) IsAdmin(
+	gtx context.Context, serviceId, adminId int64) (bool, error) {
+	const query = `
+		SELECT EXISTS( 
+			SELECT 1 
+			FROM service_to_owner 
+			WHERE 
+				service_id = $1 AND
+				owner_id = $2
+		)
+	`
+
+	isAdmin := false
+	err := pg.Conn().SelectContext(gtx, &isAdmin, query, adminId)
+	if err != nil {
+		return false, errx.Errf(err,
+			"failed to check if '%s' is an admin of service '%d'",
+			serviceId,
+			adminId,
+		)
+	}
+	return isAdmin, nil
 }

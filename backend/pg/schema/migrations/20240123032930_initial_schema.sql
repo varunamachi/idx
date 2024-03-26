@@ -45,8 +45,17 @@ CREATE TABLE IF NOT EXISTS idx_service (
     permissions     JSONB NOT NULL,
 
     CONSTRAINT fk_service_owner FOREIGN KEY(owner_id)
-        REFERENCES idx_service(id) ON DELETE CASCADEs
+        REFERENCES idx_user(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS service_to_owner (
+    service_id      INT NOT NULL,
+    admin_id        INT NOT NULL,
+    CONSTRAINT fk_service_id FOREIGN KEY(service_id)
+        REFERENCES idx_service(id) ON DELETE CASCADE
+    CONSTRAINT fk_admin_admin FOREIGN KEY(admin_id)
+        REFERENCES idx_user(id) ON DELETE CASCADE
+)
 
 CREATE TABLE IF NOT EXISTS user_pass(
     id INT PRIMARY KEY,
@@ -71,7 +80,8 @@ CREATE TABLE IF NOT EXISTS user_to_group (
 
     PRIMARY KEY(user_id, group_id),
     CONSTRAINT fk_g2u_group FOREIGN KEY(group_id) REFERENCES idx_group(id)
-    CONSTRAINT fk_g2u_user FOREIGN KEY(user_id) REFERENCES idx_user(id),
+        ON DELETE CASCADE,
+    CONSTRAINT fk_g2u_user FOREIGN KEY(user_id) REFERENCES idx_user(id)
         ON DELETE CASCADE
 )
 

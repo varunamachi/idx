@@ -24,6 +24,11 @@ type ServiceStorage interface {
 	Remove(gtx context.Context, id int64) error
 	Get(gtx context.Context, params *data.CommonParams) ([]*Service, error)
 
+	AddAdmin(gtx context.Context, serviceId, userId int64) error
+	GetAdmins(gtx context.Context, serviceId int64) ([]*User, error)
+	RemoveAdmin(gtx context.Context, serviceId, userId int64) error
+	IsAdmin(gtx context.Context, serviceId, userId int64) (bool, error)
+
 	Exists(gtx context.Context, name string) (bool, error)
 	Count(gtx context.Context, filter *data.Filter) (int64, error)
 }

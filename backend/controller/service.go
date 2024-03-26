@@ -10,21 +10,21 @@ import (
 )
 
 // TODO - implement
-type Service struct {
+type svcCtl struct {
 	srvStore core.ServiceStorage
 }
 
 func NewServiceController(ss core.ServiceStorage) core.ServiceController {
-	return &Service{
+	return &svcCtl{
 		srvStore: ss,
 	}
 }
 
-func (sc Service) Storage() core.ServiceStorage {
+func (sc svcCtl) Storage() core.ServiceStorage {
 	return sc.srvStore
 }
 
-func (sc Service) Save(gtx context.Context, service *core.Service) error {
+func (sc svcCtl) Save(gtx context.Context, service *core.Service) error {
 	user, err := core.GetUser(gtx)
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (sc Service) Save(gtx context.Context, service *core.Service) error {
 	return ev.Commit(err)
 }
 
-func (sc Service) Update(gtx context.Context, service *core.Service) error {
+func (sc svcCtl) Update(gtx context.Context, service *core.Service) error {
 	ev := core.NewEventAdder(gtx, "service.update", data.M{
 		"service": service,
 	})
@@ -67,7 +67,7 @@ func (sc Service) Update(gtx context.Context, service *core.Service) error {
 	return ev.Commit(err)
 }
 
-func (sc Service) GetOne(
+func (sc svcCtl) GetOne(
 	gtx context.Context, id int64) (*core.Service, error) {
 	s, err := sc.srvStore.GetOne(gtx, id)
 	if err != nil {
@@ -78,7 +78,7 @@ func (sc Service) GetOne(
 	return s, nil
 }
 
-func (sc Service) Remove(gtx context.Context, id int64) error {
+func (sc svcCtl) Remove(gtx context.Context, id int64) error {
 	ev := core.NewEventAdder(gtx, "service.remove", data.M{
 		"id": id,
 	})
@@ -86,7 +86,7 @@ func (sc Service) Remove(gtx context.Context, id int64) error {
 	return ev.Commit(err)
 }
 
-func (sc Service) Get(
+func (sc svcCtl) Get(
 	gtx context.Context, params *data.CommonParams) ([]*core.Service, error) {
 	s, err := sc.srvStore.Get(gtx, params)
 	if err != nil {
@@ -97,7 +97,7 @@ func (sc Service) Get(
 	return s, nil
 }
 
-func (sc Service) Exists(gtx context.Context, name string) (bool, error) {
+func (sc svcCtl) Exists(gtx context.Context, name string) (bool, error) {
 	exists, err := sc.srvStore.Exists(gtx, name)
 	if err != nil {
 		return false, core.NewEventAdder(gtx, "service.exists", data.M{
@@ -107,7 +107,7 @@ func (sc Service) Exists(gtx context.Context, name string) (bool, error) {
 	return exists, nil
 }
 
-func (sc Service) Count(
+func (sc svcCtl) Count(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	count, err := sc.srvStore.Count(gtx, filter)
 	if err != nil {
@@ -118,7 +118,7 @@ func (sc Service) Count(
 	return count, nil
 }
 
-func (sc *Service) GetByName(
+func (sc *svcCtl) GetByName(
 	gtx context.Context, name string) (*core.Service, error) {
 	s, err := sc.srvStore.GetByName(gtx, name)
 	if err != nil {
@@ -129,7 +129,7 @@ func (sc *Service) GetByName(
 	return s, nil
 }
 
-func (sc *Service) GetForOwner(
+func (sc *svcCtl) GetForOwner(
 	gtx context.Context, ownerId string) ([]*core.Service, error) {
 	s, err := sc.srvStore.GetForOwner(gtx, ownerId)
 	if err != nil {
@@ -138,4 +138,25 @@ func (sc *Service) GetForOwner(
 		}).Commit(err)
 	}
 	return s, nil
+}
+
+func (sc *svcCtl) AddAdmin(
+	gtx context.Context, serviceId, userId int64) error {
+	//TODO - implement
+	return nil
+}
+func (sc *svcCtl) GetAdmins(
+	gtx context.Context, serviceId int64) ([]*core.User, error) {
+	//TODO - implement
+	return nil, nil
+}
+func (sc *svcCtl) RemoveAdmin(
+	gtx context.Context, serviceId, userId int64) error {
+	//TODO - implement
+	return nil
+}
+func (sc *svcCtl) IsAdmin(
+	gtx context.Context, serviceId, userId int64) (bool, error) {
+	//TODO - implement
+	return false, nil
 }

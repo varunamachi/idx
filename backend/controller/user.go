@@ -16,7 +16,7 @@ func IsSuperUser(userId string) bool {
 	return false
 }
 
-type User struct {
+type userCtl struct {
 	ustore        core.UserStorage
 	credStore     core.SecretStorage
 	emailProvider email.Provider
@@ -26,22 +26,22 @@ func NewUserController(
 	ustore core.UserStorage,
 	credStore core.SecretStorage,
 	emailProvider email.Provider) core.UserController {
-	return &User{
+	return &userCtl{
 		ustore:        ustore,
 		credStore:     credStore,
 		emailProvider: emailProvider,
 	}
 }
 
-func (uc *User) Storage() core.UserStorage {
+func (uc *userCtl) Storage() core.UserStorage {
 	return uc.ustore
 }
 
-func (uc *User) CredentialStorage() core.SecretStorage {
+func (uc *userCtl) CredentialStorage() core.SecretStorage {
 	return uc.credStore
 }
 
-func (uc *User) Register(
+func (uc *userCtl) Register(
 	gtx context.Context, user *core.User, password string) error {
 
 	evAdder := core.NewEventAdder(gtx, "user.register", data.M{
@@ -101,7 +101,7 @@ func (uc *User) Register(
 	return evAdder.Commit(nil)
 }
 
-func (uc *User) Verify(
+func (uc *userCtl) Verify(
 	gtx context.Context, operation, userId, verToken string) error {
 	evtAdder := core.NewEventAdder(gtx, "user.verify", data.M{
 		"userId": userId,
@@ -116,7 +116,7 @@ func (uc *User) Verify(
 	return evtAdder.Commit(nil)
 }
 
-func (uc *User) Approve(
+func (uc *userCtl) Approve(
 	gtx context.Context,
 	userId string,
 	role auth.Role,
@@ -182,7 +182,7 @@ func (uc *User) Approve(
 	return ev.Commit(nil)
 }
 
-func (uc *User) InitResetPassword(
+func (uc *userCtl) InitResetPassword(
 	gtx context.Context, userId string) error {
 	ev := core.NewEventAdder(gtx, "user.pwReset.init", data.M{
 		"userId": userId,
@@ -226,7 +226,7 @@ func (uc *User) InitResetPassword(
 	return nil
 }
 
-func (uc *User) ResetPassword(
+func (uc *userCtl) ResetPassword(
 	gtx context.Context, userId, token, newPassword string) error {
 	evtAdder := core.NewEventAdder(gtx, "user.pw.reset", data.M{
 		"userId": userId,
@@ -250,7 +250,7 @@ func (uc *User) ResetPassword(
 	return evtAdder.Commit(nil)
 }
 
-func (uc *User) UpdatePassword(gtx context.Context,
+func (uc *userCtl) UpdatePassword(gtx context.Context,
 	userId, oldPassword, newPassword string) error {
 	evtAdder := core.NewEventAdder(gtx, "user.pw.update", data.M{
 		"userId": userId,
@@ -278,19 +278,19 @@ func (uc *User) UpdatePassword(gtx context.Context,
 	return evtAdder.Commit(nil)
 }
 
-func (uc *User) Save(gtx context.Context, user *core.User) error {
+func (uc *userCtl) Save(gtx context.Context, user *core.User) error {
 	adr := core.NewEventAdder(gtx, "user.save", data.M{"user": user})
 	err := uc.ustore.Save(gtx, user)
 	return adr.Commit(err)
 }
 
-func (uc *User) Update(gtx context.Context, user *core.User) error {
+func (uc *userCtl) Update(gtx context.Context, user *core.User) error {
 	adr := core.NewEventAdder(gtx, "user.update", data.M{"user": user})
 	err := uc.ustore.Update(gtx, user)
 	return adr.Commit(err)
 }
 
-func (uc *User) GetOne(
+func (uc *userCtl) GetOne(
 	gtx context.Context, id int64) (*core.User, error) {
 	out, err := uc.ustore.GetOne(gtx, id)
 	if err != nil {
@@ -301,7 +301,7 @@ func (uc *User) GetOne(
 	return out, err
 }
 
-func (uc *User) GetByUserId(
+func (uc *userCtl) GetByUserId(
 	gtx context.Context, id string) (*core.User, error) {
 	out, err := uc.ustore.GetByUserId(gtx, id)
 	if err != nil {
@@ -312,7 +312,7 @@ func (uc *User) GetByUserId(
 	return out, err
 }
 
-func (uc *User) SetState(
+func (uc *userCtl) SetState(
 	gtx context.Context, id int64, state core.UserState) error {
 	err := uc.ustore.SetState(gtx, id, state)
 	return core.NewEventAdder(gtx, "user.setState", data.M{
@@ -322,14 +322,14 @@ func (uc *User) SetState(
 
 }
 
-func (uc *User) Remove(gtx context.Context, id int64) error {
+func (uc *userCtl) Remove(gtx context.Context, id int64) error {
 	err := uc.ustore.Remove(gtx, id)
 	return core.NewEventAdder(gtx, "user.delete", data.M{
 		"userId": id,
 	}).Commit(err)
 }
 
-func (uc *User) Get(
+func (uc *userCtl) Get(
 	gtx context.Context, params *data.CommonParams) ([]*core.User, error) {
 	out, err := uc.ustore.Get(gtx, params)
 	if err != nil {
@@ -339,7 +339,7 @@ func (uc *User) Get(
 	return out, err
 }
 
-func (uc *User) AddToGroups(
+func (uc *userCtl) AddToGroups(
 	gtx context.Context, userId int64, groupId ...int64) error {
 	err := uc.ustore.AddToGroups(gtx, userId, groupId...)
 	return core.NewEventAdder(gtx, "user.addToGroup", data.M{
@@ -348,7 +348,7 @@ func (uc *User) AddToGroups(
 	}).Commit(err)
 }
 
-func (uc *User) RemoveFromGroup(
+func (uc *userCtl) RemoveFromGroup(
 	gtx context.Context, userId, groupId int64) error {
 	err := uc.ustore.RemoveFromGroup(gtx, userId, groupId)
 	return core.NewEventAdder(gtx, "user.removeFromGroup", data.M{
@@ -357,7 +357,7 @@ func (uc *User) RemoveFromGroup(
 	}).Commit(err)
 }
 
-func (uc *User) GetPermissionForService(
+func (uc *userCtl) GetPermissionForService(
 	gtx context.Context, userId, serviceId int64) ([]string, error) {
 	perms, err := uc.ustore.GetPermissionForService(gtx, userId, serviceId)
 	if err != nil {
@@ -369,7 +369,7 @@ func (uc *User) GetPermissionForService(
 	return perms, err
 }
 
-func (uc *User) Exists(gtx context.Context, id string) (bool, error) {
+func (uc *userCtl) Exists(gtx context.Context, id string) (bool, error) {
 	out, err := uc.ustore.Exists(gtx, id)
 	if err != nil {
 		core.NewEventAdder(gtx, "user.exists", data.M{"id": id}).
@@ -378,7 +378,7 @@ func (uc *User) Exists(gtx context.Context, id string) (bool, error) {
 	return out, err
 }
 
-func (uc *User) Count(gtx context.Context, filter *data.Filter) (int64, error) {
+func (uc *userCtl) Count(gtx context.Context, filter *data.Filter) (int64, error) {
 	out, err := uc.ustore.Count(gtx, filter)
 	if err != nil {
 		core.NewEventAdder(gtx, "user.count", data.M{"filter": filter}).
