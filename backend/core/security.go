@@ -16,4 +16,5 @@ const (
 	PermDeleteService         = "idx.deleteService"
 	PermGetService            = "idx.getService"
 	PermModifyServicePermTree = "idx.modifyServicePermTree"
+	PermServiceAdmin          = "idx.serviceAdmin"
 )

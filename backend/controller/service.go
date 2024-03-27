@@ -2,16 +2,17 @@ package controller
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
-	"github.com/varunamachi/libx/errx"
 )
 
 // TODO - implement
 type svcCtl struct {
-	srvStore core.ServiceStorage
+	srvStore  core.ServiceStorage
+	userStore core.UserStorage
 }
 
 func NewServiceController(ss core.ServiceStorage) core.ServiceController {
@@ -45,6 +46,11 @@ func (sc svcCtl) Save(gtx context.Context, service *core.Service) error {
 		return ev.Commit(err)
 	}
 
+	// Make the owner admin
+	if err = sc.srvStore.AddAdmin(gtx, service.Id, user.SeqId()); err != nil {
+		return ev.Commit(err)
+	}
+
 	return ev.Commit(err)
 }
 
@@ -54,17 +60,24 @@ func (sc svcCtl) Update(gtx context.Context, service *core.Service) error {
 	})
 	user := core.MustGetUser(gtx)
 
-	// TODO - make this list of admins of the service
-	if service.OwnerId != user.SeqId() {
-		return errx.Errf(core.ErrUnauthorized,
+	isAdmin, err := sc.srvStore.IsAdmin(gtx, service.Id, user.SeqId())
+	if err != nil {
+		return ev.Commit(err)
+	}
+
+	if !isAdmin {
+		return ev.Errf(core.ErrUnauthorized,
 			"an user '%s' is not authorized to update service '%s'",
 			user.UserId, service.Name,
 		)
 	}
 
 	service.UpdatedBy, service.UpdatedAt = user.SeqId(), time.Now()
-	err := sc.srvStore.Update(gtx, service)
-	return ev.Commit(err)
+	if err := sc.srvStore.Update(gtx, service); err != nil {
+		return ev.Commit(err)
+	}
+
+	return ev.Commit(nil)
 }
 
 func (sc svcCtl) GetOne(
@@ -142,21 +155,77 @@ func (sc *svcCtl) GetForOwner(
 
 func (sc *svcCtl) AddAdmin(
 	gtx context.Context, serviceId, userId int64) error {
-	//TODO - implement
-	return nil
+	ev := core.NewEventAdder(gtx, "service.addAdmin", data.M{
+		"serviceId": serviceId,
+		"adminId":   userId,
+	})
+
+	curUser, err := core.GetUser(gtx)
+	if err != nil {
+		ev.Commit(err)
+	}
+
+	isAdmin, err := sc.srvStore.IsAdmin(gtx, serviceId, curUser.SeqId())
+	if err != nil {
+		return ev.Commit(err)
+	}
+	if !isAdmin {
+		return ev.Errf(core.ErrUnauthorized,
+			"user '%s' is not authorized modify service admin list")
+	}
+
+	perms, err := sc.userStore.GetPermissionForService(gtx, userId, serviceId)
+	if err != nil {
+		return ev.Commit(err)
+	}
+
+	if !slices.Contains(perms, core.PermServiceAdmin) {
+		return ev.Errf(core.ErrUnauthorized,
+			"only user with 'idx.serviceAdmin' permission can be "+
+				"added as admin")
+	}
+
+	err = sc.srvStore.AddAdmin(gtx, serviceId, userId)
+	if err != nil {
+		return ev.Commit(err)
+	}
+	return ev.Commit(err)
 }
+
 func (sc *svcCtl) GetAdmins(
 	gtx context.Context, serviceId int64) ([]*core.User, error) {
-	//TODO - implement
-	return nil, nil
+	admins, err := sc.srvStore.GetAdmins(gtx, serviceId)
+	if err != nil {
+		return nil, core.NewEventAdder(gtx, "service.addAdmin", data.M{
+			"serviceId": serviceId,
+		}).Commit(err)
+	}
+	return admins, nil
 }
+
 func (sc *svcCtl) RemoveAdmin(
 	gtx context.Context, serviceId, userId int64) error {
-	//TODO - implement
-	return nil
+	ev := core.NewEventAdder(gtx, "service.removeAdmin", data.M{
+		"serviceId": serviceId,
+		"adminId":   userId,
+	})
+
+	err := sc.srvStore.RemoveAdmin(gtx, serviceId, userId)
+	if err != nil {
+		return ev.Commit(err)
+	}
+
+	return ev.Commit(nil)
 }
+
 func (sc *svcCtl) IsAdmin(
 	gtx context.Context, serviceId, userId int64) (bool, error) {
-	//TODO - implement
-	return false, nil
+	isAdmin, err := sc.srvStore.IsAdmin(gtx, serviceId, userId)
+	if err != nil {
+		return false, core.NewEventAdder(gtx, "service.isAdmin", data.M{
+			"serviceId": serviceId,
+			"userId":    userId,
+		}).Commit(err)
+	}
+	return isAdmin, nil
 }
