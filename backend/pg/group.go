@@ -2,7 +2,9 @@ package pg
 
 import (
 	"context"
+	"database/sql"
 
+	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/pg"
@@ -107,4 +109,60 @@ func (pgs *groupPgStorage) Exists(
 func (pgs *groupPgStorage) Count(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	return pgs.gd.Count(gtx, "idx_group", filter)
+}
+
+func (pgs *groupPgStorage) SetPermissions(
+	gtx context.Context,
+	groupId int64,
+	perms []string) error {
+
+	const query = `
+		INSERT INTO group_to_perm(
+			group_id,
+			perm_id
+		) VALUES (
+			$1,
+			$2
+		) ON CONFLICT IGNORE
+	`
+
+	tx, err := pg.Conn().BeginTxx(gtx, &sql.TxOptions{})
+	if err != nil {
+		return errx.Errf(err, "failed to begin transaction")
+	}
+	ef := func(err error, fmtStr string, args ...any) error {
+		if e := tx.Rollback(); e != nil {
+			log.Error().Err(err).
+				Msg("transaction rollback failed for fake users table")
+		}
+		return errx.Errf(err, fmtStr, args...)
+	}
+
+	for perm := range perms {
+		_, err := tx.ExecContext(gtx, query)
+		if err != nil {
+			return ef(err, "failed to add permission '%s' to group '%s'",
+				perm, groupId)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return ef(err, "failed to commit addition of permissions to group")
+	}
+
+	return nil
+}
+
+func (pgs *groupPgStorage) GetPermissions(
+	gtx context.Context,
+	groupId int64) ([]string, error) {
+	const query = `SELECT perm_id FROM group_to_perm WHERE group_id = $1`
+
+	perms := make([]string, 0, 100)
+	err := pg.Conn().SelectContext(gtx, &perms, query, groupId)
+	if err != nil {
+		return nil, errx.Errf(
+			err, "failed get permissions for group '%d'", groupId)
+	}
+	return perms, nil
 }

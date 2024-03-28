@@ -24,10 +24,14 @@ type GroupStorage interface {
 
 	Exists(gtx context.Context, id int64) (bool, error)
 	Count(gtx context.Context, filter *data.Filter) (int64, error)
+
+	SetPermissions(gtx context.Context, groupId int64, perms []string) error
+	GetPermissions(gtx context.Context, groupId int64) ([]string, error)
 }
 
 type GroupController interface {
 	GroupStorage
 
 	Storage() GroupStorage
+	SaveWithPerms(gtx context.Context, group *Group, perms []string) error
 }

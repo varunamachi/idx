@@ -118,11 +118,13 @@ CREATE TABLE IF NOT EXISTS euph_token (
 -- +goose StatementBegin
 -- DROP TABLE user_to_perm
 -- DROP TABLE service_to_pw
+DROP TABLE euph_token
 DROP TABLE credential
 DROP TABLE service_to_group
 DROP TABLE group_to_perm
 DROP TABLE user_to_group
 DROP TABLE idx_event
+DROP TABLE service_to_owner
 DROP TABLE user_pass
 DROP TABLE idx_service
 DROP TABLE idx_group
