@@ -10,6 +10,13 @@ import (
 //go:embed resources/*
 var mailDir embed.FS
 
+const (
+	UserAccountVerificationTemplate = "verify_user_account"
+	UserAccountApprovedTemplate     = "user_account_approved"
+	UserAccountLockedTemplate       = "user_account_locked"
+	PasswordResetInitTemplate       = "pw_reset_init"
+)
+
 var cache = struct {
 	sync.Mutex
 	mp map[string]string
@@ -17,23 +24,23 @@ var cache = struct {
 	mp: make(map[string]string),
 }
 
-func UserAccountVerificationTemplate() (string, error) {
-	return readTemplate("verify_user_account")
-}
+// func UserAccountVerificationTemplate() (string, error) {
+// 	return readTemplate("verify_user_account")
+// }
 
-func UserAccountApprovedTemplate() (string, error) {
-	return readTemplate("user_account_approved")
-}
+// func UserAccountApprovedTemplate() (string, error) {
+// 	return readTemplate("user_account_approved")
+// }
 
-func UserAccountLockedTemplate() (string, error) {
-	return readTemplate("user_account_locked")
-}
+// func UserAccountLockedTemplate() (string, error) {
+// 	return readTemplate("user_account_locked")
+// }
 
-func PasswordResetInitTemplate() (string, error) {
-	return readTemplate("pw_reset_init")
-}
+// func PasswordResetInitTemplate() (string, error) {
+// 	return readTemplate("pw_reset_init")
+// }
 
-func readTemplate(name string) (string, error) {
+func ReadTemplate(name string) (string, error) {
 	cache.Lock()
 	defer cache.Unlock()
 

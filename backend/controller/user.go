@@ -85,15 +85,19 @@ func (uc *userCtl) Register(
 		return evAdder.Commit(err)
 	}
 
-	mailTemplate, err := mailtmpl.UserAccountVerificationTemplate()
-	if err != nil {
-		return evAdder.Commit(err)
-	}
+	// mailTemplate, err := mailtmpl.UserAccountVerificationTemplate()
+	// if err != nil {
+	// 	return evAdder.Commit(err)
+	// }
 
 	verificationUrl := core.ToFullUrl("user/verify", tok.Id, tok.Token)
-	err = core.SendSimpleMail(gtx, user.EmailId, mailTemplate, data.M{
-		"url": verificationUrl,
-	})
+	err = core.SendSimpleMail(
+		gtx,
+		user.EmailId,
+		mailtmpl.UserAccountVerificationTemplate,
+		data.M{
+			"url": verificationUrl,
+		})
 	if err != nil {
 		return evAdder.Commit(err)
 	}
@@ -168,13 +172,13 @@ func (uc *userCtl) Approve(
 		return ev.Commit(errx.Errf(err, "failed to approve user with groups"))
 	}
 
-	mt, err := mailtmpl.UserAccountApprovedTemplate()
-	if err != nil {
-		return ev.Commit(err)
-	}
-	err = core.SendSimpleMail(gtx, user.EmailId, mt, data.M{
-		"loginUrl": core.ToFullUrl("/login"),
-	})
+	// mt, err := mailtmpl.UserAccountApprovedTemplate()
+	// if err != nil {
+	// 	return ev.Commit(err)
+	// }
+	err = core.SendSimpleMail(
+		gtx, user.EmailId, "UserAccountApprovedTemplate",
+		data.M{"loginUrl": core.ToFullUrl("/login")})
 	if err != nil {
 		return errx.Errf(err, "failed to notify (email) user about approval")
 	}
@@ -209,16 +213,18 @@ func (uc *userCtl) InitResetPassword(
 	}
 
 	// Get mail template
-	tmpl, err := mailtmpl.PasswordResetInitTemplate()
-	if err != nil {
-		return ev.Errf(err, "failed to load password reset init mail")
-	}
+	// tmpl, err := mailtmpl.PasswordResetInitTemplate()
+	// if err != nil {
+	// 	return ev.Errf(err, "failed to load password reset init mail")
+	// }
 
 	// Send the verification mail
 	verificationUrl := core.ToFullUrl("user/pw/reset", tok.Id, tok.Token)
-	err = core.SendSimpleMail(gtx, user.EmailId, tmpl, data.M{
-		"url": verificationUrl,
-	})
+	err = core.SendSimpleMail(
+		gtx, user.EmailId, "PasswordResetInitTemplate",
+		data.M{
+			"url": verificationUrl,
+		})
 	if err != nil {
 		return ev.Errf(err, "failed to send password reset init mail")
 	}
