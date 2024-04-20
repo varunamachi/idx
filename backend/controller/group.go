@@ -14,7 +14,7 @@ type groupCtl struct {
 
 func NewGroupController(
 	gstore core.GroupStorage,
-	svcStore core.ServiceStorage) *groupCtl {
+	svcStore core.ServiceStorage) core.GroupController {
 	return &groupCtl{
 		gstore:   gstore,
 		svcStore: svcStore,

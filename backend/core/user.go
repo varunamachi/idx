@@ -87,6 +87,11 @@ func (u *User) SetProp(key string, value any) {
 	u.Props[key] = value
 }
 
+type UserWithPassword struct {
+	User     *User
+	Password string `json:"password"`
+}
+
 type UserStorage interface {
 	Save(gtx context.Context, user *User) error
 	Update(gtx context.Context, user *User) error
@@ -111,7 +116,7 @@ type UserController interface {
 	CredentialStorage() SecretStorage
 
 	Register(gtx context.Context, user *User, password string) error
-	Verify(gtx context.Context, operation, userId, verToken string) error
+	Verify(gtx context.Context, userId, verToken string) error
 	Approve(gtx context.Context,
 		userId string,
 		role auth.Role,

@@ -5,10 +5,10 @@ import "context"
 func Test1(gtx context.Context) error {
 
 	// Create a super user
-
 	// Register a user
-	// Suppress email verification
-	// Force approve - as a Super user
+	// Use fake email provider
+	// Get the mail fro provider
+	// Verify
 	// Try to login
 	// Logout
 	// Change password

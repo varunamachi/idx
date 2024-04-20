@@ -106,7 +106,7 @@ func (uc *userCtl) Register(
 }
 
 func (uc *userCtl) Verify(
-	gtx context.Context, operation, userId, verToken string) error {
+	gtx context.Context, userId, verToken string) error {
 	evtAdder := core.NewEventAdder(gtx, "user.verify", data.M{
 		"userId": userId,
 	})
