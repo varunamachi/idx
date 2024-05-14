@@ -39,11 +39,24 @@ func (c *IdxClient) Verify(
 
 func (c *IdxClient) UpdatePassword(
 	gtx context.Context, userId, oldPwd, newPwd string) error {
+	apiRes := c.Put(gtx, map[string]string{
+		"userId":      userId,
+		"oldPassword": oldPwd,
+		"newPassword": newPwd,
+	}, "/user/password")
+	if err := apiRes.Close(); err != nil {
+		return errx.Errf(err, "failed to verify user '%s'", userId)
+	}
 	return nil
 }
 
 func (c *IdxClient) InitResetPassword(
 	gtx context.Context, userId string) error {
+	return nil
+}
+
+func (c *IdxClient) ResetPassword(
+	gtx context.Context, userId, token, newPwd string) error {
 	return nil
 }
 

@@ -23,6 +23,9 @@ func UserEndpoints(gtx context.Context) []*httpx.Endpoint {
 		getUser(us),
 		getUsers(us),
 		deleteUser(us),
+		updatePasswordEp(us),
+		initPasswordResetEp(us),
+		resetPasswordEp(us),
 	}
 }
 
@@ -180,13 +183,100 @@ func deleteUser(us core.UserController) *httpx.Endpoint {
 }
 
 func updatePasswordEp(us core.UserController) *httpx.Endpoint {
-	return nil
+	handler := func(etx echo.Context) error {
+
+		credx := struct {
+			UserId      string `json:"userId"`
+			OldPassword string `json:"oldPassword"`
+			NewPassword string `json:"newPassword"`
+		}{}
+
+		if err := etx.Bind(&credx); err != nil {
+			return errx.BadReqX(err, "invalid cred info given")
+		}
+
+		err := us.UpdatePassword(
+			etx.Request().Context(),
+			credx.UserId,
+			credx.OldPassword,
+			credx.NewPassword)
+		if err != nil {
+			return err
+		}
+
+		return etx.String(http.StatusOK, credx.UserId)
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.PUT,
+		Path:        "/user/password",
+		Category:    "idx.user",
+		Desc:        "Update user password",
+		Version:     "v1",
+		Permissions: []string{},
+		Handler:     handler,
+	}
 }
 
 func initPasswordResetEp(us core.UserController) *httpx.Endpoint {
-	return nil
+	handler := func(etx echo.Context) error {
+
+		prmg := httpx.NewParamGetter(etx)
+		user := prmg.Str("userId")
+		if prmg.HasError() {
+			return prmg.BadReqError()
+		}
+
+		err := us.InitResetPassword(etx.Request().Context(), user)
+		if err != nil {
+			return err
+		}
+
+		return etx.String(http.StatusOK, user)
+	}
+
+	return &httpx.Endpoint{
+		Method:   echo.POST,
+		Path:     "/user/password/reset/init",
+		Category: "idx.user",
+		Desc:     "Update user password",
+		Version:  "v1",
+		Handler:  handler,
+	}
 }
 
 func resetPasswordEp(us core.UserController) *httpx.Endpoint {
-	return nil
+
+	handler := func(etx echo.Context) error {
+
+		credx := struct {
+			UserId      string `json:"userId"`
+			Token       string `json:"token"`
+			NewPassword string `json:"newPassword"`
+		}{}
+
+		if err := etx.Bind(&credx); err != nil {
+			return errx.BadReqX(err, "invalid cred info given")
+		}
+
+		err := us.ResetPassword(
+			etx.Request().Context(),
+			credx.UserId,
+			credx.Token,
+			credx.NewPassword)
+		if err != nil {
+			return err
+		}
+
+		return etx.String(http.StatusOK, credx.UserId)
+	}
+
+	return &httpx.Endpoint{
+		Method:   echo.PUT,
+		Path:     "/user/password/reset",
+		Category: "idx.user",
+		Desc:     "Update user password",
+		Version:  "v1",
+		Handler:  handler,
+	}
 }
