@@ -237,7 +237,7 @@ func initPasswordResetEp(us core.UserController) *httpx.Endpoint {
 
 	return &httpx.Endpoint{
 		Method:   echo.POST,
-		Path:     "/user/password/reset/init",
+		Path:     "/user/:user/password/reset/init",
 		Category: "idx.user",
 		Desc:     "Update user password",
 		Version:  "v1",

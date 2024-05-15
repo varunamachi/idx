@@ -45,18 +45,33 @@ func (c *IdxClient) UpdatePassword(
 		"newPassword": newPwd,
 	}, "/user/password")
 	if err := apiRes.Close(); err != nil {
-		return errx.Errf(err, "failed to verify user '%s'", userId)
+		return errx.Errf(err, "failed to update password for user '%s'", userId)
 	}
 	return nil
 }
 
 func (c *IdxClient) InitResetPassword(
 	gtx context.Context, userId string) error {
+	apiRes := c.Post(gtx, nil, "user", userId, "password/reset/init")
+	if err := apiRes.Close(); err != nil {
+		return errx.Errf(err,
+			"failed to initialize password reset for user '%s'", userId)
+	}
+	// TODO - think about handling mail
 	return nil
 }
 
 func (c *IdxClient) ResetPassword(
 	gtx context.Context, userId, token, newPwd string) error {
+	data := map[string]string{
+		"userId":      userId,
+		"token":       token,
+		"newPassword": newPwd,
+	}
+	apiRes := c.Post(gtx, data, "user/password/reset")
+	if err := apiRes.Close(); err != nil {
+		return errx.Errf(err, "failed to reset password of user '%s'", userId)
+	}
 	return nil
 }
 
