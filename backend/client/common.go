@@ -76,7 +76,10 @@ func (c *IdxClient) ResetPassword(
 }
 
 func (c *IdxClient) Approve(
-	gtx context.Context, userId string, role auth.Role) error {
+	gtx context.Context,
+	userId string,
+	role auth.Role,
+	groupIds ...int64) error {
 	return nil
 }
 

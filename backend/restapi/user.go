@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
@@ -280,3 +281,41 @@ func resetPasswordEp(us core.UserController) *httpx.Endpoint {
 		Handler:  handler,
 	}
 }
+
+func approveEp(us core.UserController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+
+		pmg := httpx.NewParamGetter(etx)
+		user := pmg.Str("user")
+		role := auth.Role(pmg.Str("role"))
+
+		groupIds := make([]int64, 0, 100)
+		if err := etx.Bind(&groupIds); err != nil {
+			return errx.BadReqX(
+				err, "failed to get groupIds for user '%s'", user)
+		}
+
+		if !data.OneOf(role, auth.ValidRoles...) {
+			return errx.BadReq("invalid role '%s' provided", role)
+		}
+
+		err := us.Approve(etx.Request().Context(), user, role)
+		if err != nil {
+			return err
+		}
+
+		return etx.String(http.StatusOK, string(role))
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.PUT,
+		Path:        "/user/:user/approve/:role",
+		Category:    "idx.user",
+		Desc:        "Approve a user with appropriate role",
+		Version:     "v1",
+		Permissions: []string{core.PermSetUserState},
+		Handler:     handler,
+	}
+}
+
+func 
