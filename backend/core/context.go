@@ -15,7 +15,7 @@ type Services struct {
 	UserCtlr      UserController
 	ServiceCtlr   ServiceController
 	GroupCtlr     GroupController
-	Authenticator auth.Authenticator
+	Authenticator auth.UserAuthenticator
 	EventService  event.Service
 	MailProvider  email.Provider
 }
@@ -49,7 +49,7 @@ func GroupCtlr(gtx context.Context) GroupController {
 	return services(gtx).GroupCtlr
 }
 
-func Authenticator(gtx context.Context) auth.Authenticator {
+func Authenticator(gtx context.Context) auth.UserAuthenticator {
 	return services(gtx).Authenticator
 }
 

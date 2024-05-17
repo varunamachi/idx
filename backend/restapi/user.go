@@ -317,5 +317,3 @@ func approveEp(us core.UserController) *httpx.Endpoint {
 		Handler:     handler,
 	}
 }
-
-func 

@@ -18,10 +18,11 @@ type cred struct {
 }
 
 type authenticator struct {
+	us core.UserStorage
 	cs core.SecretStorage
 }
 
-func NewAuthenticator(cs core.SecretStorage) auth.Authenticator {
+func NewAuthenticator(cs core.SecretStorage) auth.UserAuthenticator {
 	return &authenticator{
 		cs: cs,
 	}
@@ -39,4 +40,14 @@ func (athn *authenticator) Authenticate(
 		return err
 	}
 	return nil
+}
+
+func (athn *authenticator) GetUser(
+	gtx context.Context, authData auth.AuthData) (auth.User, error) {
+
+	userId, _, err := authData.ToUserAndPassword()
+	if err != nil {
+		return nil, err
+	}
+	return athn.us.GetByUserId(gtx, userId)
 }

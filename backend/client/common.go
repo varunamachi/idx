@@ -80,16 +80,35 @@ func (c *IdxClient) Approve(
 	userId string,
 	role auth.Role,
 	groupIds ...int64) error {
+
+	apiRes := c.Post(gtx, groupIds, "user", userId, "approve", string(role))
+	if err := apiRes.Close(); err != nil {
+		return errx.Errf(err, "failed to reset password of user '%s'", userId)
+	}
 	return nil
 }
 
 func (c *IdxClient) Login(
 	gtx context.Context, userId, password string) (*core.User, error) {
-	return nil, nil
+
+	creds := auth.AuthData{}
+	apiRes := c.Post(gtx, creds, "authenticate")
+
+	authResult := struct {
+		User  *core.User `json:"user"`
+		Token string     `json:"token"`
+	}{}
+
+	if err := apiRes.LoadClose(&authResult); err != nil {
+		return nil, errx.Errf(err, "failed to authenticate user '%s'", userId)
+	}
+	c.SetUser(authResult.User).SetToken(authResult.Token)
+
+	return authResult.User, nil
 }
 
 func (c *IdxClient) GetPerms(
-	gtx context.Context, userId string) ([]string, error) {
+	gtx context.Context, serviceId, userId int) ([]string, error) {
 	return nil, nil
 }
 
