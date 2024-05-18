@@ -10,12 +10,14 @@ import (
 )
 
 type IdxClient struct {
-	httpx.Client
+	*httpx.Client
 	user *core.User
 }
 
-func New() *IdxClient {
-	return &IdxClient{}
+func New(address string) *IdxClient {
+	return &IdxClient{
+		Client: httpx.New(address, ""),
+	}
 }
 
 func (c *IdxClient) Register(
@@ -30,7 +32,7 @@ func (c *IdxClient) Register(
 
 func (c *IdxClient) Verify(
 	gtx context.Context, userId, verifyId string) error {
-	apiRes := c.Post(gtx, nil, "/user/verify", userId, verifyId)
+	apiRes := c.Post(gtx, nil, "/api/v1/user/verify", userId, verifyId)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to verify user '%s'", userId)
 	}
@@ -52,7 +54,7 @@ func (c *IdxClient) UpdatePassword(
 
 func (c *IdxClient) InitResetPassword(
 	gtx context.Context, userId string) error {
-	apiRes := c.Post(gtx, nil, "user", userId, "password/reset/init")
+	apiRes := c.Post(gtx, nil, "/api/v1/user", userId, "password/reset/init")
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err,
 			"failed to initialize password reset for user '%s'", userId)
@@ -68,7 +70,7 @@ func (c *IdxClient) ResetPassword(
 		"token":       token,
 		"newPassword": newPwd,
 	}
-	apiRes := c.Post(gtx, data, "user/password/reset")
+	apiRes := c.Post(gtx, data, "/api/v1/user/password/reset")
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to reset password of user '%s'", userId)
 	}
@@ -81,7 +83,8 @@ func (c *IdxClient) Approve(
 	role auth.Role,
 	groupIds ...int64) error {
 
-	apiRes := c.Post(gtx, groupIds, "user", userId, "approve", string(role))
+	apiRes := c.Post(gtx, groupIds,
+		"/api/v1/user", userId, "approve", string(role))
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to reset password of user '%s'", userId)
 	}
@@ -92,7 +95,7 @@ func (c *IdxClient) Login(
 	gtx context.Context, userId, password string) (*core.User, error) {
 
 	creds := auth.AuthData{}
-	apiRes := c.Post(gtx, creds, "authenticate")
+	apiRes := c.Post(gtx, creds, "/api/v1/authenticate")
 
 	authResult := struct {
 		User  *core.User `json:"user"`
@@ -105,16 +108,6 @@ func (c *IdxClient) Login(
 	c.SetUser(authResult.User).SetToken(authResult.Token)
 
 	return authResult.User, nil
-}
-
-func (c *IdxClient) GetPerms(
-	gtx context.Context, serviceId, userId int) ([]string, error) {
-	return nil, nil
-}
-
-func (c *IdxClient) AddService(
-	gtx context.Context, srv *core.Service) error {
-	return nil
 }
 
 func (c *IdxClient) AddGroup(
