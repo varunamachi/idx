@@ -7,10 +7,10 @@ const (
 	PermSetUserState     = "idx.setUserState"
 	PermModifyUserGroups = "idx.modifyUserGroups"
 
-	PermCreateGroup         = "idx.createGroup"
-	PermDeleteGroup         = "idx.deleteGroup"
-	PermGetGroup            = "idx.getGroup"
-	PermModifyGroupPermTree = "idx.modifyGroupPermTree"
+	PermCreateGroup     = "idx.createGroup"
+	PermDeleteGroup     = "idx.deleteGroup"
+	PermGetGroup        = "idx.getGroup"
+	PermModifyGroupPerm = "idx.modifyGroupPermTree"
 
 	PermCreateService         = "idx.createService"
 	PermServiceManageAdmins   = "idx.serviceManageAdmins"

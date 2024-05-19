@@ -17,9 +17,9 @@ func GroupEndpoints(gtx context.Context) []*httpx.Endpoint {
 	return []*httpx.Endpoint{
 		createGroupEp(gs),
 		updateGroupEp(gs),
-		getGroup(gs),
-		getGroups(gs),
-		deleteGroup(gs),
+		getGroupEp(gs),
+		getGroupsEp(gs),
+		deleteGroupEp(gs),
 	}
 }
 
@@ -71,7 +71,7 @@ func updateGroupEp(gs core.GroupController) *httpx.Endpoint {
 	}
 }
 
-func getGroup(gs core.GroupController) *httpx.Endpoint {
+func getGroupEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -98,7 +98,7 @@ func getGroup(gs core.GroupController) *httpx.Endpoint {
 	}
 }
 
-func getGroups(gs core.GroupController) *httpx.Endpoint {
+func getGroupsEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -124,7 +124,7 @@ func getGroups(gs core.GroupController) *httpx.Endpoint {
 	}
 }
 
-func deleteGroup(gs core.GroupController) *httpx.Endpoint {
+func deleteGroupEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -147,6 +147,120 @@ func deleteGroup(gs core.GroupController) *httpx.Endpoint {
 		Desc:        "Delete a group",
 		Version:     "v1",
 		Permissions: []string{core.PermDeleteGroup},
+		Handler:     handler,
+	}
+}
+
+func groupExistsEp(gs core.GroupController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+		prmg := httpx.NewParamGetter(etx)
+		id := prmg.Int64("id")
+		if prmg.HasError() {
+			return prmg.BadReqError()
+		}
+
+		group, err := gs.Exists(etx.Request().Context(), id)
+		if err != nil {
+			return err
+		}
+
+		return httpx.SendJSON(etx, group)
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.GET,
+		Path:        "/group/:id/exists",
+		Category:    "idx.group",
+		Desc:        "Check if a group exists",
+		Version:     "v1",
+		Permissions: []string{core.PermGetGroup},
+		Handler:     handler,
+	}
+}
+
+func getNumGroupsEp(gs core.GroupController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+		filter, err := rest.GetFilter(etx)
+		if err != nil {
+			return errx.BadReqX(err, "failed decode filter from request")
+		}
+
+		count, err := gs.Count(etx.Request().Context(), filter)
+		if err != nil {
+			return err
+		}
+
+		return httpx.SendJSON(etx, map[string]int64{
+			"count": count,
+		})
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.GET,
+		Path:        "/group/count",
+		Category:    "idx.group",
+		Desc:        "Get number of groups, selected by given filter",
+		Version:     "v1",
+		Permissions: []string{core.PermGetGroup},
+		Handler:     handler,
+	}
+}
+
+func setGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+
+		pmg := httpx.NewParamGetter(etx)
+		groupId := pmg.Int64("groupId")
+		if pmg.HasError() {
+			return pmg.BadReqError()
+		}
+
+		perms := make([]string, 0, 100)
+		if err := etx.Bind(&perms); err != nil {
+			return errx.BadReq("failed to read group info from request", err)
+		}
+
+		err := gs.SetPermissions(etx.Request().Context(), groupId, perms)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.PUT,
+		Path:        "/group/:groupId/perm",
+		Category:    "idx.group",
+		Desc:        "Set permissions for a group",
+		Version:     "v1",
+		Permissions: []string{core.PermModifyGroupPerm},
+		Handler:     handler,
+	}
+}
+
+func getGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+		prmg := httpx.NewParamGetter(etx)
+		id := prmg.Int64("groupId")
+		if prmg.HasError() {
+			return prmg.BadReqError()
+		}
+
+		perms, err := gs.GetPermissions(etx.Request().Context(), id)
+		if err != nil {
+			return err
+		}
+
+		return httpx.SendJSON(etx, perms)
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.GET,
+		Path:        "/group/:groupId/perm",
+		Category:    "idx.group",
+		Desc:        "Get permissions of a group",
+		Version:     "v1",
+		Permissions: []string{core.PermGetGroup},
 		Handler:     handler,
 	}
 }
