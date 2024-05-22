@@ -25,6 +25,14 @@ var Disabled UserState = "disabled"
 // Flagged - user account is flagged by a user
 var Flagged UserState = "flagged"
 
+var ValidUserStates = []UserState{
+	Created,
+	Verfied,
+	Active,
+	Disabled,
+	Flagged,
+}
+
 type User struct {
 	DbItem
 	UserId    string    `json:"userId" db:"user_id"`

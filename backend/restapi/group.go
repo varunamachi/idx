@@ -20,6 +20,10 @@ func GroupEndpoints(gtx context.Context) []*httpx.Endpoint {
 		getGroupEp(gs),
 		getGroupsEp(gs),
 		deleteGroupEp(gs),
+		groupExistsEp(gs),
+		getNumGroupsEp(gs),
+		setGroupPermissionsEp(gs),
+		getGroupPermissionsEp(gs),
 	}
 }
 

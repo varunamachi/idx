@@ -21,12 +21,17 @@ func UserEndpoints(gtx context.Context) []*httpx.Endpoint {
 		registerUserEp(us),
 		verifyUserEp(us),
 		updateUserEp(us),
-		getUser(us),
-		getUsers(us),
-		deleteUser(us),
+		getUserEp(us),
+		getUserByUserIdEp(us),
+		getUsersEp(us),
+		deleteUserEp(us),
 		updatePasswordEp(us),
 		initPasswordResetEp(us),
 		resetPasswordEp(us),
+		approveEp(us),
+		setStateEp(us),
+		userExistsEp(us),
+		userCountEp(us),
 	}
 }
 
@@ -103,7 +108,7 @@ func updateUserEp(us core.UserController) *httpx.Endpoint {
 	}
 }
 
-func getUser(us core.UserController) *httpx.Endpoint {
+func getUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -130,7 +135,34 @@ func getUser(us core.UserController) *httpx.Endpoint {
 	}
 }
 
-func getUsers(us core.UserController) *httpx.Endpoint {
+func getUserByUserIdEp(us core.UserController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+		prmg := httpx.NewParamGetter(etx)
+		id := prmg.Str("id")
+		if prmg.HasError() {
+			return prmg.BadReqError()
+		}
+
+		user, err := us.GetByUserId(etx.Request().Context(), id)
+		if err != nil {
+			return err
+		}
+
+		return httpx.SendJSON(etx, user)
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.GET,
+		Path:        "/user/strid/:id",
+		Category:    "idx.user",
+		Desc:        "Get info for a user identified by string id",
+		Version:     "v1",
+		Permissions: []string{core.PermGetUser},
+		Handler:     handler,
+	}
+}
+
+func getUsersEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -156,7 +188,7 @@ func getUsers(us core.UserController) *httpx.Endpoint {
 	}
 }
 
-func deleteUser(us core.UserController) *httpx.Endpoint {
+func deleteUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -314,6 +346,93 @@ func approveEp(us core.UserController) *httpx.Endpoint {
 		Desc:        "Approve a user with appropriate role",
 		Version:     "v1",
 		Permissions: []string{core.PermSetUserState},
+		Handler:     handler,
+	}
+}
+
+func setStateEp(us core.UserController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+
+		pmg := httpx.NewParamGetter(etx)
+		user := pmg.Int64("user")
+		state := core.UserState(pmg.Str("state"))
+
+		if !data.OneOf(state, core.ValidUserStates...) {
+			return errx.BadReq("invalid user state '%s' provided", state)
+		}
+
+		err := us.SetState(etx.Request().Context(), user, state)
+		if err != nil {
+			return err
+		}
+
+		return etx.String(http.StatusOK, string(state))
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.PUT,
+		Path:        "/user/:user/state/:state",
+		Category:    "idx.user",
+		Desc:        "Approve a user with appropriate role",
+		Version:     "v1",
+		Permissions: []string{core.PermSetUserState},
+		Handler:     handler,
+	}
+}
+
+func userExistsEp(us core.UserController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+		prmg := httpx.NewParamGetter(etx)
+		id := prmg.Str("userId")
+		if prmg.HasError() {
+			return prmg.BadReqError()
+		}
+
+		res, err := us.Exists(etx.Request().Context(), id)
+		if err != nil {
+			return err
+		}
+
+		return httpx.SendJSON(etx, map[string]bool{
+			"exists": res,
+		})
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.GET,
+		Path:        "/user/:userId/exists",
+		Category:    "idx.user",
+		Desc:        "Check if an user exists",
+		Version:     "v1",
+		Permissions: []string{core.PermGetUser},
+		Handler:     handler,
+	}
+}
+
+func userCountEp(us core.UserController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+		filter, err := rest.GetFilter(etx)
+		if err != nil {
+			return err
+		}
+
+		res, err := us.Count(etx.Request().Context(), filter)
+		if err != nil {
+			return err
+		}
+
+		return httpx.SendJSON(etx, map[string]int64{
+			"count": res,
+		})
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.GET,
+		Path:        "/user/count",
+		Category:    "idx.user",
+		Desc:        "Get user list",
+		Version:     "v1",
+		Permissions: []string{core.PermGetUser},
 		Handler:     handler,
 	}
 }

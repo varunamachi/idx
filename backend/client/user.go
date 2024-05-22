@@ -5,6 +5,7 @@ import (
 
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/auth"
+	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 )
@@ -116,13 +117,89 @@ func (c *IdxClient) Login(
 	return authResult.User, nil
 }
 
-func (c *IdxClient) AddGroup(
-	gtx context.Context, srv int64, gp *core.Group) error {
-	// TODO - implement
+// func (c *IdxClient) AddGroup(
+// 	gtx context.Context, srv int64, gp *core.Group) error {
+// 	// TODO - implement
+// 	return nil
+// }
+
+// func (c *IdxClient) AddUserToGroup(
+//		gtx context.Context, uid, gid int64) error {
+// 	// TODO - implement
+// 	return nil
+// }
+
+func (c *IdxClient) UpdateUser(gtx context.Context, user *core.User) error {
+	apiRes := c.Build().Path("/user").Put(gtx, user)
+	if err := apiRes.Close(); err != nil {
+		return errx.Errf(err, "failed to update user: '%s'", user.UserId)
+	}
 	return nil
 }
 
-func (c *IdxClient) AddUserToGroup(gtx context.Context, uid, gid int64) error {
-	// TODO - implement
+func (c *IdxClient) GetUser(
+	gtx context.Context, id int64) (*core.User, error) {
+	var user core.User
+	apiRes := c.Build().Path("/user", id).Get(gtx)
+	if err := apiRes.LoadClose(&user); err != nil {
+		return nil, errx.Errf(err, "failed to get user '%d'", id)
+	}
+	return &user, nil
+}
+
+func (c *IdxClient) GetByUserId(
+	gtx context.Context, id string) (*core.User, error) {
+	var user core.User
+	apiRes := c.Build().Path("/user/strid/", id).Get(gtx)
+	if err := apiRes.LoadClose(&user); err != nil {
+		return nil, errx.Errf(err, "failed to get user '%d'", id)
+	}
+	return &user, nil
+}
+
+func (c *IdxClient) SetUserState(
+	gtx context.Context, id int64, state core.UserState) error {
+	apiRes := c.Build().Path("/user", id, "state", state).Put(gtx, nil)
+	if err := apiRes.Close(); err != nil {
+		return errx.Errf(err,
+			"failed to set state '%s' for user '%d'", id, state)
+	}
 	return nil
+}
+
+func (c *IdxClient) RemoveUser(gtx context.Context, id int64) error {
+	apiRes := c.Build().Path("/user", id).Delete(gtx)
+	if err := apiRes.Close(); err != nil {
+		return errx.Errf(err, "failed to delete user '%d'", id)
+	}
+	return nil
+}
+
+func (c *IdxClient) GetUsers(
+	gtx context.Context, params *data.CommonParams) ([]*core.User, error) {
+	apiRes := c.Build().Path("/user").CmnParam(params).Get(gtx)
+	users := make([]*core.User, 0, params.PageSize)
+	if err := apiRes.LoadClose(&users); err != nil {
+		return nil, errx.Errf(err, "failed to get user list")
+	}
+	return users, nil
+}
+
+func (c *IdxClient) UserExists(gtx context.Context, id string) (bool, error) {
+	apiRes := c.Build().Path("/user", id, "exists").Get(gtx)
+	res := map[string]bool{"exists": false}
+	if err := apiRes.LoadClose(&res); err != nil {
+		return false, errx.Errf(err, "failed to check if user exists: '%s'", id)
+	}
+	return res["exists"], nil
+}
+
+func (c *IdxClient) UserCount(
+	gtx context.Context, filter *data.Filter) (int64, error) {
+	apiRes := c.Build().Path("/user").Filter(filter).Get(gtx)
+	res := map[string]int64{"count": 0}
+	if err := apiRes.LoadClose(&res); err != nil {
+		return 0, errx.Errf(err, "failed to get user count for filter")
+	}
+	return res["count"], nil
 }

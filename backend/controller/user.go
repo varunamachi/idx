@@ -384,7 +384,8 @@ func (uc *userCtl) Exists(gtx context.Context, id string) (bool, error) {
 	return out, err
 }
 
-func (uc *userCtl) Count(gtx context.Context, filter *data.Filter) (int64, error) {
+func (uc *userCtl) Count(
+	gtx context.Context, filter *data.Filter) (int64, error) {
 	out, err := uc.ustore.Count(gtx, filter)
 	if err != nil {
 		core.NewEventAdder(gtx, "user.count", data.M{"filter": filter}).
