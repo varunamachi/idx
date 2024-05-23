@@ -120,3 +120,9 @@ func (c *IdxClient) GetGroupPermissions(
 	}
 	return perms, nil
 }
+
+func (c *IdxClient) AddUserToGroup(
+	gtx context.Context, uid, gid int64) error {
+	// TODO - implement
+	return nil
+}

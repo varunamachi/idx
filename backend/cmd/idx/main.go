@@ -38,7 +38,8 @@ func main() {
 	authr := idxAuth.NewAuthenticator(credStorage)
 	uctlr := controller.NewUserController(userStore, credStorage, emailProvider)
 	gctlr := controller.NewGroupController(groupStore, serviceStore)
-	sctlr := controller.NewServiceController(serviceStore)
+	sctlr := controller.NewServiceController(
+		serviceStore, userStore, groupStore)
 
 	gtx = core.NewContext(gtx, &core.Services{
 		UserCtlr:      uctlr,

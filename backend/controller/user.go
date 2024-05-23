@@ -168,9 +168,9 @@ func (uc *userCtl) Approve(
 		return ev.Commit(errx.Errf(err, "failed to approve user"))
 	}
 
-	if err := uc.ustore.AddToGroups(gtx, user.SeqId(), groups...); err != nil {
-		return ev.Commit(errx.Errf(err, "failed to approve user with groups"))
-	}
+	// if err := uc.ustore.AddToGroups(gtx, user.SeqId(), groups...); err != nil {
+	// 	return ev.Commit(errx.Errf(err, "failed to approve user with groups"))
+	// }
 
 	// mt, err := mailtmpl.UserAccountApprovedTemplate()
 	// if err != nil {
@@ -343,36 +343,6 @@ func (uc *userCtl) Get(
 			Commit(err)
 	}
 	return out, err
-}
-
-func (uc *userCtl) AddToGroups(
-	gtx context.Context, userId int64, groupId ...int64) error {
-	err := uc.ustore.AddToGroups(gtx, userId, groupId...)
-	return core.NewEventAdder(gtx, "user.addToGroup", data.M{
-		"userId":  userId,
-		"groupId": groupId,
-	}).Commit(err)
-}
-
-func (uc *userCtl) RemoveFromGroup(
-	gtx context.Context, userId, groupId int64) error {
-	err := uc.ustore.RemoveFromGroup(gtx, userId, groupId)
-	return core.NewEventAdder(gtx, "user.removeFromGroup", data.M{
-		"userId":  userId,
-		"groupId": groupId,
-	}).Commit(err)
-}
-
-func (uc *userCtl) GetPermissionForService(
-	gtx context.Context, userId, serviceId int64) ([]string, error) {
-	perms, err := uc.ustore.GetPermissionForService(gtx, userId, serviceId)
-	if err != nil {
-		core.NewEventAdder(gtx, "user.getPerms", data.M{
-			"userId":    userId,
-			"serviceId": serviceId,
-		}).Commit(err)
-	}
-	return perms, err
 }
 
 func (uc *userCtl) Exists(gtx context.Context, id string) (bool, error) {

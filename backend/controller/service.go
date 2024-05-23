@@ -11,11 +11,15 @@ import (
 
 // TODO - implement
 type svcCtl struct {
-	srvStore  core.ServiceStorage
-	userStore core.UserStorage
+	srvStore   core.ServiceStorage
+	userStore  core.UserStorage
+	groupStore core.GroupStorage
 }
 
-func NewServiceController(ss core.ServiceStorage) core.ServiceController {
+func NewServiceController(
+	ss core.ServiceStorage,
+	us core.UserStorage,
+	gs core.GroupStorage) core.ServiceController {
 	return &svcCtl{
 		srvStore: ss,
 	}
@@ -174,7 +178,7 @@ func (sc *svcCtl) AddAdmin(
 			"user '%s' is not authorized modify service admin list")
 	}
 
-	perms, err := sc.userStore.GetPermissionForService(gtx, userId, serviceId)
+	perms, err := sc.groupStore.GetPermissionForService(gtx, userId, serviceId)
 	if err != nil {
 		return ev.Commit(err)
 	}

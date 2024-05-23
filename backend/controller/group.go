@@ -153,3 +153,33 @@ func (gc *groupCtl) GetPermissions(
 	}
 	return perms, nil
 }
+
+func (gc *groupCtl) AddToGroups(
+	gtx context.Context, userId int64, groupId ...int64) error {
+	err := gc.gstore.AddToGroups(gtx, userId, groupId...)
+	return core.NewEventAdder(gtx, "user.addToGroup", data.M{
+		"userId":  userId,
+		"groupId": groupId,
+	}).Commit(err)
+}
+
+func (gc *groupCtl) RemoveFromGroup(
+	gtx context.Context, userId, groupId int64) error {
+	err := gc.gstore.RemoveFromGroup(gtx, userId, groupId)
+	return core.NewEventAdder(gtx, "user.removeFromGroup", data.M{
+		"userId":  userId,
+		"groupId": groupId,
+	}).Commit(err)
+}
+
+func (gc *groupCtl) GetPermissionForService(
+	gtx context.Context, userId, serviceId int64) ([]string, error) {
+	perms, err := gc.gstore.GetPermissionForService(gtx, userId, serviceId)
+	if err != nil {
+		core.NewEventAdder(gtx, "user.getPerms", data.M{
+			"userId":    userId,
+			"serviceId": serviceId,
+		}).Commit(err)
+	}
+	return perms, err
+}

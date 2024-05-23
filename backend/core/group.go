@@ -27,6 +27,11 @@ type GroupStorage interface {
 
 	SetPermissions(gtx context.Context, groupId int64, perms []string) error
 	GetPermissions(gtx context.Context, groupId int64) ([]string, error)
+
+	AddToGroups(gtx context.Context, userId int64, groupIds ...int64) error
+	RemoveFromGroup(gtx context.Context, userId, groupId int64) error
+	GetPermissionForService(
+		gtx context.Context, userId, serviceId int64) ([]string, error)
 }
 
 type GroupController interface {

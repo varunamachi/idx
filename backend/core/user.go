@@ -108,10 +108,6 @@ type UserStorage interface {
 	SetState(gtx context.Context, id int64, state UserState) error
 	Remove(gtx context.Context, id int64) error
 	Get(gtx context.Context, params *data.CommonParams) ([]*User, error)
-	AddToGroups(gtx context.Context, userId int64, groupIds ...int64) error
-	RemoveFromGroup(gtx context.Context, userId, groupId int64) error
-	GetPermissionForService(
-		gtx context.Context, userId, serviceId int64) ([]string, error)
 
 	Exists(gtx context.Context, id string) (bool, error)
 	Count(gtx context.Context, filter *data.Filter) (int64, error)

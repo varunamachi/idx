@@ -117,18 +117,6 @@ func (c *IdxClient) Login(
 	return authResult.User, nil
 }
 
-// func (c *IdxClient) AddGroup(
-// 	gtx context.Context, srv int64, gp *core.Group) error {
-// 	// TODO - implement
-// 	return nil
-// }
-
-// func (c *IdxClient) AddUserToGroup(
-//		gtx context.Context, uid, gid int64) error {
-// 	// TODO - implement
-// 	return nil
-// }
-
 func (c *IdxClient) UpdateUser(gtx context.Context, user *core.User) error {
 	apiRes := c.Build().Path("/user").Put(gtx, user)
 	if err := apiRes.Close(); err != nil {
