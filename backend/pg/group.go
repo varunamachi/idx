@@ -220,29 +220,3 @@ func (pgs *groupPgStorage) RemoveFromGroup(
 	}
 	return nil
 }
-
-func (pgs *groupPgStorage) GetPermissionForService(
-	gtx context.Context, userId, serviceId int64) ([]string, error) {
-	query := `
-		SELECT
-			perm_id
-		FROM group_to_perm g2p
-		JOIN idx_group g ON g.id = g2p.group_id
-		JOIN user_to_group u2g ON g.id = u2g.group_id
-		JOIN idx_user u ON u.id = u2g.id
-		JOIN service_to_group s2g ON s2g.group_id = g.id
-		WHERE u.user_id = $1 AND s2g.service_id = $2
-	`
-
-	perms := make([]string, 0, 50)
-	err := pg.Conn().SelectContext(gtx, &perms, query, userId, serviceId)
-	if err != nil {
-		return nil,
-			errx.Errf(
-				err,
-				"failed to get permissions of user '%s' for service '%s'",
-				userId, serviceId)
-
-	}
-	return perms, nil
-}

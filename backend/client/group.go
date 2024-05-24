@@ -126,3 +126,9 @@ func (c *IdxClient) AddUserToGroup(
 	// TODO - implement
 	return nil
 }
+
+func (c *IdxClient) RemoveUserFromGroup(
+	gtx context.Context, uid, gid int64) error {
+	// TODO - implement
+	return nil
+}

@@ -181,3 +181,9 @@ func (c *IdxClient) IsServiceAdmin(
 	}
 	return out["isAdmin"], nil
 }
+
+func (c *IdxClient) GetUserPermsForService(
+	gtx context.Context, serviceId, userId int64) ([]string, error) {
+	// TODO - implement
+	return nil, nil
+}

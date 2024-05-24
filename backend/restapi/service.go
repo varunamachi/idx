@@ -28,6 +28,7 @@ func ServiceEndpoints(gtx context.Context) []*httpx.Endpoint {
 		removeAdminFromServiceEp(ss),
 		getServiceAdminsEp(ss),
 		isServiceAdminEp(ss),
+		getPermissionsForService(ss),
 	}
 }
 
@@ -367,6 +368,35 @@ func isServiceAdminEp(ss core.ServiceController) *httpx.Endpoint {
 		Path:        "/service/:service/admin/:user/exists",
 		Category:    "idx.service",
 		Desc:        "Check if user is an admin of a service",
+		Version:     "v1",
+		Permissions: []string{core.PermGetService},
+		Handler:     handler,
+	}
+}
+
+func getPermissionsForService(gs core.ServiceController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+		prmg := httpx.NewParamGetter(etx)
+		userId := prmg.Int64("userId")
+		serviceId := prmg.Int64("serviceId")
+		if prmg.HasError() {
+			return prmg.BadReqError()
+		}
+
+		perms, err := gs.GetPermissionForService(
+			etx.Request().Context(), userId, serviceId)
+		if err != nil {
+			return err
+		}
+
+		return httpx.SendJSON(etx, perms)
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.GET,
+		Path:        "/service/:serviceId/perms/:userId",
+		Category:    "idx.service",
+		Desc:        "Get permissions of a service for a user",
 		Version:     "v1",
 		Permissions: []string{core.PermGetService},
 		Handler:     handler,

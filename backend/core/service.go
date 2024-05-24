@@ -31,6 +31,9 @@ type ServiceStorage interface {
 
 	Exists(gtx context.Context, name string) (bool, error)
 	Count(gtx context.Context, filter *data.Filter) (int64, error)
+
+	GetPermissionForService(
+		gtx context.Context, userId, serviceId int64) ([]string, error)
 }
 
 type ServiceController interface {

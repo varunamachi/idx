@@ -171,15 +171,3 @@ func (gc *groupCtl) RemoveFromGroup(
 		"groupId": groupId,
 	}).Commit(err)
 }
-
-func (gc *groupCtl) GetPermissionForService(
-	gtx context.Context, userId, serviceId int64) ([]string, error) {
-	perms, err := gc.gstore.GetPermissionForService(gtx, userId, serviceId)
-	if err != nil {
-		core.NewEventAdder(gtx, "user.getPerms", data.M{
-			"userId":    userId,
-			"serviceId": serviceId,
-		}).Commit(err)
-	}
-	return perms, err
-}

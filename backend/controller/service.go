@@ -178,7 +178,7 @@ func (sc *svcCtl) AddAdmin(
 			"user '%s' is not authorized modify service admin list")
 	}
 
-	perms, err := sc.groupStore.GetPermissionForService(gtx, userId, serviceId)
+	perms, err := sc.srvStore.GetPermissionForService(gtx, userId, serviceId)
 	if err != nil {
 		return ev.Commit(err)
 	}
@@ -232,4 +232,16 @@ func (sc *svcCtl) IsAdmin(
 		}).Commit(err)
 	}
 	return isAdmin, nil
+}
+
+func (gc *svcCtl) GetPermissionForService(
+	gtx context.Context, userId, serviceId int64) ([]string, error) {
+	perms, err := gc.srvStore.GetPermissionForService(gtx, userId, serviceId)
+	if err != nil {
+		core.NewEventAdder(gtx, "user.getPerms", data.M{
+			"userId":    userId,
+			"serviceId": serviceId,
+		}).Commit(err)
+	}
+	return perms, err
 }

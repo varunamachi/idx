@@ -24,6 +24,8 @@ func GroupEndpoints(gtx context.Context) []*httpx.Endpoint {
 		getNumGroupsEp(gs),
 		setGroupPermissionsEp(gs),
 		getGroupPermissionsEp(gs),
+		addUserToGroups(gs),
+		removeUserFromGroup(gs),
 	}
 }
 
@@ -265,6 +267,66 @@ func getGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
 		Desc:        "Get permissions of a group",
 		Version:     "v1",
 		Permissions: []string{core.PermGetGroup},
+		Handler:     handler,
+	}
+}
+
+func addUserToGroups(gs core.GroupController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+
+		pmg := httpx.NewParamGetter(etx)
+		userId := pmg.Int64("userId")
+		if pmg.HasError() {
+			return pmg.BadReqError()
+		}
+
+		groupIds := make([]int64, 0, 100)
+		if err := etx.Bind(&groupIds); err != nil {
+			return errx.BadReq("failed to read group info from request", err)
+		}
+
+		err := gs.AddToGroups(etx.Request().Context(), userId, groupIds...)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.PUT,
+		Path:        "/group/:userId",
+		Category:    "idx.group",
+		Desc:        "Add user to ne or more groups",
+		Version:     "v1",
+		Permissions: []string{core.PermModifyGroupPerm},
+		Handler:     handler,
+	}
+}
+
+func removeUserFromGroup(gs core.GroupController) *httpx.Endpoint {
+	handler := func(etx echo.Context) error {
+		prmg := httpx.NewParamGetter(etx)
+		groupId := prmg.Int64("groupId")
+		userId := prmg.Int64("userId")
+		if prmg.HasError() {
+			return prmg.BadReqError()
+		}
+
+		err := gs.RemoveFromGroup(etx.Request().Context(), userId, groupId)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return &httpx.Endpoint{
+		Method:      echo.DELETE,
+		Path:        "/group/:groupId/:userId",
+		Category:    "idx.group",
+		Desc:        "Delete a group",
+		Version:     "v1",
+		Permissions: []string{core.PermDeleteGroup},
 		Handler:     handler,
 	}
 }

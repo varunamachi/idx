@@ -5,8 +5,8 @@ go 1.22
 require (
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/pressly/goose/v3 v3.20.0
-	github.com/rs/zerolog v1.32.0
-	github.com/varunamachi/libx v0.0.0-20240420164813-38cdf9c50f99
+	github.com/rs/zerolog v1.33.0
+	github.com/varunamachi/libx v0.0.0-20240521161106-84b4252757ec
 )
 
 require golang.org/x/term v0.20.0 // indirect
@@ -32,7 +32,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xhit/go-simple-mail/v2 v2.16.0 // indirect
-	github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 // indirect
+	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.23.0
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect

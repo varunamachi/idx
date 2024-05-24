@@ -164,18 +164,3 @@ func (pgu *userPgStorage) Count(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	return pgu.gd.Count(gtx, "idx_user", filter)
 }
-
-// func (us *UserStorage) SetPassword(userId, password string) error {
-// 	// TODO - implement
-// 	return nil
-// }
-
-// func (us *UserStorage) UpdatePassword(userId, oldPw, newPw string) error {
-// 	// TODO - implement
-// 	return nil
-// }
-
-// func (us *UserStorage) Verify(userId, password string) error {
-// 	// TODO - implement
-// 	return nil
-// }
