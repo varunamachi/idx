@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 	"github.com/varunamachi/libx/utils/rest"
@@ -39,10 +40,11 @@ func createServiceEp(ss core.ServiceController) *httpx.Endpoint {
 			return errx.BadReq("failed to read service info from request", err)
 		}
 
-		if err := ss.Save(etx.Request().Context(), &service); err != nil {
+		serviceId, err := ss.Save(etx.Request().Context(), &service)
+		if err != nil {
 			return err
 		}
-		return nil
+		return httpx.SendJSON(etx, data.M{"serviceId": serviceId})
 	}
 
 	return &httpx.Endpoint{

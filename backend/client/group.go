@@ -10,13 +10,15 @@ import (
 
 func (c *IdxClient) CreateGroup(
 	gtx context.Context,
-	group *core.Group) error {
+	group *core.Group) (int64, error) {
 	// apiRes := c.Post(gtx, group, "/api/v1/group")
 	apiRes := c.Build().Path("/api/v1/group").Post(gtx, group)
-	if err := apiRes.Close(); err != nil {
-		return errx.Errf(err, "failed to create group: '%s'", group.Name)
+
+	res := map[string]int64{"groupId": int64(-1)}
+	if err := apiRes.LoadClose(&res); err != nil {
+		return -1, errx.Errf(err, "failed to create group: '%s'", group.Name)
 	}
-	return nil
+	return res["groupId"], nil
 }
 
 func (c *IdxClient) UpdateGroup(gtx context.Context, group *core.Group) error {

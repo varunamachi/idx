@@ -101,7 +101,7 @@ type UserWithPassword struct {
 }
 
 type UserStorage interface {
-	Save(gtx context.Context, user *User) error
+	Save(gtx context.Context, user *User) (int64, error)
 	Update(gtx context.Context, user *User) error
 	GetOne(gtx context.Context, id int64) (*User, error)
 	GetByUserId(gtx context.Context, id string) (*User, error)
@@ -119,7 +119,7 @@ type UserController interface {
 	Storage() UserStorage
 	CredentialStorage() SecretStorage
 
-	Register(gtx context.Context, user *User, password string) error
+	Register(gtx context.Context, user *User, password string) (int64, error)
 	Verify(gtx context.Context, userId, verToken string) error
 	Approve(gtx context.Context,
 		userId string,

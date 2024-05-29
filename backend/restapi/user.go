@@ -42,11 +42,12 @@ func registerUserEp(us core.UserController) *httpx.Endpoint {
 			return errx.BadReq("failed to read user info from request", err)
 		}
 
-		err := us.Register(etx.Request().Context(), up.User, up.Password)
+		userId, err := us.Register(
+			etx.Request().Context(), up.User, up.Password)
 		if err != nil {
 			return err
 		}
-		return nil
+		return httpx.SendJSON(etx, data.M{"userId": userId})
 	}
 
 	return &httpx.Endpoint{

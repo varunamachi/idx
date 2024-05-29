@@ -20,7 +20,7 @@ func NewServiceStorage(gd data.GetterDeleter) core.ServiceStorage {
 }
 
 func (pss *svcPgStorage) Save(
-	gtx context.Context, service *core.Service) error {
+	gtx context.Context, service *core.Service) (int64, error) {
 	query := `
 		INSERT INTO idx_service (
 			created_by,
@@ -36,20 +36,32 @@ func (pss *svcPgStorage) Save(
 			:owner_id,
 			:display_name,
 			:permissions	
-		) ON CONFLICT (user_id) DO UPDATE SET
+		) ON CONFLICT (id) DO UPDATE SET
 				created_by = EXCLUDED.created_by,
 				updated_by = EXCLUDED.updated_by,
 				name = EXCLUDED.name,
 				owner_id = EXCLUDED.owner_id,
 				display_name = EXCLUDED.display_name,
 				permissions = EXCLUDED.permissions
+		RETURNING id;
 	`
-	if _, err := pg.Conn().NamedExecContext(gtx, query, service); err != nil {
-		return errx.Errf(
-			err, "failed to insert service '%s' to database", service.Id)
+
+	stmt, err := pg.Conn().PrepareNamed(query)
+	if err != nil {
+		return -1, errx.Errf(err, "failed to prepare query to save service")
 	}
 
-	return nil
+	var id int64
+	if err = stmt.GetContext(gtx, &id, service); err != nil {
+		return -1, errx.Errf(err,
+			"failed to insert service '%s' to database", service.Id)
+	}
+	return id, nil
+
+	// if _, err := pg.Conn().NamedExecContext(gtx, query, service); err != nil {
+	// 	return -1, errx.Errf(
+	// 		err, "failed to insert service '%s' to database", service.Id)
+	// }
 }
 
 func (pss *svcPgStorage) Update(

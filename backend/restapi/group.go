@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 	"github.com/varunamachi/libx/utils/rest"
@@ -36,10 +37,13 @@ func createGroupEp(gs core.GroupController) *httpx.Endpoint {
 			return errx.BadReq("failed to read group info from request", err)
 		}
 
-		if err := gs.Save(etx.Request().Context(), &group); err != nil {
+		id, err := gs.Save(etx.Request().Context(), &group)
+		if err != nil {
 			return err
 		}
-		return nil
+		return httpx.SendJSON(etx, data.M{
+			"groupId": id,
+		})
 	}
 
 	return &httpx.Endpoint{

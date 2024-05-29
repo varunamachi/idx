@@ -16,7 +16,7 @@ type Group struct {
 }
 
 type GroupStorage interface {
-	Save(gtx context.Context, group *Group) error
+	Save(gtx context.Context, group *Group) (int64, error)
 	Update(gtx context.Context, group *Group) error
 	GetOne(gtx context.Context, id int64) (*Group, error)
 	Remove(gtx context.Context, id int64) error
@@ -36,5 +36,6 @@ type GroupController interface {
 	GroupStorage
 
 	Storage() GroupStorage
-	SaveWithPerms(gtx context.Context, group *Group, perms []string) error
+	SaveWithPerms(
+		gtx context.Context, group *Group, perms []string) (int64, error)
 }

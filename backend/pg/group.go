@@ -21,9 +21,10 @@ func NewGroupStorage(gd data.GetterDeleter) core.GroupStorage {
 	}
 }
 
-func (pgs groupPgStorage) Save(gtx context.Context, group *core.Group) error {
+func (pgs groupPgStorage) Save(
+	gtx context.Context, group *core.Group) (int64, error) {
 	query := `
-		INSERT INTO idx_user (
+		INSERT INTO idx_group (
 			created_by,
 			updated_by,
 			service_id,
@@ -37,21 +38,33 @@ func (pgs groupPgStorage) Save(gtx context.Context, group *core.Group) error {
 			:name,
 			:display_name,
 			:description
-		) ON CONFLICT (user_id) DO UPDATE SET
+		) ON CONFLICT (id) DO UPDATE SET
 				created_by = EXCLUDED.created_by,
 				updated_by = EXCLUDED.updated_by,
 				service_id = EXCLUDED.service_id,
 				name = EXCLUDED.name,
 				display_name = EXCLUDED.display_name,
 				description = EXCLUDED.description
+		RETURNING id;
 	`
 
-	if _, err := pg.Conn().NamedExecContext(gtx, query, group); err != nil {
-		return errx.Errf(
-			err, "failed to insert user '%s' to database", group.Id)
+	stmt, err := pg.Conn().PrepareNamed(query)
+	if err != nil {
+		return -1, errx.Errf(err, "failed to prepare query to save group")
 	}
 
-	return nil
+	var id int64
+	if err = stmt.GetContext(gtx, &id, group); err != nil {
+		return -1, errx.Errf(
+			err, "failed to insert group '%s' to database", group.Id)
+	}
+	return id, nil
+
+	// if _, err := pg.Conn().NamedExecContext(gtx, query, group); err != nil {
+	// 	return -1, errx.Errf(
+	// 		err, "failed to insert user '%s' to database", group.Id)
+	// }
+	// return 0, nil
 }
 
 func (pgs groupPgStorage) Update(gtx context.Context, group *core.Group) error {

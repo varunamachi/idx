@@ -27,46 +27,49 @@ func (gc *groupCtl) Storage() core.GroupStorage {
 
 func (gc *groupCtl) Save(
 	gtx context.Context,
-	group *core.Group) error {
+	group *core.Group) (int64, error) {
 
 	ev := core.NewEventAdder(gtx, "group.save", data.M{
 		"group": group,
 	})
-	if err := gc.gstore.Save(gtx, group); err != nil {
-		return ev.Commit(err)
+	id, err := gc.gstore.Save(gtx, group)
+	if err != nil {
+		return id, ev.Commit(err)
 	}
 
 	// if err := gc.gstore.SetPermissions(gtx, group.Id, perms); err != nil {
 	// 	return ev.Commit(err)
 	// }
 
-	return ev.Commit(nil)
+	return id, ev.Commit(nil)
 }
 
 func (gc *groupCtl) SaveWithPerms(
 	gtx context.Context,
 	group *core.Group,
-	perms []string) error {
+	perms []string) (int64, error) {
 
 	ev := core.NewEventAdder(gtx, "group.save", data.M{
 		"group": group,
 	})
-	if err := gc.gstore.Save(gtx, group); err != nil {
-		return ev.Commit(err)
+
+	id, err := gc.gstore.Save(gtx, group)
+	if err != nil {
+		return id, ev.Commit(err)
 	}
 
 	if err := gc.gstore.SetPermissions(gtx, group.Id, perms); err != nil {
-		return ev.Commit(err)
+		return id, ev.Commit(err)
 	}
 
-	return ev.Commit(nil)
+	return id, ev.Commit(nil)
 }
 
 func (gc *groupCtl) Update(gtx context.Context, group *core.Group) error {
 	ev := core.NewEventAdder(gtx, "group.update", data.M{
 		"group": group,
 	})
-	if err := gc.gstore.Save(gtx, group); err != nil {
+	if err := gc.gstore.Update(gtx, group); err != nil {
 		return ev.Commit(err)
 	}
 	return ev.Commit(nil)

@@ -12,7 +12,6 @@ import (
 
 type IdxClient struct {
 	*httpx.Client
-	user *core.User
 }
 
 func New(address string) *IdxClient {
@@ -21,14 +20,20 @@ func New(address string) *IdxClient {
 	}
 }
 
+func (c *IdxClient) CurrentUser() *core.User {
+	return c.User().(*core.User)
+}
+
 func (c *IdxClient) Register(
-	gtx context.Context, user *core.User, password string) error {
+	gtx context.Context, user *core.User, password string) (int64, error) {
 	up := core.UserWithPassword{User: user, Password: password}
+
+	res := map[string]int64{"userId": int64(-1)}
 	apiRes := c.Build().Path("/api/v1/user").Post(gtx, up)
-	if err := apiRes.Close(); err != nil {
-		return errx.Errf(err, "failed to register user")
+	if err := apiRes.LoadClose(&res); err != nil {
+		return -1, errx.Errf(err, "failed to register user")
 	}
-	return nil
+	return res["userId"], nil
 
 }
 

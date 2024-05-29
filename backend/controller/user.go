@@ -42,18 +42,18 @@ func (uc *userCtl) CredentialStorage() core.SecretStorage {
 }
 
 func (uc *userCtl) Register(
-	gtx context.Context, user *core.User, password string) error {
+	gtx context.Context, user *core.User, password string) (int64, error) {
 
 	evAdder := core.NewEventAdder(gtx, "user.register", data.M{
 		"user": user,
 	})
 	exists, err := uc.ustore.Exists(gtx, user.UserId)
 	if err != nil {
-		return evAdder.Commit(err)
+		return -1, evAdder.Commit(err)
 	}
 	if exists {
 		err = errx.Errf(core.ErrEntityExists, "user '%s' exists", user.UserId)
-		return evAdder.Commit(err)
+		return -1, evAdder.Commit(err)
 	}
 
 	// Enable configured super user immediately
@@ -66,8 +66,9 @@ func (uc *userCtl) Register(
 		user.AuthzRole = auth.Normal
 	}
 
-	if err := uc.ustore.Save(gtx, user); err != nil {
-		return evAdder.Commit(err)
+	id, err := uc.ustore.Save(gtx, user)
+	if err != nil {
+		return id, evAdder.Commit(err)
 	}
 
 	creds := &core.Creds{
@@ -76,13 +77,13 @@ func (uc *userCtl) Register(
 		Type:     "user",
 	}
 	if err := uc.credStore.SetPassword(gtx, creds); err != nil {
-		return evAdder.Commit(err)
+		return id, evAdder.Commit(err)
 	}
 
 	tok := core.NewToken(user.UserId, "verfiy_account", "idx_user")
 	if err := uc.credStore.StoreToken(gtx, tok); err != nil {
 		err = errx.Errf(err, "failed to store user verification token")
-		return evAdder.Commit(err)
+		return id, evAdder.Commit(err)
 	}
 
 	// mailTemplate, err := mailtmpl.UserAccountVerificationTemplate()
@@ -99,10 +100,10 @@ func (uc *userCtl) Register(
 			"url": verificationUrl,
 		})
 	if err != nil {
-		return evAdder.Commit(err)
+		return id, evAdder.Commit(err)
 	}
 
-	return evAdder.Commit(nil)
+	return id, evAdder.Commit(nil)
 }
 
 func (uc *userCtl) Verify(
@@ -284,10 +285,10 @@ func (uc *userCtl) UpdatePassword(gtx context.Context,
 	return evtAdder.Commit(nil)
 }
 
-func (uc *userCtl) Save(gtx context.Context, user *core.User) error {
+func (uc *userCtl) Save(gtx context.Context, user *core.User) (int64, error) {
 	adr := core.NewEventAdder(gtx, "user.save", data.M{"user": user})
-	err := uc.ustore.Save(gtx, user)
-	return adr.Commit(err)
+	id, err := uc.ustore.Save(gtx, user)
+	return id, adr.Commit(err)
 }
 
 func (uc *userCtl) Update(gtx context.Context, user *core.User) error {

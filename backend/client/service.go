@@ -14,13 +14,14 @@ func (c *IdxClient) GetPerms(
 }
 
 func (c *IdxClient) CreateService(
-	gtx context.Context, srv *core.Service) error {
+	gtx context.Context, srv *core.Service) (int64, error) {
 
 	apiRes := c.Build().Path("/api/v1/service").Post(gtx, srv)
-	if err := apiRes.Close(); err != nil {
-		return errx.Errf(err, "failed to cratre service: '%s'", srv.Name)
+	res := map[string]int64{"serviceId": int64(-1)}
+	if err := apiRes.LoadClose(&res); err != nil {
+		return -1, errx.Errf(err, "failed to cratre service: '%s'", srv.Name)
 	}
-	return nil
+	return res["serviceId"], nil
 }
 
 func (c *IdxClient) UpdateService(

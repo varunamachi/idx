@@ -16,7 +16,7 @@ type Service struct {
 }
 
 type ServiceStorage interface {
-	Save(gtx context.Context, service *Service) error
+	Save(gtx context.Context, service *Service) (int64, error)
 	Update(gtx context.Context, service *Service) error
 	GetOne(gtx context.Context, id int64) (*Service, error)
 	GetByName(gtx context.Context, name string) (*Service, error)

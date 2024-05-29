@@ -14,5 +14,6 @@ type Authenticator interface {
 }
 
 type Authorizor interface {
-	AuthorizeUser(gtx context.Context, serviceId, userId string) (*core.User, error)
+	AuthorizeUser(
+		gtx context.Context, serviceId, userId string) (*core.User, error)
 }

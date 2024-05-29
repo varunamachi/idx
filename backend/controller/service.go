@@ -29,33 +29,36 @@ func (sc svcCtl) Storage() core.ServiceStorage {
 	return sc.srvStore
 }
 
-func (sc svcCtl) Save(gtx context.Context, service *core.Service) error {
+func (sc svcCtl) Save(
+	gtx context.Context, service *core.Service) (int64, error) {
 	user, err := core.GetUser(gtx)
 	if err != nil {
-		return err
+		return -1, err
 	}
 	ev := core.NewEventAdder(gtx, "service.save", data.M{"service": service})
 
 	exists, err := sc.srvStore.Exists(gtx, service.Name)
 	if err != nil {
-		return err
+		return -1, err
 	}
 	if exists {
-		return ev.Errf(core.ErrEntityExists,
+		return -1, ev.Errf(core.ErrEntityExists,
 			"service '%d:%s' already exists", service.Id, service.Name)
 	}
 
 	service.CreatedBy, service.UpdatedBy = user.SeqId(), user.SeqId()
-	if err = sc.srvStore.Save(gtx, service); err != nil {
-		return ev.Commit(err)
+
+	id, err := sc.srvStore.Save(gtx, service)
+	if err != nil {
+		return id, ev.Commit(err)
 	}
 
 	// Make the owner admin
 	if err = sc.srvStore.AddAdmin(gtx, service.Id, user.SeqId()); err != nil {
-		return ev.Commit(err)
+		return id, ev.Commit(err)
 	}
 
-	return ev.Commit(err)
+	return id, ev.Commit(err)
 }
 
 func (sc svcCtl) Update(gtx context.Context, service *core.Service) error {

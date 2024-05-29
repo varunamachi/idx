@@ -21,7 +21,7 @@ func NewUserStorage(gd data.GetterDeleter) core.UserStorage {
 }
 
 func (pgu *userPgStorage) Save(
-	gtx context.Context, user *core.User) (err error) {
+	gtx context.Context, user *core.User) (int64, error) {
 
 	query := `
 		INSERT INTO idx_user (
@@ -46,7 +46,7 @@ func (pgu *userPgStorage) Save(
 			:last_name,
 			:title,
 			:props	
-		) ON CONFLICT (user_id) DO UPDATE SET
+		) ON CONFLICT (id) DO UPDATE SET
 				created_by = EXCLUDED.created_by,
 				updated_by = EXCLUDED.updated_by,
 				user_id = EXCLUDED.user_id,
@@ -56,14 +56,27 @@ func (pgu *userPgStorage) Save(
 				last_name = EXCLUDED.last_name,
 				title = EXCLUDED.title,
 				props = EXCLUDED.props
+		RETURNING id;
 	`
 
-	if _, err := pg.Conn().NamedExecContext(gtx, query, user); err != nil {
-		return errx.Errf(
-			err, "failed to insert user '%s' to database", user.Id())
+	stmt, err := pg.Conn().PrepareNamed(query)
+	if err != nil {
+		return -1, errx.Errf(err, "failed to prepare query to save user")
 	}
 
-	return nil
+	var id int64
+	if err = stmt.GetContext(gtx, &id, user); err != nil {
+		return -1, errx.Errf(
+			err, "failed to insert user '%s' to database", user.Id())
+	}
+	return id, nil
+
+	// if _, err := pg.Conn().NamedExecContext(gtx, query, user); err != nil {
+	// 	return -1, errx.Errf(
+	// 		err, "failed to insert user '%s' to database", user.Id())
+	// }
+
+	// return 0, nil
 }
 
 func (pgu *userPgStorage) Update(
