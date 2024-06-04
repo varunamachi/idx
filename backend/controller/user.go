@@ -2,7 +2,10 @@ package controller
 
 import (
 	"context"
+	"os"
+	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/idx/mailtmpl"
 	"github.com/varunamachi/libx/auth"
@@ -11,9 +14,39 @@ import (
 	"github.com/varunamachi/libx/errx"
 )
 
-func IsSuperUser(userId string) bool {
-	// TODO - get from environment variable
-	return false
+var roleMapping = map[string]auth.Role{}
+
+func mappedRole(userId string) auth.Role {
+	roleEnv := os.Getenv("IDX_ROLE_MAPPING")
+	if roleEnv == "" {
+		return auth.None
+	}
+
+	if len(roleMapping) == 0 {
+		fields := strings.Split(roleEnv, ",")
+		for _, f := range fields {
+			asocs := strings.Split(f, ":")
+			if len(asocs) < 2 {
+				log.Error().Str("field", f).Msg("invalid role association")
+				continue
+			}
+
+			role := auth.ToRole(asocs[0])
+			if role == auth.None {
+				log.Error().Str("roleStr", asocs[0]).
+					Msg("invalid role association")
+				continue
+			}
+
+			roleMapping[asocs[1]] = role
+		}
+
+	}
+
+	if role, found := roleMapping[userId]; found {
+		return role
+	}
+	return auth.None
 }
 
 type userCtl struct {
@@ -57,9 +90,9 @@ func (uc *userCtl) Register(
 	}
 
 	// Enable configured super user immediately
-	if IsSuperUser(user.UserId) {
+	if role := mappedRole(user.UserId); role != auth.None {
 		user.State = core.Active
-		user.AuthzRole = auth.Super
+		user.AuthzRole = role
 		user.SetProp("autoApproved", true)
 	} else {
 		user.State = core.Created

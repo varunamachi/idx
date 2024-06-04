@@ -25,6 +25,9 @@ var Disabled UserState = "disabled"
 // Flagged - user account is flagged by a user
 var Flagged UserState = "flagged"
 
+// Invalid state
+var None UserState = ""
+
 var ValidUserStates = []UserState{
 	Created,
 	Verfied,
