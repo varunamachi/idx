@@ -119,5 +119,38 @@ var services = []*core.Service{
 }
 
 var groups = []*core.Group{
-	{},
+	{
+		DbItem: core.DbItem{
+			Id:        0,
+			CreatedAt: time.Time{},
+			CreatedBy: 0,
+			UpdatedAt: time.Time{},
+			UpdatedBy: 0,
+		},
+		ServiceId:   0,
+		Name:        "svc1_group_1",
+		DisplayName: "S1G1",
+		Description: "Service group 1",
+		Perms: []string{
+			"svc1_perm_0_0",
+			"svc1_perm_0_1_1",
+		},
+	},
+	{
+		DbItem: core.DbItem{
+			Id:        0,
+			CreatedAt: time.Time{},
+			CreatedBy: 0,
+			UpdatedAt: time.Time{},
+			UpdatedBy: 0,
+		},
+		ServiceId:   0,
+		Name:        "svc1_group_2",
+		DisplayName: "S2G2",
+		Description: "Service group 2",
+		Perms: []string{
+			"svc1_perm_1_0",
+			"svc1_perm_1_1",
+		},
+	},
 }
