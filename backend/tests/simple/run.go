@@ -1,8 +1,10 @@
 package simple
 
-import "context"
+import (
+	"context"
+)
 
-func Test1(gtx context.Context) error {
+func Run(gtx context.Context) error {
 
 	// Create a super user
 	// Register a user

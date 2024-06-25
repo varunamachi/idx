@@ -18,6 +18,8 @@ import (
 
 func main() {
 
+	// TODO - will these work if pg database is initialize later?
+
 	gtx, cancel := rt.Gtx()
 	defer cancel()
 

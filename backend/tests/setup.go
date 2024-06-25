@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 
-	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/auth"
 	idxAuth "github.com/varunamachi/idx/auth"
 	"github.com/varunamachi/idx/controller"
@@ -48,17 +47,15 @@ func runDockerCompose(op, dcFilePath string) error {
 		"-f",
 		dcFilePath,
 	}
-
 	return execCmd("docker-compose", args...)
 }
 
-func TestGtx() (context.Context, context.CancelFunc) {
+func Gtx() (context.Context, context.CancelFunc) {
+
+	// TODO - will these work if pg database is initialize later?
 	gtx, cancel := rt.Gtx()
 
-	emailProvider, err := email.NewProviderFromEnv("IDX")
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed initilize email provider")
-	}
+	emailProvider := email.NewFakeEmailProvider()
 	evtSrv := idxpg.NewEventService()
 
 	gd := pg.NewGetterDeleter()
