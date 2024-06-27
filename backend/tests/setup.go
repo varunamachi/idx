@@ -2,7 +2,12 @@ package tests
 
 import (
 	"context"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 
+	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/auth"
 	idxAuth "github.com/varunamachi/idx/auth"
 	"github.com/varunamachi/idx/controller"
@@ -11,6 +16,7 @@ import (
 	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/email"
+	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/rt"
 )
 
@@ -81,4 +87,35 @@ func Gtx() (context.Context, context.CancelFunc) {
 		EventService:  evtSrv,
 	}), cancel
 
+}
+
+func builbuildAndRunServer() error {
+
+	// go build -ldflags "-s -w" -race -o "$root/_local/bin/picl"
+	fxRootPath := mustGetSourceRoot()
+	goArch := runtime.GOARCH
+
+	cmdDir := filepath.Join(fxRootPath, "cmd", "idx")
+	output := filepath.Join(fxRootPath, "_local", "bin", goArch, "picl")
+
+	cmd := exec.Command(
+		"go", "build",
+		"-ldflags", "-s -w",
+		"-o", output,
+		cmdDir)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	// cmd.Env = append(os.Environ(), "GOARCH="+goArch)
+	if err := cmd.Run(); err != nil {
+		const msg = "failed to run go build"
+		log.Error().Err(err).Msg(msg)
+		return errx.Errf(err, msg)
+	}
+
+	// return output, nil
+
+	// TODO - launch this in background or in a goroutine
+	err := execCmd(output, "serve", "--pg-url",
+		"postgres://postgres:postgres@localhost:5432/test-data ")
+	return err
 }
