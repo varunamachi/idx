@@ -29,6 +29,10 @@ func Setup(gtx context.Context) error {
 		return err
 	}
 
+	if err := builbuildAndRunServer(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -115,7 +119,19 @@ func builbuildAndRunServer() error {
 	// return output, nil
 
 	// TODO - launch this in background or in a goroutine
-	err := execCmd(output, "serve", "--pg-url",
-		"postgres://postgres:postgres@localhost:5432/test-data ")
-	return err
+	cmd, err := startCmd(output, "serve", "--pg-url",
+		"postgres://postgres:postgres@localhost:5432/test-data")
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		if err := cmd.Wait(); err != nil {
+			log.Error().Err(err).Msg("server exited with an error")
+			return
+		}
+		log.Info().Msg("server exited normally")
+	}()
+
+	return nil
 }

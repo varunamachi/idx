@@ -15,11 +15,22 @@ func execCmd(cmdName string, args ...string) error {
 	cmd := exec.Command(cmdName, args...)
 	// cmd.Stdout =
 
-	if err := cmd.Err; err != nil {
+	if err := cmd.Run(); err != nil {
 		return errx.Errf(err, "failed to execute '%s'", cmdName)
 	}
 
 	return nil
+}
+
+func startCmd(cmdName string, args ...string) (*exec.Cmd, error) {
+	cmd := exec.Command(cmdName, args...)
+	// cmd.Stdout =
+
+	if err := cmd.Start(); err != nil {
+		return nil, errx.Errf(err, "failed to execute '%s'", cmdName)
+	}
+
+	return cmd, nil
 }
 
 func mustGetSourceRoot() string {

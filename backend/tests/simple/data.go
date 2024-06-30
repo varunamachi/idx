@@ -7,58 +7,73 @@ import (
 	"github.com/varunamachi/libx/auth"
 )
 
-var superUser = &core.User{
-	DbItem:    core.DbItem{},
-	UserId:    "super",
-	EmailId:   "super@example.com",
-	AuthzRole: auth.Super,
-	State:     core.Active,
-	FirstName: "Super",
-	LastName:  "User",
-	Title:     "Dr",
-	Props: map[string]any{
-		"initialUser": true,
-	},
+type userAndPassword struct {
+	user     *core.User
+	password string
 }
 
-var users = []*core.User{
-	{
-		DbItem: core.DbItem{
-			Id:        0,
-			CreatedAt: time.Time{},
-			CreatedBy: 0,
-			UpdatedAt: time.Time{},
-			UpdatedBy: 0,
-		},
-		UserId:    "admin_1",
-		EmailId:   "admin1@example.com",
-		AuthzRole: auth.Admin,
-		State:     core.None,
-		FirstName: "Admin",
-		LastName:  "One",
-		Title:     "Mr",
+var super = userAndPassword{
+
+	user: &core.User{
+		DbItem:    core.DbItem{},
+		UserId:    "super",
+		EmailId:   "super@example.com",
+		AuthzRole: auth.Super,
+		State:     core.Active,
+		FirstName: "Super",
+		LastName:  "User",
+		Title:     "Dr",
 		Props: map[string]any{
-			"test": "test",
+			"initialUser": true,
 		},
 	},
+	password: "onetwothree",
+}
+
+var users = []userAndPassword{
 	{
-		DbItem: core.DbItem{
-			Id:        0,
-			CreatedAt: time.Time{},
-			CreatedBy: 0,
-			UpdatedAt: time.Time{},
-			UpdatedBy: 0,
+		user: &core.User{
+			DbItem: core.DbItem{
+				Id:        0,
+				CreatedAt: time.Time{},
+				CreatedBy: 0,
+				UpdatedAt: time.Time{},
+				UpdatedBy: 0,
+			},
+			UserId:    "admin_1",
+			EmailId:   "admin1@example.com",
+			AuthzRole: auth.Admin,
+			State:     core.None,
+			FirstName: "Admin",
+			LastName:  "One",
+			Title:     "Mr",
+			Props: map[string]any{
+				"test": "test",
+			},
 		},
-		UserId:    "",
-		EmailId:   "user2@example.com",
-		AuthzRole: auth.Admin,
-		State:     core.None,
-		FirstName: "User",
-		LastName:  "One",
-		Title:     "Ms",
-		Props: map[string]any{
-			"test": "test",
+		password: "onetwothree",
+	},
+	{
+		user: &core.User{
+			DbItem: core.DbItem{
+				Id:        0,
+				CreatedAt: time.Time{},
+				CreatedBy: 0,
+				UpdatedAt: time.Time{},
+				UpdatedBy: 0,
+			},
+			UserId:    "",
+			EmailId:   "user2@example.com",
+			AuthzRole: auth.Admin,
+			State:     core.None,
+			FirstName: "User",
+			LastName:  "One",
+			Title:     "Ms",
+			Props: map[string]any{
+				"test": "test",
+			},
 		},
+		password: "onetwothree",
 	},
 }
 
