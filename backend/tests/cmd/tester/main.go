@@ -4,12 +4,12 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"github.com/varunamachi/idx/tests"
 	"github.com/varunamachi/libx"
+	"github.com/varunamachi/libx/rt"
 )
 
 func main() {
-	gtx, cancel := tests.Gtx()
+	gtx, cancel := rt.Gtx()
 	defer cancel()
 
 	app := libx.NewApp(

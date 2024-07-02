@@ -8,16 +8,9 @@ import (
 	"runtime"
 
 	"github.com/rs/zerolog/log"
-	"github.com/varunamachi/idx/auth"
-	idxAuth "github.com/varunamachi/idx/auth"
-	"github.com/varunamachi/idx/controller"
-	"github.com/varunamachi/idx/core"
-	idxpg "github.com/varunamachi/idx/pg"
 	"github.com/varunamachi/idx/pg/schema"
-	"github.com/varunamachi/libx/data/pg"
-	"github.com/varunamachi/libx/email"
+	"github.com/varunamachi/idx/tests/smsrv"
 	"github.com/varunamachi/libx/errx"
-	"github.com/varunamachi/libx/rt"
 )
 
 func Setup(gtx context.Context) error {
@@ -28,6 +21,8 @@ func Setup(gtx context.Context) error {
 	if err := schema.Init(gtx, "test"); err != nil {
 		return err
 	}
+
+	smsrv.GetMailService().Start(gtx)
 
 	if err := builbuildAndRunServer(); err != nil {
 		return err
@@ -60,38 +55,38 @@ func runDockerCompose(op, dcFilePath string) error {
 	return execCmd("docker-compose", args...)
 }
 
-func Gtx() (context.Context, context.CancelFunc) {
+// func Gtx() (context.Context, context.CancelFunc) {
 
-	// TODO - will these work if pg database is initialize later?
-	gtx, cancel := rt.Gtx()
+// 	// TODO - will these work if pg database is initialize later?
+// 	gtx, cancel := rt.Gtx()
 
-	emailProvider := email.NewFakeEmailProvider()
-	evtSrv := idxpg.NewEventService()
+// 	emailProvider := email.NewFakeEmailProvider()
+// 	evtSrv := idxpg.NewEventService()
 
-	gd := pg.NewGetterDeleter()
-	userStore := idxpg.NewUserStorage(gd)
-	groupStore := idxpg.NewGroupStorage(gd)
-	serviceStore := idxpg.NewServiceStorage(gd)
+// 	gd := pg.NewGetterDeleter()
+// 	userStore := idxpg.NewUserStorage(gd)
+// 	groupStore := idxpg.NewGroupStorage(gd)
+// 	serviceStore := idxpg.NewServiceStorage(gd)
 
-	hasher := auth.NewArgon2Hasher()
-	credStorage := idxpg.NewCredentialStorage(hasher)
+// 	hasher := auth.NewArgon2Hasher()
+// 	credStorage := idxpg.NewCredentialStorage(hasher)
 
-	authr := idxAuth.NewAuthenticator(credStorage)
-	uctlr := controller.NewUserController(userStore, credStorage, emailProvider)
-	gctlr := controller.NewGroupController(groupStore, serviceStore)
-	sctlr := controller.NewServiceController(
-		serviceStore, userStore, groupStore)
+// 	authr := idxAuth.NewAuthenticator(credStorage)
+// 	uctlr := controller.NewUserController(userStore, credStorage, emailProvider)
+// 	gctlr := controller.NewGroupController(groupStore, serviceStore)
+// 	sctlr := controller.NewServiceController(
+// 		serviceStore, userStore, groupStore)
 
-	return core.NewContext(gtx, &core.Services{
-		UserCtlr:      uctlr,
-		ServiceCtlr:   sctlr,
-		GroupCtlr:     gctlr,
-		Authenticator: authr,
-		MailProvider:  emailProvider,
-		EventService:  evtSrv,
-	}), cancel
+// 	return core.NewContext(gtx, &core.Services{
+// 		UserCtlr:      uctlr,
+// 		ServiceCtlr:   sctlr,
+// 		GroupCtlr:     gctlr,
+// 		Authenticator: authr,
+// 		MailProvider:  emailProvider,
+// 		EventService:  evtSrv,
+// 	}), cancel
 
-}
+// }
 
 func builbuildAndRunServer() error {
 

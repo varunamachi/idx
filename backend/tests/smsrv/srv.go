@@ -2,13 +2,22 @@ package smsrv
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/libx/email"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 )
+
+var ms = &MailService{
+	fakeProvider: *email.NewFakeEmailProvider(),
+}
+
+func GetMailService() *MailService {
+	return ms
+}
 
 type MailService struct {
 	fakeProvider email.FakeEmailProvider
@@ -58,12 +67,25 @@ func (ms *MailService) getEp() *httpx.Endpoint {
 func (ms *MailService) Start(gtx context.Context) {
 
 	go func() {
-		err := httpx.NewServer(nil, nil).WithAPIs(
+		server := httpx.NewServer(nil, nil)
+		server.WithAPIs(
 			ms.sendEp(),
 			ms.getEp(),
-		).Start(9999)
+		)
+
+		go func() {
+			<-gtx.Done()
+			server.Close()
+		}()
+
+		if err := server.Start(9999); err != nil {
+			if err != http.ErrServerClosed {
+				log.Error().Err(err).Msg("mail service exited with error")
+			}
+			log.Error().Err(err).Msg("mail service stopped")
+		}
+
 		// TODO - context, cancel, exit etc
-		fmt.Println(err)
 	}()
 }
 
