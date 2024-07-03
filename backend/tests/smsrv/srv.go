@@ -30,7 +30,8 @@ func (ms *MailService) sendEp() *httpx.Endpoint {
 			return errx.BadReqX(err, "failed to read mail msg")
 		}
 
-		err := ms.fakeProvider.Send(&msg, false)
+		html := etx.QueryParam("html") == "true"
+		err := ms.fakeProvider.Send(&msg, html)
 		return err
 	}
 

@@ -23,7 +23,7 @@ func main() {
 	gtx, cancel := rt.Gtx()
 	defer cancel()
 
-	emailProvider, err := email.NewProviderFromEnv("IDX")
+	emailProvider, err := email.NewSMTPProviderFromEnv("IDX")
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed initilize email provider")
 	}

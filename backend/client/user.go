@@ -16,7 +16,7 @@ type IdxClient struct {
 
 func New(address string) *IdxClient {
 	return &IdxClient{
-		Client: httpx.New(address, ""),
+		Client: httpx.NewClient(address, ""),
 	}
 }
 
