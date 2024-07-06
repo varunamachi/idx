@@ -23,10 +23,14 @@ func main() {
 	gtx, cancel := rt.Gtx()
 	defer cancel()
 
-	emailProvider, err := email.NewSMTPProviderFromEnv("IDX")
+	emailProvider, err := email.ProviderFromEnv("IDX")
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed initilize email provider")
 	}
+	if emailProvider == nil {
+		log.Fatal().Msg("email provider not defined in environment")
+	}
+
 	evtSrv := idxpg.NewEventService()
 
 	gd := pg.NewGetterDeleter()

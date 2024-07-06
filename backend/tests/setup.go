@@ -11,6 +11,7 @@ import (
 	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/idx/tests/smsrv"
 	"github.com/varunamachi/libx/errx"
+	"github.com/varunamachi/libx/rt"
 )
 
 func Setup(gtx context.Context) error {
@@ -24,7 +25,7 @@ func Setup(gtx context.Context) error {
 
 	smsrv.GetMailService().Start(gtx)
 
-	if err := builbuildAndRunServer(); err != nil {
+	if err := buildAndRunServer(); err != nil {
 		return err
 	}
 
@@ -55,42 +56,7 @@ func runDockerCompose(op, dcFilePath string) error {
 	return execCmd("docker-compose", args...)
 }
 
-// func Gtx() (context.Context, context.CancelFunc) {
-
-// 	// TODO - will these work if pg database is initialize later?
-// 	gtx, cancel := rt.Gtx()
-
-// 	emailProvider := email.NewFakeEmailProvider()
-// 	evtSrv := idxpg.NewEventService()
-
-// 	gd := pg.NewGetterDeleter()
-// 	userStore := idxpg.NewUserStorage(gd)
-// 	groupStore := idxpg.NewGroupStorage(gd)
-// 	serviceStore := idxpg.NewServiceStorage(gd)
-
-// 	hasher := auth.NewArgon2Hasher()
-// 	credStorage := idxpg.NewCredentialStorage(hasher)
-
-// 	authr := idxAuth.NewAuthenticator(credStorage)
-// 	uctlr := controller.NewUserController(userStore, credStorage, emailProvider)
-// 	gctlr := controller.NewGroupController(groupStore, serviceStore)
-// 	sctlr := controller.NewServiceController(
-// 		serviceStore, userStore, groupStore)
-
-// 	return core.NewContext(gtx, &core.Services{
-// 		UserCtlr:      uctlr,
-// 		ServiceCtlr:   sctlr,
-// 		GroupCtlr:     gctlr,
-// 		Authenticator: authr,
-// 		MailProvider:  emailProvider,
-// 		EventService:  evtSrv,
-// 	}), cancel
-
-// }
-
-func builbuildAndRunServer() error {
-
-	// go build -ldflags "-s -w" -race -o "$root/_local/bin/picl"
+func buildAndRunServer() error {
 	fxRootPath := mustGetSourceRoot()
 	goArch := runtime.GOARCH
 
@@ -111,17 +77,14 @@ func builbuildAndRunServer() error {
 		return errx.Errf(err, msg)
 	}
 
-	// return output, nil
-
-	// TODO - launch this in background or in a goroutine
-	cmd, err := startCmd(output, "serve", "--pg-url",
-		"postgres://postgres:postgres@localhost:5432/test-data")
-	if err != nil {
-		return err
-	}
+	builder := rt.NewCmdBuilder(output).
+		WithArgs("serve", "--pg-url",
+			"postgres://postgres:postgres@localhost:5432/test-data").
+		WithEnv("IDX_MAIL_PROVIDER", "IDX_SIMPLE_MAIL_SERVICE_CLIENT_PROVIDER").
+		WithEnv("IDX_SIMPLE_SRV_SEND_URL", "http://localhost:9999/send")
 
 	go func() {
-		if err := cmd.Wait(); err != nil {
+		if err := builder.Execute(); err != nil {
 			log.Error().Err(err).Msg("server exited with an error")
 			return
 		}
