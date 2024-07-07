@@ -14,7 +14,7 @@ func main() {
 
 	app := libx.NewApp(
 		"idx", "Simple Identity Service", "0.0.1", "varunamachi").
-		WithCommands(testSimpleCmd())
+		WithCommands(runCmd())
 
 	if err := app.RunContext(gtx, os.Args); err != nil {
 		log.Fatal().Err(err).Msg("exiting...")
