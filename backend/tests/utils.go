@@ -40,14 +40,16 @@ func mustGetSourceRoot() string {
 		log.Fatal().Msg(msg)
 	}
 
-	fxRootPath, err := filepath.Abs(filename + "/../..")
+	fxRootPath, err := filepath.Abs(filename + "/../../..")
 	if err != nil {
 		panic(err)
 	}
 
+	fmt.Println(fxRootPath)
+
 	subdirs := []string{"backend", "_scripts", "_local"}
 	for _, sd := range subdirs {
-		if !iox.ExistsAsDir(sd) {
+		if !iox.ExistsAsDir(filepath.Join(fxRootPath, sd)) {
 			panic(fmt.Errorf("could not find expected dir '%s' in source root",
 				sd))
 		}

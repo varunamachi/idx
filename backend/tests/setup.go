@@ -47,13 +47,14 @@ func Destroy(gtx context.Context) error {
 
 func runDockerCompose(op, dcFilePath string) error {
 	args := []string{
+		"compose",
 		"-p",
 		"idx_test",
 		op,
 		"-f",
 		dcFilePath,
 	}
-	return execCmd("docker-compose", args...)
+	return execCmd("docker", args...)
 }
 
 func buildAndRunServer() error {

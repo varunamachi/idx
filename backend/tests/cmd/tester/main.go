@@ -13,7 +13,7 @@ func main() {
 	defer cancel()
 
 	app := libx.NewApp(
-		"idx", "Simple Identity Service", "0.0.1", "varunamachi").
+		"idx-tester", "Simple Identity Service", "0.0.1", "varunamachi").
 		WithCommands(runCmd())
 
 	if err := app.RunContext(gtx, os.Args); err != nil {
