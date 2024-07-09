@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
@@ -21,7 +22,8 @@ func runCmd() *cli.Command {
 		Before: func(ctx *cli.Context) error {
 			fmt.Println("Initializing test setup")
 			if err := tests.Setup(ctx.Context); err != nil {
-				log.Fatal().Err(err)
+				log.Fatal().Err(err).Msg("initialization failed")
+				os.Exit(10)
 				return err
 			}
 			fmt.Println("Initialized")
@@ -31,6 +33,7 @@ func runCmd() *cli.Command {
 			fmt.Println("Destroying test setup")
 			if err := tests.Destroy(ctx.Context); err != nil {
 				log.Fatal().Err(err).Msg("failed to destroy test setup")
+				os.Exit(10)
 				return err
 			}
 
@@ -42,7 +45,7 @@ func runCmd() *cli.Command {
 
 func simpleTestCmd() *cli.Command {
 	return &cli.Command{
-		Name:        "simple-tests",
+		Name:        "simple",
 		Description: "Run simple test",
 		Usage:       "Run simple test",
 		Action: func(ctx *cli.Context) error {

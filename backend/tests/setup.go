@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/idx/tests/smsrv"
+	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/rt"
 )
@@ -50,9 +51,10 @@ func runDockerCompose(op, dcFilePath string) error {
 		"compose",
 		"-p",
 		"idx_test",
-		op,
 		"-f",
 		dcFilePath,
+		op,
+		data.Qop(op == "up", "-d", ""),
 	}
 	return execCmd("docker", args...)
 }

@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -13,7 +14,8 @@ import (
 
 func execCmd(cmdName string, args ...string) error {
 	cmd := exec.Command(cmdName, args...)
-	// cmd.Stdout =
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	if err := cmd.Run(); err != nil {
 		return errx.Errf(err, "failed to execute '%s'", cmdName)
