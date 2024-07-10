@@ -37,6 +37,11 @@ func ServeCommand() *cli.Command {
 				WithEndpoints(restapi.GroupEndpoints(gtx)...).
 				WithEndpoints(restapi.ServiceEndpoints(gtx)...)
 
+			// Create schema if required
+			if err := schema.Init(gtx, "test"); err != nil {
+				return err
+			}
+
 			go func() {
 				<-gtx.Done()
 				log.Info().Msg("stopping the server")

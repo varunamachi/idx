@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,18 +12,33 @@ import (
 	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/idx/tests/smsrv"
 	"github.com/varunamachi/libx/data"
+	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/rt"
 )
+
+const pgUrl = "postgres://postgres:postgres@localhost:5432/test-data?sslmode=disable"
 
 func Setup(gtx context.Context) error {
 
 	if err := runDockerCompose("up", mustGetPgDockerComposePath()); err != nil {
 		return err
 	}
-	if err := schema.Init(gtx, "test"); err != nil {
+
+	purl, err := url.Parse(pgUrl)
+	if err != nil {
+		return errx.Errf(err, "invalid pg-url in setup")
+	}
+	db, err := pg.Connect(gtx, purl, "Asia/Kolkata")
+	if err != nil {
 		return err
 	}
+	pg.SetDefaultConn(db)
+
+	// init is done during server start
+	// if err := schema.Init(gtx, "test"); err != nil {
+	// 	return err
+	// }
 
 	smsrv.GetMailService().Start(gtx)
 
@@ -81,8 +97,7 @@ func buildAndRunServer() error {
 	}
 
 	builder := rt.NewCmdBuilder(output).
-		WithArgs("serve", "--pg-url",
-			"postgres://postgres:postgres@localhost:5432/test-data").
+		WithArgs("serve", "--pg-url", pgUrl).
 		WithEnv("IDX_MAIL_PROVIDER", "IDX_SIMPLE_MAIL_SERVICE_CLIENT_PROVIDER").
 		WithEnv("IDX_SIMPLE_SRV_SEND_URL", "http://localhost:9999/send")
 
