@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 	"github.com/varunamachi/idx/tests"
 	"github.com/varunamachi/idx/tests/simple"
+	"github.com/varunamachi/libx/errx"
 )
 
 func runCmd() *cli.Command {
@@ -22,22 +22,17 @@ func runCmd() *cli.Command {
 		Before: func(ctx *cli.Context) error {
 			fmt.Println("Initializing test setup")
 			if err := tests.Setup(ctx.Context); err != nil {
-				log.Fatal().Err(err).Msg("initialization failed")
-				os.Exit(10)
-				return err
+				log.Error().Err(err).Msg("initialization failed")
+				return errx.Errf(err, "initialization failed")
 			}
-			fmt.Println("Initialized")
 			return nil
 		},
 		After: func(ctx *cli.Context) error {
 			fmt.Println("Destroying test setup")
 			if err := tests.Destroy(ctx.Context); err != nil {
-				log.Fatal().Err(err).Msg("failed to destroy test setup")
-				os.Exit(10)
-				return err
+				log.Error().Err(err).Msg("destruction failed")
+				errx.Errf(err, "failed to destroy test setup")
 			}
-
-			fmt.Println("Destroyed")
 			return nil
 		},
 	}

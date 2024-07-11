@@ -17,7 +17,7 @@ import (
 	"github.com/varunamachi/libx/rt"
 )
 
-const pgUrl = "postgres://postgres:postgres@localhost:5432/test-data?sslmode=disable"
+const pgUrl = "postgresql://idx:idxp@localhost:5432/test-data?sslmode=disable"
 
 func Setup(gtx context.Context) error {
 
@@ -52,7 +52,7 @@ func Setup(gtx context.Context) error {
 func Destroy(gtx context.Context) error {
 
 	if err := schema.Destroy(gtx); err != nil {
-		return err
+		log.Error().Err(err)
 	}
 	err := runDockerCompose("down", mustGetPgDockerComposePath())
 	if err != nil {

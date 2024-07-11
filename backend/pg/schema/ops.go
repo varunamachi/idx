@@ -3,6 +3,7 @@ package schema
 import (
 	"context"
 	"embed"
+	"fmt"
 
 	"github.com/pressly/goose/v3"
 	"github.com/varunamachi/libx/data/pg"
@@ -36,6 +37,10 @@ func Create(gtx context.Context) error {
 }
 
 func Destroy(gtx context.Context) error {
+	if pg.Conn() == nil {
+		return fmt.Errorf("db connection does not exist")
+	}
+
 	db := pg.Conn().DB
 	goose.SetBaseFS(migs)
 
