@@ -21,7 +21,7 @@ const pgUrl = "postgresql://idx:idxp@localhost:5432/test-data?sslmode=disable"
 
 func Setup(gtx context.Context) error {
 
-	if err := runDockerCompose("up", mustGetPgDockerComposePath()); err != nil {
+	if err := RunDockerCompose("up", MustGetPgDockerComposePath()); err != nil {
 		return err
 	}
 
@@ -29,7 +29,7 @@ func Setup(gtx context.Context) error {
 	if err != nil {
 		return errx.Errf(err, "invalid pg-url in setup")
 	}
-	db, err := pg.Connect(gtx, purl, "Asia/Kolkata")
+	db, err := pg.Connect(gtx, purl, "")
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func Setup(gtx context.Context) error {
 
 	smsrv.GetMailService().Start(gtx)
 
-	if err := buildAndRunServer(); err != nil {
+	if err := BuildAndRunServer(); err != nil {
 		return err
 	}
 
@@ -54,7 +54,7 @@ func Destroy(gtx context.Context) error {
 	if err := schema.Destroy(gtx); err != nil {
 		log.Error().Err(err)
 	}
-	err := runDockerCompose("down", mustGetPgDockerComposePath())
+	err := RunDockerCompose("down", MustGetPgDockerComposePath())
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func Destroy(gtx context.Context) error {
 	return nil
 }
 
-func runDockerCompose(op, dcFilePath string) error {
+func RunDockerCompose(op, dcFilePath string) error {
 	args := []string{
 		"compose",
 		"-p",
@@ -75,11 +75,11 @@ func runDockerCompose(op, dcFilePath string) error {
 	return execCmd("docker", args...)
 }
 
-func buildAndRunServer() error {
-	fxRootPath := mustGetSourceRoot()
+func BuildAndRunServer() error {
+	fxRootPath := MustGetSourceRoot()
 	goArch := runtime.GOARCH
 
-	cmdDir := filepath.Join(fxRootPath, "cmd", "idx")
+	cmdDir := filepath.Join(fxRootPath, "backend", "cmd", "idx")
 	output := filepath.Join(fxRootPath, "_local", "bin", goArch, "picl")
 
 	cmd := exec.Command(

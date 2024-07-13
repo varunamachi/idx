@@ -5,6 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/libx"
+	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/rt"
 )
 
@@ -14,9 +15,10 @@ func main() {
 
 	app := libx.NewApp(
 		"idx-tester", "Simple Identity Service", "0.0.1", "varunamachi").
-		WithCommands(runCmd())
+		WithCommands(runCmd(), checkPgConn())
 
 	if err := app.RunContext(gtx, os.Args); err != nil {
+		errx.PrintSomeStack(err)
 		log.Fatal().Err(err).Msg("exiting...")
 	}
 }

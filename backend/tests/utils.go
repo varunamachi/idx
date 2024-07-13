@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/libx/errx"
@@ -35,21 +36,23 @@ func startCmd(cmdName string, args ...string) (*exec.Cmd, error) {
 	return cmd, nil
 }
 
-func mustGetSourceRoot() string {
+func MustGetSourceRoot() string {
+
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
-		const msg = "Couldnt get main file path"
+		const msg = "This command must be executed in source, path error"
 		log.Fatal().Msg(msg)
 	}
 
-	fxRootPath, err := filepath.Abs(filename + "/../../..")
-	if err != nil {
-		panic(err)
+	if !strings.Contains(filename, "idx/backend") {
+		const msg = "This command must be executed in source, path error"
+		log.Fatal().Str("path", filename).Msg(msg)
 	}
 
-	fmt.Println(fxRootPath)
+	idx := strings.Index(filename, "idx/backend")
+	fxRootPath := filename[:idx+len("idx")]
 
-	subdirs := []string{"backend", "_scripts", "_local"}
+	subdirs := []string{"backend/core", "_scripts", "_local"}
 	for _, sd := range subdirs {
 		if !iox.ExistsAsDir(filepath.Join(fxRootPath, sd)) {
 			panic(fmt.Errorf("could not find expected dir '%s' in source root",
@@ -60,8 +63,7 @@ func mustGetSourceRoot() string {
 	return fxRootPath
 }
 
-func mustGetPgDockerComposePath() string {
-	return filepath.Join(mustGetSourceRoot(),
-		"_scripts/deployment/dev/pg.docker-compose.yml")
+func MustGetPgDockerComposePath() string {
+	return filepath.Join(MustGetSourceRoot(), "backend/tests/pg-dc.yaml")
 
 }
