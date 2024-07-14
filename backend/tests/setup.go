@@ -9,7 +9,6 @@ import (
 	"runtime"
 
 	"github.com/rs/zerolog/log"
-	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/idx/tests/smsrv"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/pg"
@@ -51,13 +50,13 @@ func Setup(gtx context.Context) error {
 
 func Destroy(gtx context.Context) error {
 
-	if err := schema.Destroy(gtx); err != nil {
-		log.Error().Err(err)
-	}
-	err := RunDockerCompose("down", MustGetPgDockerComposePath())
-	if err != nil {
-		return err
-	}
+	// if err := schema.Destroy(gtx); err != nil {
+	// 	log.Error().Err(err)
+	// }
+	// err := RunDockerCompose("down", MustGetPgDockerComposePath())
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -80,7 +79,7 @@ func BuildAndRunServer() error {
 	goArch := runtime.GOARCH
 
 	cmdDir := filepath.Join(fxRootPath, "backend", "cmd", "idx")
-	output := filepath.Join(fxRootPath, "_local", "bin", goArch, "picl")
+	output := filepath.Join(fxRootPath, "_local", "bin", goArch, "idx")
 
 	cmd := exec.Command(
 		"go", "build",

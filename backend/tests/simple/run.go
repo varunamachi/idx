@@ -2,22 +2,25 @@ package simple
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/varunamachi/idx/client"
 )
 
 func Run(gtx context.Context) error {
 
-	cnt := client.New("localhost:8080")
+	cnt := client.New("http://localhost:8888")
 	_, err := cnt.Register(gtx, super.user, super.password)
 	if err != nil {
 		return err
 	}
 
-	_, err = cnt.Login(gtx, super.user.UserId, super.password)
+	user, err := cnt.Login(gtx, super.user.UserId, super.password)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println(user.UserId)
 
 	// TODO - make the email provider a service and receive email through
 	// API, fake provider cant be just memory based
