@@ -3,14 +3,21 @@ package simple
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/varunamachi/idx/client"
+	"github.com/varunamachi/libx/netx"
 )
 
 func Run(gtx context.Context) error {
 
+	err := netx.WaitForPorts(gtx, "localhost:8888", 10*time.Second)
+	if err != nil {
+		return err
+	}
+
 	cnt := client.New("http://localhost:8888")
-	_, err := cnt.Register(gtx, super.user, super.password)
+	_, err = cnt.Register(gtx, super.user, super.password)
 	if err != nil {
 		return err
 	}
