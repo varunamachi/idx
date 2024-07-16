@@ -29,7 +29,7 @@ func ServeCommand() *cli.Command {
 		Action: func(ctx *cli.Context) error {
 
 			gtx := ctx.Context
-			schema.Init(gtx, "onServerStart")
+			// schema.Init(gtx, "onServerStart")
 			app := libx.MustGetApp(ctx).
 				WithServer(8080, &userRetriever{}).
 				WithEndpoints(restapi.AuthEndpoints(gtx)...).

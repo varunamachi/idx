@@ -39,7 +39,7 @@ func registerUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		var up core.UserWithPassword
 		if err := etx.Bind(&up); err != nil {
-			return errx.BadReq("failed to read user info from request", err)
+			return errx.BadReqX(err, "failed to read user info from request")
 		}
 
 		userId, err := us.Register(
@@ -89,7 +89,7 @@ func updateUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		var user core.User
 		if err := etx.Bind(&user); err != nil {
-			return errx.BadReq("failed to read user info from request", err)
+			return errx.BadReqX(err, "failed to read user info from request")
 		}
 
 		if err := us.Update(etx.Request().Context(), &user); err != nil {

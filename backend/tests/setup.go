@@ -18,19 +18,19 @@ import (
 
 const pgUrl = "postgresql://idx:idxp@localhost:5432/test-data?sslmode=disable"
 
-func Setup(gtx context.Context) error {
+func Setup(gtx context.Context) (*os.Process, error) {
 
 	if err := RunDockerCompose("up", MustGetPgDockerComposePath()); err != nil {
-		return err
+		return nil, err
 	}
 
 	purl, err := url.Parse(pgUrl)
 	if err != nil {
-		return errx.Errf(err, "invalid pg-url in setup")
+		return nil, errx.Errf(err, "invalid pg-url in setup")
 	}
 	db, err := pg.Connect(gtx, purl, "")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	pg.SetDefaultConn(db)
 
@@ -41,14 +41,15 @@ func Setup(gtx context.Context) error {
 
 	smsrv.GetMailService().Start(gtx)
 
-	if err := BuildAndRunServer(); err != nil {
-		return err
+	process, err := BuildAndRunServer()
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return process, nil
 }
 
-func Destroy(gtx context.Context) error {
+func Destroy(gtx context.Context, process *os.Process) error {
 
 	// if err := schema.Destroy(gtx); err != nil {
 	// 	log.Error().Err(err)
@@ -57,6 +58,14 @@ func Destroy(gtx context.Context) error {
 	// if err != nil {
 	// 	return err
 	// }
+
+	if err := process.Signal(os.Interrupt); err != nil {
+		return errx.Errf(err, "failed to send SIGINT to server process")
+	}
+	if _, err := process.Wait(); err != nil {
+		return errx.Errf(err, "waiting for server process failed")
+
+	}
 
 	return nil
 }
@@ -74,7 +83,7 @@ func RunDockerCompose(op, dcFilePath string) error {
 	return execCmd("docker", args...)
 }
 
-func BuildAndRunServer() error {
+func BuildAndRunServer() (*os.Process, error) {
 	fxRootPath := MustGetSourceRoot()
 	goArch := runtime.GOARCH
 
@@ -92,7 +101,7 @@ func BuildAndRunServer() error {
 	if err := cmd.Run(); err != nil {
 		const msg = "failed to run go build"
 		log.Error().Err(err).Msg(msg)
-		return errx.Errf(err, msg)
+		return nil, errx.Errf(err, msg)
 	}
 
 	builder := rt.NewCmdBuilder(output).
@@ -100,13 +109,11 @@ func BuildAndRunServer() error {
 		WithEnv("IDX_MAIL_PROVIDER", "IDX_SIMPLE_MAIL_SERVICE_CLIENT_PROVIDER").
 		WithEnv("IDX_SIMPLE_SRV_SEND_URL", "http://localhost:9999/send")
 
-	go func() {
-		if err := builder.Execute(); err != nil {
-			log.Error().Err(err).Msg("server exited with an error")
-			return
-		}
-		log.Info().Msg("server exited normally")
-	}()
+	process, err := builder.Start()
+	if err != nil {
+		return nil, errx.Errf(err, "server exited with an error")
+	}
+	log.Info().Msg("server exited normally")
 
-	return nil
+	return process, nil
 }
