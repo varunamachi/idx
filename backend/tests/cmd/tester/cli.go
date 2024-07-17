@@ -19,13 +19,36 @@ func runCmd() *cli.Command {
 		Name:        "run",
 		Description: "Run tests",
 		Usage:       "Run tests",
-		Flags:       []cli.Flag{},
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "no-app-server",
+				Usage: "Skip building and starting the server in test setup",
+				Value: false,
+			},
+			&cli.BoolFlag{
+				Name:  "no-docker-compose",
+				Usage: "Skip running docker compose during test setup",
+				Value: false,
+			},
+			&cli.BoolFlag{
+				Name:  "destroy-schema-after-test",
+				Usage: "Destroy the schema once tests are done",
+				Value: false,
+			},
+		},
 		Subcommands: []*cli.Command{
 			simpleTestCmd(),
 		},
 		Before: func(ctx *cli.Context) error {
+
+			testConfig := tests.TestConfig{
+				SkipAppServer:     ctx.Bool("no-app-server"),
+				SkipDockerCompose: ctx.Bool("no-docker-compose"),
+				DestroySchema:     ctx.Bool("destroy-schema-after-test"),
+			}
+
 			var err error
-			proc, err = tests.Setup(ctx.Context)
+			proc, err = tests.Setup(ctx.Context, &testConfig)
 			if err != nil {
 				// log.Error().Err(err).Msg("initialization failed")
 				return errx.Errf(err, "initialization failed")
@@ -34,7 +57,14 @@ func runCmd() *cli.Command {
 			return nil
 		},
 		After: func(ctx *cli.Context) error {
-			if err := tests.Destroy(ctx.Context, proc); err != nil {
+			testConfig := tests.TestConfig{
+				SkipAppServer:     ctx.Bool("no-app-server"),
+				SkipDockerCompose: ctx.Bool("no-docker-compose"),
+				DestroySchema:     ctx.Bool("destroy-schema-after-test"),
+			}
+
+			err := tests.Destroy(ctx.Context, &testConfig, proc)
+			if err != nil {
 				// log.Error().Err(err).Msg("destruction failed")
 				errx.Errf(err, "failed to destroy test setup")
 			}

@@ -16,55 +16,73 @@ import (
 	"github.com/varunamachi/libx/rt"
 )
 
+type TestConfig struct {
+	SkipAppServer     bool
+	SkipDockerCompose bool
+	DestroySchema     bool
+}
+
 const pgUrl = "postgresql://idx:idxp@localhost:5432/test-data?sslmode=disable"
 
-func Setup(gtx context.Context) (*os.Process, error) {
+func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 
-	if err := RunDockerCompose("up", MustGetPgDockerComposePath()); err != nil {
-		return nil, err
-	}
+	if !testConfig.SkipDockerCompose {
+		err := RunDockerCompose("up", MustGetPgDockerComposePath())
+		if err != nil {
+			return nil, err
+		}
 
-	purl, err := url.Parse(pgUrl)
-	if err != nil {
-		return nil, errx.Errf(err, "invalid pg-url in setup")
+		purl, err := url.Parse(pgUrl)
+		if err != nil {
+			return nil, errx.Errf(err, "invalid pg-url in setup")
+		}
+		db, err := pg.Connect(gtx, purl, "")
+		if err != nil {
+			return nil, err
+		}
+		pg.SetDefaultConn(db)
 	}
-	db, err := pg.Connect(gtx, purl, "")
-	if err != nil {
-		return nil, err
-	}
-	pg.SetDefaultConn(db)
 
 	// init is done during server start
 	// if err := schema.Init(gtx, "test"); err != nil {
 	// 	return err
 	// }
 
-	smsrv.GetMailService().Start(gtx)
-
-	process, err := BuildAndRunServer()
-	if err != nil {
-		return nil, err
+	if !testConfig.SkipAppServer {
+		smsrv.GetMailService().Start(gtx)
+		process, err := BuildAndRunServer()
+		if err != nil {
+			return nil, err
+		}
+		return process, nil
 	}
 
-	return process, nil
+	return nil, nil
 }
 
-func Destroy(gtx context.Context, process *os.Process) error {
+func Destroy(
+	gtx context.Context,
+	testConfig *TestConfig,
+	serverProcess *os.Process) error {
 
 	// if err := schema.Destroy(gtx); err != nil {
 	// 	log.Error().Err(err)
 	// }
-	// err := RunDockerCompose("down", MustGetPgDockerComposePath())
-	// if err != nil {
-	// 	return err
-	// }
 
-	if err := process.Signal(os.Interrupt); err != nil {
-		return errx.Errf(err, "failed to send SIGINT to server process")
+	if !testConfig.SkipDockerCompose {
+		err := RunDockerCompose("down", MustGetPgDockerComposePath())
+		if err != nil {
+			return err
+		}
 	}
-	if _, err := process.Wait(); err != nil {
-		return errx.Errf(err, "waiting for server process failed")
 
+	if !testConfig.SkipAppServer {
+		if err := serverProcess.Signal(os.Interrupt); err != nil {
+			return errx.Errf(err, "failed to send SIGINT to server process")
+		}
+		if _, err := serverProcess.Wait(); err != nil {
+			return errx.Errf(err, "waiting for server process failed")
+		}
 	}
 
 	return nil
