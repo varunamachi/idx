@@ -7,12 +7,14 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/tests/smsrv"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
+	"github.com/varunamachi/libx/netx"
 	"github.com/varunamachi/libx/rt"
 )
 
@@ -31,17 +33,24 @@ func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		purl, err := url.Parse(pgUrl)
+	} else {
+		// Wait for externally launched postgres server
+		log.Info().Msg("waiting for postgres at port 5432 (max wait = 2m)")
+		err := netx.WaitForPorts(gtx, "localhost:5432", 2*time.Minute)
 		if err != nil {
-			return nil, errx.Errf(err, "invalid pg-url in setup")
+			return nil, errx.Errf(err, "could not connect to postgres server")
 		}
-		db, err := pg.Connect(gtx, purl, "")
-		if err != nil {
-			return nil, err
-		}
-		pg.SetDefaultConn(db)
 	}
+
+	purl, err := url.Parse(pgUrl)
+	if err != nil {
+		return nil, errx.Errf(err, "invalid pg-url in setup")
+	}
+	db, err := pg.Connect(gtx, purl, "")
+	if err != nil {
+		return nil, err
+	}
+	pg.SetDefaultConn(db)
 
 	// init is done during server start
 	// if err := schema.Init(gtx, "test"); err != nil {
@@ -55,6 +64,13 @@ func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 			return nil, err
 		}
 		return process, nil
+	} else {
+		// Wait for externally launched server
+		log.Info().Msg("waiting for app server at port 8888 (max wait = 2m)")
+		err := netx.WaitForPorts(gtx, "localhost:8888", 2*time.Minute)
+		if err != nil {
+			return nil, errx.Errf(err, "could not connect to app server")
+		}
 	}
 
 	return nil, nil
