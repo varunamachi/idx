@@ -28,7 +28,7 @@ func NewContext(gtx context.Context, services *Services) context.Context {
 	return context.WithValue(gtx, servicesKey, services)
 }
 
-func services(gtx context.Context) *Services {
+func GetCoreServices(gtx context.Context) *Services {
 	svs := gtx.Value(servicesKey).(*Services)
 	if svs == nil {
 		panic("failed get service holder from context")
@@ -38,27 +38,27 @@ func services(gtx context.Context) *Services {
 }
 
 func UserCtlr(gtx context.Context) UserController {
-	return services(gtx).UserCtlr
+	return GetCoreServices(gtx).UserCtlr
 }
 
 func ServiceCtlr(gtx context.Context) ServiceController {
-	return services(gtx).ServiceCtlr
+	return GetCoreServices(gtx).ServiceCtlr
 }
 
 func GroupCtlr(gtx context.Context) GroupController {
-	return services(gtx).GroupCtlr
+	return GetCoreServices(gtx).GroupCtlr
 }
 
 func Authenticator(gtx context.Context) auth.UserAuthenticator {
-	return services(gtx).Authenticator
+	return GetCoreServices(gtx).Authenticator
 }
 
 func EventService(gtx context.Context) event.Service {
-	return services(gtx).EventService
+	return GetCoreServices(gtx).EventService
 }
 
 func MailProvider(gtx context.Context) email.Provider {
-	return services(gtx).MailProvider
+	return GetCoreServices(gtx).MailProvider
 }
 
 func NewEventAdder(gtx context.Context, op string, data data.M) *event.Adder {
