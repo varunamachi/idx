@@ -16,7 +16,7 @@ func (c *IdxClient) GetPerms(
 func (c *IdxClient) CreateService(
 	gtx context.Context, srv *core.Service) (int64, error) {
 
-	apiRes := c.Build().Path("/api/v1/service").Post(gtx, srv)
+	apiRes := c.build().Path("/api/v1/service").Post(gtx, srv)
 	res := map[string]int64{"serviceId": int64(-1)}
 	if err := apiRes.LoadClose(&res); err != nil {
 		return -1, errx.Errf(err, "failed to cratre service: '%s'", srv.Name)
@@ -26,7 +26,7 @@ func (c *IdxClient) CreateService(
 
 func (c *IdxClient) UpdateService(
 	gtx context.Context, srv *core.Service) error {
-	apiRes := c.Build().Path("/api/v1/service").Put(gtx, srv)
+	apiRes := c.build().Path("/api/v1/service").Put(gtx, srv)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to update service: '%s'", srv.Name)
 	}
@@ -35,7 +35,7 @@ func (c *IdxClient) UpdateService(
 
 func (c *IdxClient) GetService(
 	gtx context.Context, id int64) (*core.Service, error) {
-	apiRes := c.Build().Path("/api/v1/service", id).Get(gtx)
+	apiRes := c.build().Path("/api/v1/service", id).Get(gtx)
 	var service core.Service
 	if err := apiRes.LoadClose(&service); err != nil {
 		return nil, errx.Errf(err, "failed to get service: '%d'", id)
@@ -47,7 +47,7 @@ func (c *IdxClient) GetServices(
 	gtx context.Context, params *data.CommonParams) ([]*core.Service, error) {
 
 	// TODO - use common params as JSON query param
-	apiRes := c.Build().Path("/api/v1/service").CmnParam(params).Get(gtx)
+	apiRes := c.build().Path("/api/v1/service").CmnParam(params).Get(gtx)
 	services := make([]*core.Service, 0, params.PageSize)
 	if err := apiRes.LoadClose(&services); err != nil {
 		return nil, errx.Errf(err, "failed to get list of services")
@@ -57,7 +57,7 @@ func (c *IdxClient) GetServices(
 
 func (c *IdxClient) RemoveService(gtx context.Context, id int64) error {
 	// apiRes := c.Get(gtx, "/api/v1/service", strconv.FormatInt(id, 10))
-	apiRes := c.Build().Path("/api/v1/service", id).Delete(gtx)
+	apiRes := c.build().Path("/api/v1/service", id).Delete(gtx)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to remove service: '%d'", id)
 	}
@@ -67,7 +67,7 @@ func (c *IdxClient) RemoveService(gtx context.Context, id int64) error {
 func (c *IdxClient) ServiceExists(
 	gtx context.Context, name string) (bool, error) {
 	// apiRes := c.Get(gtx, "/api/v1/service/exists", name)
-	apiRes := c.Build().Path("/api/v1/service/exists", name).Get(gtx)
+	apiRes := c.build().Path("/api/v1/service/exists", name).Get(gtx)
 	exists := map[string]bool{
 		"exists": false,
 	}
@@ -81,7 +81,7 @@ func (c *IdxClient) ServiceExists(
 func (c *IdxClient) NumServices(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	// apiRes := c.Get(gtx, "/api/v1/service/count")
-	apiRes := c.Build().Path("/api/v1/service/count").Filter(filter).Get(gtx)
+	apiRes := c.build().Path("/api/v1/service/count").Filter(filter).Get(gtx)
 	num := map[string]int64{
 		"count": 0,
 	}
@@ -95,7 +95,7 @@ func (c *IdxClient) NumServices(
 func (c *IdxClient) GetServiceByName(
 	gtx context.Context, name string) (*core.Service, error) {
 	// apiRes := c.Get(gtx, "/api/v1/service/named", name)
-	apiRes := c.Build().Path("/api/v1/service/named", name).Get(gtx)
+	apiRes := c.build().Path("/api/v1/service/named", name).Get(gtx)
 	var service core.Service
 	if err := apiRes.LoadClose(&service); err != nil {
 		return nil, errx.Errf(err, "failed to get service: '%s'", name)
@@ -106,7 +106,7 @@ func (c *IdxClient) GetServiceByName(
 func (c *IdxClient) GetServicesForOwner(
 	gtx context.Context, ownerId string) ([]*core.Service, error) {
 	// apiRes := c.Get(gtx, "/api/v1/service/owner", ownerId)
-	apiRes := c.Build().Path("/api/v1/service/owner", ownerId).Get(gtx)
+	apiRes := c.build().Path("/api/v1/service/owner", ownerId).Get(gtx)
 	services := make([]*core.Service, 0, 10)
 	if err := apiRes.LoadClose(&services); err != nil {
 		return nil, errx.Errf(
@@ -121,7 +121,7 @@ func (c *IdxClient) AddAdminToService(
 	// 	"/api/v1/service/", strconv.FormatInt(serviceId, 10),
 	// 	"admin", strconv.FormatInt(userId, 10))
 
-	apiRes := c.Build().
+	apiRes := c.build().
 		Path("/api/v1/service/", serviceId, "admin", userId).
 		Put(gtx, nil)
 
@@ -138,7 +138,7 @@ func (c *IdxClient) GetServiceAdmins(
 	// apiRes := c.Get(gtx, "/api/v1/service/", strconv.FormatInt(serviceId, 10),
 	// 	"admin")
 
-	apiRes := c.Build().Path(gtx, "/api/v1/service/", serviceId).Get(gtx)
+	apiRes := c.build().Path(gtx, "/api/v1/service/", serviceId).Get(gtx)
 	admins := make([]*core.User, 0, 10)
 	if err := apiRes.LoadClose(&admins); err != nil {
 		return nil, errx.Errf(
@@ -152,7 +152,7 @@ func (c *IdxClient) RemoveAdminFromService(
 	// apiRes := c.Delete(gtx,
 	// 	"/api/v1/service/", strconv.FormatInt(serviceId, 10),
 	// 	"admin", strconv.FormatInt(userId, 10))
-	apiRes := c.Build().
+	apiRes := c.build().
 		Path("/api/v1/service/", serviceId, "admin", userId).
 		Delete(gtx)
 	if err := apiRes.Close(); err != nil {
@@ -170,7 +170,7 @@ func (c *IdxClient) IsServiceAdmin(
 	// 	"admin", strconv.FormatInt(userId, 10),
 	// 	"exists")
 
-	apiRes := c.Build().
+	apiRes := c.build().
 		Path("/api/v1/service/", serviceId, "admin", userId, "exists").
 		Get(gtx)
 	out := map[string]bool{

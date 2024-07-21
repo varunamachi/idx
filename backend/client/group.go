@@ -12,7 +12,7 @@ func (c *IdxClient) CreateGroup(
 	gtx context.Context,
 	group *core.Group) (int64, error) {
 	// apiRes := c.Post(gtx, group, "/api/v1/group")
-	apiRes := c.Build().Path("/api/v1/group").Post(gtx, group)
+	apiRes := c.build().Path("/api/v1/group").Post(gtx, group)
 
 	res := map[string]int64{"groupId": int64(-1)}
 	if err := apiRes.LoadClose(&res); err != nil {
@@ -23,7 +23,7 @@ func (c *IdxClient) CreateGroup(
 
 func (c *IdxClient) UpdateGroup(gtx context.Context, group *core.Group) error {
 	// apiRes := c.Put(gtx, group, "/api/v1/group")
-	apiRes := c.Build().Path("/api/v1/group").Put(gtx, group)
+	apiRes := c.build().Path("/api/v1/group").Put(gtx, group)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to update group: '%s'", group.Name)
 
@@ -35,7 +35,7 @@ func (c *IdxClient) GetGroup(
 	gtx context.Context, id int64) (*core.Group, error) {
 	var group core.Group
 	// apiRes := c.Get(gtx, "/api/v1/group", strconv.FormatInt(id, 10))
-	apiRes := c.Build().Path("/api/v1/group", id).Get(gtx)
+	apiRes := c.build().Path("/api/v1/group", id).Get(gtx)
 	if err := apiRes.LoadClose(&group); err != nil {
 		return nil, errx.Errf(err, "failed to get group: '%d'", id)
 	}
@@ -44,7 +44,7 @@ func (c *IdxClient) GetGroup(
 
 func (c *IdxClient) RemoveGroup(gtx context.Context, id int64) error {
 	// apiRes := c.Delete(gtx, "/api/v1/group", strconv.FormatInt(id, 10))
-	apiRes := c.Build().Path("/api/v1/group", id).Delete(gtx)
+	apiRes := c.build().Path("/api/v1/group", id).Delete(gtx)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to delete group: '%d'", id)
 	}
@@ -58,7 +58,7 @@ func (c *IdxClient) GetGroups(
 
 	groups := make([]*core.Group, 0, 25)
 	// apiRes := c.Get(gtx, "/api/v1/group")
-	apiRes := c.Build().Path("/api/v1/group").CmnParam(params).Get(gtx)
+	apiRes := c.build().Path("/api/v1/group").CmnParam(params).Get(gtx)
 	if err := apiRes.LoadClose(&groups); err != nil {
 		return nil, errx.Errf(err, "failed to get groups")
 	}
@@ -72,7 +72,7 @@ func (c *IdxClient) GroupExists(gtx context.Context, id int64) (bool, error) {
 	}
 	// apiRes := c.Get(
 	// 		gtx, "/api/v1/group/", strconv.FormatInt(id, 10), "exists")
-	apiRes := c.Build().Path("/api/v1/group/", id, "exists").Get(gtx)
+	apiRes := c.build().Path("/api/v1/group/", id, "exists").Get(gtx)
 	if err := apiRes.LoadClose(&apiRes); err != nil {
 		return false, errx.Errf(
 			err, "failed to check if group exists: '%d'", id)
@@ -87,7 +87,7 @@ func (c *IdxClient) NumGroups(
 		"count": 0,
 	}
 	// apiRes := c.Get(gtx, "/api/v1/group/count")
-	apiRes := c.Build().Path("/api/v1/group/count").Filter(filter).Get(gtx)
+	apiRes := c.build().Path("/api/v1/group/count").Filter(filter).Get(gtx)
 	if err := apiRes.LoadClose(&res); err != nil {
 		return 0, errx.Errf(err, "failed to get number of group for filter")
 	}
@@ -101,7 +101,7 @@ func (c *IdxClient) SetGroupPermissions(
 	// apiRes := c.Put(gtx,
 	// 	perms,
 	// 	"/api/v1/group", strconv.FormatInt(groupId, 10), "perm")
-	apiRes := c.Build().Path("/api/v1/group", groupId, "perm").Put(gtx, perms)
+	apiRes := c.build().Path("/api/v1/group", groupId, "perm").Put(gtx, perms)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err,
 			"failed to set group's permissions: '%d'", groupId)
@@ -115,7 +115,7 @@ func (c *IdxClient) GetGroupPermissions(
 	perms := make([]string, 0, 25)
 	// apiRes := c.Get(gtx,
 	// 	"/api/v1/group", strconv.FormatInt(groupId, 10), "perm")
-	apiRes := c.Build().Path("/api/v1/group", groupId, "perm").Get(gtx)
+	apiRes := c.build().Path("/api/v1/group", groupId, "perm").Get(gtx)
 	if err := apiRes.LoadClose(&perms); err != nil {
 		return nil, errx.Errf(
 			err, "failed to get permissions for group: '%d'", groupId)

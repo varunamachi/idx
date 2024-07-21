@@ -16,7 +16,7 @@ func Run(gtx context.Context) error {
 		return err
 	}
 
-	cnt := client.New("http://localhost:8888")
+	cnt := client.New("http://localhost:8888").WithTimeout(5 * time.Minute)
 	_, err = cnt.Register(gtx, super.user, super.password)
 	if err != nil {
 		return err

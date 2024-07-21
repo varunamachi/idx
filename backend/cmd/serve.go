@@ -83,7 +83,7 @@ func contextMiddleware(gtx context.Context) echo.MiddlewareFunc {
 			newGtx = core.NewContext(newGtx, services)
 			etx.SetRequest(etx.Request().WithContext(newGtx))
 			fmt.Println("set")
-			return nil
+			return next(etx)
 
 		}
 	}
