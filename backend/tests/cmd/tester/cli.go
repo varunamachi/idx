@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"slices"
 
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
@@ -20,15 +21,9 @@ func runCmd() *cli.Command {
 		Description: "Run tests",
 		Usage:       "Run tests",
 		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:  "no-app-server",
-				Usage: "Skip building and starting the server in test setup",
-				Value: false,
-			},
-			&cli.BoolFlag{
-				Name:  "no-docker-compose",
-				Usage: "Skip running docker compose during test setup",
-				Value: false,
+			&cli.StringSliceFlag{
+				Name:  "skip",
+				Usage: "Skip a step. Valid: 'server', 'compose'",
 			},
 			&cli.BoolFlag{
 				Name:  "destroy-schema-after-test",
@@ -41,9 +36,10 @@ func runCmd() *cli.Command {
 		},
 		Before: func(ctx *cli.Context) error {
 
+			ss := ctx.StringSlice("skip")
 			testConfig := tests.TestConfig{
-				SkipAppServer:     ctx.Bool("no-app-server"),
-				SkipDockerCompose: ctx.Bool("no-docker-compose"),
+				SkipAppServer:     slices.Contains(ss, "server"),
+				SkipDockerCompose: slices.Contains(ss, "server"),
 				DestroySchema:     ctx.Bool("destroy-schema-after-test"),
 			}
 
@@ -57,12 +53,12 @@ func runCmd() *cli.Command {
 			return nil
 		},
 		After: func(ctx *cli.Context) error {
+			ss := ctx.StringSlice("skip")
 			testConfig := tests.TestConfig{
-				SkipAppServer:     ctx.Bool("no-app-server"),
-				SkipDockerCompose: ctx.Bool("no-docker-compose"),
+				SkipAppServer:     slices.Contains(ss, "server"),
+				SkipDockerCompose: slices.Contains(ss, "server"),
 				DestroySchema:     ctx.Bool("destroy-schema-after-test"),
 			}
-
 			err := tests.Destroy(ctx.Context, &testConfig, proc)
 			if err != nil {
 				// log.Error().Err(err).Msg("destruction failed")

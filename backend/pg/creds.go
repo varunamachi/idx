@@ -35,7 +35,7 @@ func (pcs *SecretStorage) SetPassword(
 			$1,
 			$2,
 			$3
-		) ON CONFLICT(id) DO
+		) ON CONFLICT(id, item_type) DO
 			UPDATE SET password_hash = EXCLUDED.password_hash;
 	
 	`

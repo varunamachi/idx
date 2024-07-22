@@ -25,7 +25,9 @@ func (pgu *userPgStorage) Save(
 
 	query := `
 		INSERT INTO idx_user (
+			created_at,
 			created_by,
+			updated_at,
 			updated_by,
 			user_id,
 			email,
@@ -47,7 +49,7 @@ func (pgu *userPgStorage) Save(
 			:title,
 			:props	
 		) ON CONFLICT (id) DO UPDATE SET
-				created_by = EXCLUDED.created_by,
+				updated_at = EXCLUDED.updated_at,
 				updated_by = EXCLUDED.updated_by,
 				user_id = EXCLUDED.user_id,
 				email = EXCLUDED.email,
