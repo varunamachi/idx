@@ -48,7 +48,7 @@ func ReadTemplate(name string) (string, error) {
 		return val, nil
 	}
 
-	dt, err := mailDir.ReadFile(name + ".tmpl.html")
+	dt, err := mailDir.ReadFile("resources/" + name + ".tmpl.html")
 	if err != nil {
 		return "", errx.Errf(err,
 			"failed read embedded mail template: '%s'", name)
