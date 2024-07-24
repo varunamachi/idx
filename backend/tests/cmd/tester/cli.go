@@ -23,7 +23,7 @@ func runCmd() *cli.Command {
 		Flags: []cli.Flag{
 			&cli.StringSliceFlag{
 				Name:  "skip",
-				Usage: "Skip a step. Valid: 'server', 'compose'",
+				Usage: "Skip a step. Valid: 'server', 'compose', 'clean'",
 			},
 			&cli.BoolFlag{
 				Name:  "destroy-schema-after-test",
@@ -36,12 +36,7 @@ func runCmd() *cli.Command {
 		},
 		Before: func(ctx *cli.Context) error {
 
-			ss := ctx.StringSlice("skip")
-			testConfig := tests.TestConfig{
-				SkipAppServer:     slices.Contains(ss, "server"),
-				SkipDockerCompose: slices.Contains(ss, "server"),
-				DestroySchema:     ctx.Bool("destroy-schema-after-test"),
-			}
+			testConfig := getConfig(ctx)
 
 			var err error
 			proc, err = tests.Setup(ctx.Context, &testConfig)
@@ -53,12 +48,11 @@ func runCmd() *cli.Command {
 			return nil
 		},
 		After: func(ctx *cli.Context) error {
-			ss := ctx.StringSlice("skip")
-			testConfig := tests.TestConfig{
-				SkipAppServer:     slices.Contains(ss, "server"),
-				SkipDockerCompose: slices.Contains(ss, "server"),
-				DestroySchema:     ctx.Bool("destroy-schema-after-test"),
-			}
+
+			// So that necessary mails are sent
+			// time.Sleep(200 * time.Millisecond)
+
+			testConfig := getConfig(ctx)
 			err := tests.Destroy(ctx.Context, &testConfig, proc)
 			if err != nil {
 				// log.Error().Err(err).Msg("destruction failed")
@@ -67,6 +61,17 @@ func runCmd() *cli.Command {
 			log.Info().Msg("destroyed test setup")
 			return nil
 		},
+	}
+}
+
+func getConfig(ctx *cli.Context) tests.TestConfig {
+	ss := ctx.StringSlice("skip")
+
+	return tests.TestConfig{
+		SkipAppServer:     slices.Contains(ss, "server"),
+		SkipDockerCompose: slices.Contains(ss, "compose"),
+		SkipDataClean:     slices.Contains(ss, "clean"),
+		DestroySchema:     ctx.Bool("destroy-schema-after-test"),
 	}
 }
 

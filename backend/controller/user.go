@@ -113,6 +113,11 @@ func (uc *userCtl) Register(
 		return id, evAdder.Commit(err)
 	}
 
+	// No need to verify auto approved accounts
+	if user.State == core.Active {
+		return id, nil
+	}
+
 	tok := core.NewToken(user.UserId, "verfiy_account", "idx_user")
 	if err := uc.credStore.StoreToken(gtx, tok); err != nil {
 		err = errx.Errf(err, "failed to store user verification token")

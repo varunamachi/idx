@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"os"
 	"os/exec"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/idx/tests/smsrv"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/pg"
@@ -21,6 +23,7 @@ import (
 type TestConfig struct {
 	SkipAppServer     bool
 	SkipDockerCompose bool
+	SkipDataClean     bool
 	DestroySchema     bool
 }
 
@@ -57,8 +60,8 @@ func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 	// 	return err
 	// }
 
+	smsrv.GetMailService().Start(gtx)
 	if !testConfig.SkipAppServer {
-		smsrv.GetMailService().Start(gtx)
 		process, err := BuildAndRunServer()
 		if err != nil {
 			return nil, err
@@ -81,15 +84,12 @@ func Destroy(
 	testConfig *TestConfig,
 	serverProcess *os.Process) error {
 
-	// if err := schema.Destroy(gtx); err != nil {
-	// 	log.Error().Err(err)
-	// }
-
 	if !testConfig.SkipDockerCompose {
 		err := RunDockerCompose("down", MustGetPgDockerComposePath())
 		if err != nil {
 			return err
 		}
+		log.Info().Msg("docker-compose shutdown complete")
 	}
 
 	if !testConfig.SkipAppServer {
@@ -99,6 +99,22 @@ func Destroy(
 		if _, err := serverProcess.Wait(); err != nil {
 			return errx.Errf(err, "waiting for server process failed")
 		}
+		log.Info().Msg("app-server shutdown complete")
+	}
+
+	if !testConfig.SkipDataClean {
+		if err := schema.CleanData(gtx); err != nil {
+			fmt.Println(err)
+			return err
+		}
+		log.Info().Msg("data clean complete")
+	}
+
+	if testConfig.DestroySchema {
+		if err := schema.Destroy(gtx); err != nil {
+			return err
+		}
+		log.Info().Msg("schema delete complete")
 	}
 
 	return nil
@@ -141,7 +157,7 @@ func BuildAndRunServer() (*os.Process, error) {
 	builder := rt.NewCmdBuilder(output).
 		WithArgs("serve", "--pg-url", pgUrl).
 		WithEnv("IDX_MAIL_PROVIDER", "IDX_SIMPLE_MAIL_SERVICE_CLIENT_PROVIDER").
-		WithEnv("IDX_SIMPLE_SRV_SEND_URL", "http://localhost:9999/send")
+		WithEnv("IDX_SIMPLE_SRV_SEND_URL", "http://localhost:9999/api/v1/send")
 
 	process, err := builder.Start()
 	if err != nil {

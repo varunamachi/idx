@@ -68,8 +68,7 @@ func (ms *MailService) getEp() *httpx.Endpoint {
 func (ms *MailService) Start(gtx context.Context) {
 
 	go func() {
-		server := httpx.NewServer(nil, nil)
-		server.WithAPIs(
+		server := httpx.NewServer(nil, nil).WithAPIs(
 			ms.sendEp(),
 			ms.getEp(),
 		)

@@ -101,17 +101,6 @@ CREATE TABLE IF NOT EXISTS idx_token (
 --
 -- +goose Down
 -- +goose StatementBegin
--- DROP TABLE idx_token;
--- DROP TABLE credential;
--- DROP TABLE service_to_group;
--- DROP TABLE group_to_perm;
--- DROP TABLE user_to_group;
--- DROP TABLE idx_event;
--- DROP TABLE service_to_owner;
--- DROP TABLE user_pass;
--- DROP TABLE idx_service;
--- DROP TABLE idx_group;
--- DROP TABLE idx_user;
 DROP TABLE idx_token;
 
 DROP TABLE credential;
@@ -120,9 +109,9 @@ DROP TABLE group_to_perm;
 
 DROP TABLE user_to_group;
 
-DROP TABLE idx_even;
+DROP TABLE idx_event;
 
-DROP TABLE user_pas;
+DROP TABLE user_pass;
 
 DROP TABLE service_to_owner;
 
