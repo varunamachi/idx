@@ -15,7 +15,7 @@ func main() {
 
 	app := libx.NewApp(
 		"idx-tester", "Simple Identity Service", "0.0.1", "varunamachi").
-		WithCommands(runCmd(), checkPgConn())
+		WithCommands(runCmd(), checkPgConnCmd(), cleanDBCmd())
 
 	if err := app.RunContext(gtx, os.Args); err != nil {
 		errx.PrintSomeStack(err)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
+	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/idx/tests"
 	"github.com/varunamachi/idx/tests/simple"
 	"github.com/varunamachi/libx/data/pg"
@@ -87,7 +88,7 @@ func simpleTestCmd() *cli.Command {
 	}
 }
 
-func checkPgConn() *cli.Command {
+func checkPgConnCmd() *cli.Command {
 	return &cli.Command{
 		Name:        "check",
 		Description: "Check something",
@@ -119,6 +120,24 @@ func checkPgConn() *cli.Command {
 			pg.SetDefaultConn(db)
 
 			return pg.Conn().Ping()
+		},
+	}
+}
+
+func cleanDBCmd() *cli.Command {
+	return &cli.Command{
+		Name:        "clean-db",
+		Description: "cleans data from idx's database tables",
+		Usage:       "cleans data from idx's database tables",
+		Action: func(ctx *cli.Context) error {
+			if err := tests.ConnectToTestDB(ctx.Context); err != nil {
+				return err
+			}
+			if err := schema.CleanData(ctx.Context); err != nil {
+				return err
+			}
+			log.Info().Msg("database clean complete!")
+			return nil
 		},
 	}
 }

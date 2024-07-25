@@ -81,7 +81,7 @@ func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
 		SELECT password_hash 
 		FROM credential
 		WHERE 
-			id = $1,
+			id = $1 AND
 			item_type = $2
 	`
 	hash := ""

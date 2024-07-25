@@ -45,20 +45,13 @@ func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 		}
 	}
 
-	purl, err := url.Parse(pgUrl)
-	if err != nil {
-		return nil, errx.Errf(err, "invalid pg-url in setup")
-	}
-	db, err := pg.Connect(gtx, purl, "")
-	if err != nil {
-		return nil, err
-	}
-	pg.SetDefaultConn(db)
-
 	// init is done during server start
 	// if err := schema.Init(gtx, "test"); err != nil {
 	// 	return err
 	// }
+	if err := ConnectToTestDB(gtx); err != nil {
+		return nil, errx.Wrap(err)
+	}
 
 	smsrv.GetMailService().Start(gtx)
 	if !testConfig.SkipAppServer {
@@ -166,4 +159,17 @@ func BuildAndRunServer() (*os.Process, error) {
 	log.Info().Msg("server exited normally")
 
 	return process, nil
+}
+
+func ConnectToTestDB(gtx context.Context) error {
+	purl, err := url.Parse(pgUrl)
+	if err != nil {
+		return errx.Errf(err, "invalid pg-url in setup")
+	}
+	db, err := pg.Connect(gtx, purl, "")
+	if err != nil {
+		return err
+	}
+	pg.SetDefaultConn(db)
+	return nil
 }
