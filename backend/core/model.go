@@ -44,10 +44,17 @@ type Token struct {
 	Created   string `db:"created" json:"created"`
 }
 
+type AuthEntity string
+
+const (
+	AuthUser    AuthEntity = "user"
+	AuthService AuthEntity = "service"
+)
+
 type Creds struct {
-	Id       string `json:"id"`
-	Password string `json:"password"`
-	Type     string `json:"type"`
+	Id       string     `json:"id"`
+	Password string     `json:"password"`
+	Type     AuthEntity `json:"type"`
 }
 
 type Hasher interface {

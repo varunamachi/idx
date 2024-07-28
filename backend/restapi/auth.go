@@ -71,14 +71,14 @@ func authenticateEp(athr auth.UserAuthenticator) *httpx.Endpoint {
 
 func logout(athr auth.Authenticator) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var creds auth.AuthData
-		if err := etx.Bind(&creds); err != nil {
-			return errx.BadReqX(err, "failed to decode credentials")
-		}
-		err := athr.Authenticate(etx.Request().Context(), creds)
-		if err != nil {
-			return err
-		}
+		// var creds auth.AuthData
+		// if err := etx.Bind(&creds); err != nil {
+		// 	return errx.BadReqX(err, "failed to decode credentials")
+		// }
+		// err := athr.(etx.Request().Context(), creds)
+		// if err != nil {
+		// 	return err
+		// }
 		return nil
 	}
 	return &httpx.Endpoint{

@@ -121,7 +121,11 @@ func (c *IdxClient) Approve(
 func (c *IdxClient) Login(
 	gtx context.Context, userId, password string) (*core.User, error) {
 
-	creds := auth.AuthData{}
+	creds := core.Creds{
+		Id:       userId,
+		Password: password,
+		Type:     core.AuthUser,
+	}
 	apiRes := c.build().Path("/api/v1/authenticate").Post(gtx, creds)
 
 	authResult := struct {

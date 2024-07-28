@@ -2,20 +2,22 @@ package auth
 
 import (
 	"context"
+	"errors"
 
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/auth"
+	"github.com/varunamachi/libx/errx"
 )
 
-const (
-	TypeUser    = "user"
-	TypeService = "service"
-)
+// const (
+// 	TypeUser    = "user"
+// 	TypeService = "service"
+// )
 
-type cred struct {
-	Id       string
-	Password string
-}
+// type cred struct {
+// 	Id       string
+// 	Password string
+// }
 
 type authenticator struct {
 	us core.UserStorage
@@ -45,9 +47,13 @@ func (athn *authenticator) Authenticate(
 func (athn *authenticator) GetUser(
 	gtx context.Context, authData auth.AuthData) (auth.User, error) {
 
-	userId, _, err := authData.ToUserAndPassword()
-	if err != nil {
+	var creds core.Creds
+	if err := authData.Decode(&creds); err != nil {
 		return nil, err
 	}
-	return athn.us.GetByUserId(gtx, userId)
+	if creds.Type != core.AuthUser {
+		return nil, errx.Errf(errors.New("invalid user for auth"),
+			"entity '%s' of type '%s' cannot be authenticated as a user")
+	}
+	return athn.us.GetByUserId(gtx, creds.Id)
 }
