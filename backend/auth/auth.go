@@ -24,9 +24,11 @@ type authenticator struct {
 	cs core.SecretStorage
 }
 
-func NewAuthenticator(cs core.SecretStorage) auth.UserAuthenticator {
+func NewAuthenticator(
+	us core.UserStorage, cs core.SecretStorage) auth.UserAuthenticator {
 	return &authenticator{
 		cs: cs,
+		us: us,
 	}
 }
 

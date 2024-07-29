@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 	"slices"
@@ -82,7 +81,6 @@ func simpleTestCmd() *cli.Command {
 		Description: "Run simple test",
 		Usage:       "Run simple test",
 		Action: func(ctx *cli.Context) error {
-			fmt.Printf("running simple test")
 			return simple.Run(ctx.Context)
 		},
 	}

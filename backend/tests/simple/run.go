@@ -2,9 +2,9 @@ package simple
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/client"
 	"github.com/varunamachi/libx/netx"
 )
@@ -26,8 +26,9 @@ func Run(gtx context.Context) error {
 	if err != nil {
 		return err
 	}
+	log.Info().Str("userId", user.UserId).Msg("logged in")
 
-	fmt.Println(user.UserId)
+	log.Info().Msg("simple test successful")
 
 	// TODO - make the email provider a service and receive email through
 	// API, fake provider cant be just memory based

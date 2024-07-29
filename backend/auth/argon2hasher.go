@@ -89,7 +89,11 @@ func (*argon2Hasher) Verify(pw string, hashStr string) (bool, error) {
 			argon2.Version, version)
 	}
 
-	if _, err := fmt.Sscanf(comps[3], "m=%d,t=%d,p=%d", &config); err != nil {
+	_, err := fmt.Sscanf(comps[3], "m=%d,t=%d,p=%d",
+		&config.Memory,
+		&config.Iterations,
+		&config.Threads)
+	if err != nil {
 		return false, errx.Errf(err, "argon2 config mismatch")
 	}
 

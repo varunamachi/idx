@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -82,7 +81,7 @@ func contextMiddleware(gtx context.Context) echo.MiddlewareFunc {
 			newGtx := etx.Request().Context()
 			newGtx = core.NewContext(newGtx, services)
 			etx.SetRequest(etx.Request().WithContext(newGtx))
-			fmt.Println("set")
+			// fmt.Println("set")
 			return next(etx)
 
 		}

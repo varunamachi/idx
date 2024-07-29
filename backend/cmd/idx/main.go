@@ -41,7 +41,7 @@ func main() {
 	hasher := auth.NewArgon2Hasher()
 	credStorage := idxpg.NewCredentialStorage(hasher)
 
-	authr := idxAuth.NewAuthenticator(credStorage)
+	authr := idxAuth.NewAuthenticator(userStore, credStorage)
 	uctlr := controller.NewUserController(userStore, credStorage, emailProvider)
 	gctlr := controller.NewGroupController(groupStore, serviceStore)
 	sctlr := controller.NewServiceController(
