@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"net/url"
 	"time"
 
 	"github.com/varunamachi/idx/core"
@@ -59,6 +60,23 @@ func (c *IdxClient) Verify(
 		Post(gtx, nil)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to verify user '%s'", userId)
+	}
+	return nil
+}
+
+func (c *IdxClient) VerifyWithUrl(
+	gtx context.Context, fullUrl string) error {
+
+	u, err := url.Parse(fullUrl)
+	if err != nil {
+		return errx.Errf(err, "failed to parse verify url: %s", fullUrl)
+	}
+
+	apiRes := c.build().
+		Path(u.Path).
+		Post(gtx, nil)
+	if err := apiRes.Close(); err != nil {
+		return errx.Errf(err, "failed to verify user with path '%s'")
 	}
 	return nil
 }

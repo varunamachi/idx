@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/varunamachi/idx/mailtmpl"
+	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/email"
 	"github.com/varunamachi/libx/rt"
 	"github.com/varunamachi/libx/str"
@@ -13,7 +14,7 @@ func SendSimpleMail(
 	gtx context.Context,
 	to string,
 	templateName string,
-	data any) error {
+	data data.M) error {
 
 	from := rt.EnvString("IDX_SENDER_MAIL_ID", "idx-noreply@example.com")
 
