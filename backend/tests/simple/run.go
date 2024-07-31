@@ -7,6 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/client"
+	"github.com/varunamachi/idx/mailtmpl"
 	"github.com/varunamachi/idx/tests/smsrv"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/netx"
@@ -27,12 +28,12 @@ func Run(gtx context.Context) error {
 		return err
 	}
 
-	// Login as super user
-	user, err := cnt.Login(gtx, super.user.UserId, super.password)
+	// Login as super super
+	super, err := cnt.Login(gtx, super.user.UserId, super.password)
 	if err != nil {
 		return err
 	}
-	log.Info().Str("userId", user.UserId).Msg("logged in")
+	log.Info().Str("userId", super.UserId).Msg("logged in")
 
 	for _, up := range users {
 		uclient := client.New("http://localhost:8888").
@@ -44,7 +45,10 @@ func Run(gtx context.Context) error {
 		}
 		fmt.Printf("received id: %d", id)
 
-		msg, err := smsrv.GetMailService().Get(user.UserId, "to", user.EmailId)
+		mailId := up.user.EmailId + ":" +
+			mailtmpl.UserAccountVerificationTemplate
+		msg, err := smsrv.GetMailService().Get(
+			up.user.EmailId, "to", mailId)
 		if err != nil {
 			return errx.Wrap(err)
 		}

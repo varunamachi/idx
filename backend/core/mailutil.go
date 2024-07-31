@@ -43,5 +43,4 @@ func SendSimpleMail(
 	}, true)
 
 	return err
-
 }
