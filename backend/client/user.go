@@ -76,7 +76,7 @@ func (c *IdxClient) VerifyWithUrl(
 		Path(u.Path).
 		Post(gtx, nil)
 	if err := apiRes.Close(); err != nil {
-		return errx.Errf(err, "failed to verify user with path '%s'")
+		return errx.Errf(err, "failed to verify user with path '%s'", u.Path)
 	}
 	return nil
 }
@@ -129,9 +129,9 @@ func (c *IdxClient) Approve(
 	groupIds ...int64) error {
 	apiRes := c.build().
 		Path("/api/v1/user", userId, "approve", string(role)).
-		Post(gtx, groupIds)
+		Patch(gtx, groupIds)
 	if err := apiRes.Close(); err != nil {
-		return errx.Errf(err, "failed to reset password of user '%s'", userId)
+		return errx.Errf(err, "failed to set approve user '%s'", userId)
 	}
 	return nil
 }

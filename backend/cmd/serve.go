@@ -10,6 +10,7 @@ import (
 	"github.com/varunamachi/idx/pg/schema"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data/pg"
+	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 
 	"github.com/rs/zerolog/log"
@@ -38,7 +39,7 @@ func ServeCommand() *cli.Command {
 				WithServer(
 					httpx.NewServer(os.Stdout, &userRetriever{}).
 						WithRootMiddlewares(contextMiddleware(gtx)).
-						PrintAllAccess(true).
+						PrintAllAccess(false).
 						WithAPIs(restapi.AuthEndpoints(gtx)...).
 						WithAPIs(restapi.UserEndpoints(gtx)...).
 						WithAPIs(restapi.GroupEndpoints(gtx)...).
@@ -46,7 +47,7 @@ func ServeCommand() *cli.Command {
 
 			// Create schema if required
 			if err := schema.Init(gtx, "test"); err != nil {
-				return err
+				return errx.Wrap(err)
 			}
 
 			go func() {
@@ -57,7 +58,7 @@ func ServeCommand() *cli.Command {
 
 			if err := app.Serve(uint32(ctx.Uint("port"))); err != nil {
 				if err != http.ErrServerClosed {
-					return err
+					return errx.Wrap(err)
 				}
 			}
 			return nil
@@ -70,7 +71,8 @@ type userRetriever struct {
 
 func (ug *userRetriever) GetUser(
 	gtx context.Context, userId string) (auth.User, error) {
-	return nil, nil
+	ctl := core.UserCtlr(gtx)
+	return ctl.GetByUserId(gtx, userId)
 }
 
 func contextMiddleware(gtx context.Context) echo.MiddlewareFunc {

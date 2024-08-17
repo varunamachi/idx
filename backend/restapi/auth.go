@@ -77,7 +77,7 @@ func logout(athr auth.Authenticator) *httpx.Endpoint {
 		// }
 		// err := athr.(etx.Request().Context(), creds)
 		// if err != nil {
-		// 	return err
+		// 	return errx.Wrap(err)
 		// }
 		return nil
 	}

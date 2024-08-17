@@ -18,20 +18,20 @@ func Run(gtx context.Context) error {
 	// Wait for the app server and create a client
 	err := netx.WaitForPorts(gtx, "localhost:8888", 10*time.Second)
 	if err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 	cnt := client.New("http://localhost:8888").WithTimeout(5 * time.Minute)
 
 	// Create a super user
 	_, err = cnt.Register(gtx, super.user, super.password)
 	if err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 
 	// Login as super super
 	super, err := cnt.Login(gtx, super.user.UserId, super.password)
 	if err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 	log.Info().Str("userId", super.UserId).Msg("logged in")
 

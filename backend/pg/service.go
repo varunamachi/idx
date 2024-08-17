@@ -99,7 +99,7 @@ func (pss *svcPgStorage) Remove(
 	gtx context.Context,
 	id int64) error {
 	if err := pss.gd.Delete(gtx, "idx_service", "id"); err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 	return nil
 }

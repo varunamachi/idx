@@ -95,7 +95,7 @@ func checkPgConnCmd() *cli.Command {
 			err := tests.RunDockerCompose("up",
 				tests.MustGetPgDockerComposePath())
 			if err != nil {
-				return err
+				return errx.Wrap(err)
 			}
 
 			defer func() {
@@ -113,7 +113,7 @@ func checkPgConnCmd() *cli.Command {
 			}
 			db, err := pg.Connect(ctx.Context, purl, "Asia/Kolkata")
 			if err != nil {
-				return err
+				return errx.Wrap(err)
 			}
 			pg.SetDefaultConn(db)
 
@@ -129,10 +129,10 @@ func cleanDBCmd() *cli.Command {
 		Usage:       "cleans data from idx's database tables",
 		Action: func(ctx *cli.Context) error {
 			if err := tests.ConnectToTestDB(ctx.Context); err != nil {
-				return err
+				return errx.Wrap(err)
 			}
 			if err := schema.CleanData(ctx.Context); err != nil {
-				return err
+				return errx.Wrap(err)
 			}
 			log.Info().Msg("database clean complete!")
 			return nil

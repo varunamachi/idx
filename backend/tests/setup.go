@@ -47,7 +47,7 @@ func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 
 	// init is done during server start
 	// if err := schema.Init(gtx, "test"); err != nil {
-	// 	return err
+	// 	return errx.Wrap(err)
 	// }
 	if err := ConnectToTestDB(gtx); err != nil {
 		return nil, errx.Wrap(err)
@@ -80,7 +80,7 @@ func Destroy(
 	if !testConfig.SkipDockerCompose {
 		err := RunDockerCompose("down", MustGetPgDockerComposePath())
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		log.Info().Msg("docker-compose shutdown complete")
 	}
@@ -98,14 +98,14 @@ func Destroy(
 	if !testConfig.SkipDataClean {
 		if err := schema.CleanData(gtx); err != nil {
 			fmt.Println(err)
-			return err
+			return errx.Wrap(err)
 		}
 		log.Info().Msg("data clean complete")
 	}
 
 	if testConfig.DestroySchema {
 		if err := schema.Destroy(gtx); err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		log.Info().Msg("schema delete complete")
 	}
@@ -150,7 +150,8 @@ func BuildAndRunServer() (*os.Process, error) {
 	builder := rt.NewCmdBuilder(output).
 		WithArgs("serve", "--pg-url", pgUrl).
 		WithEnv("IDX_MAIL_PROVIDER", "IDX_SIMPLE_MAIL_SERVICE_CLIENT_PROVIDER").
-		WithEnv("IDX_SIMPLE_SRV_SEND_URL", "http://localhost:9999/api/v1/send")
+		WithEnv("IDX_SIMPLE_SRV_SEND_URL", "http://localhost:9999/api/v1/send").
+		WithEnv("IDX_ROLE_MAPPING", "super:Super")
 
 	process, err := builder.Start()
 	if err != nil {
@@ -168,7 +169,7 @@ func ConnectToTestDB(gtx context.Context) error {
 	}
 	db, err := pg.Connect(gtx, purl, "")
 	if err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 	pg.SetDefaultConn(db)
 	return nil

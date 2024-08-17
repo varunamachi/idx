@@ -45,7 +45,7 @@ func registerUserEp(us core.UserController) *httpx.Endpoint {
 		userId, err := us.Register(
 			etx.Request().Context(), up.User, up.Password)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return httpx.SendJSON(etx, data.M{"userId": userId})
 	}
@@ -67,7 +67,7 @@ func verifyUserEp(us core.UserController) *httpx.Endpoint {
 		verToken := etx.Param("toekn")
 		err := us.Verify(etx.Request().Context(), userId, verToken)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return httpx.SendJSON(etx, data.M{
 			"userId": userId,
@@ -93,7 +93,7 @@ func updateUserEp(us core.UserController) *httpx.Endpoint {
 		}
 
 		if err := us.Update(etx.Request().Context(), &user); err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return nil
 	}
@@ -119,7 +119,7 @@ func getUserEp(us core.UserController) *httpx.Endpoint {
 
 		user, err := us.GetOne(etx.Request().Context(), id)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, user)
@@ -146,7 +146,7 @@ func getUserByUserIdEp(us core.UserController) *httpx.Endpoint {
 
 		user, err := us.GetByUserId(etx.Request().Context(), id)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, user)
@@ -167,12 +167,12 @@ func getUsersEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		users, err := us.Get(etx.Request().Context(), cmnParams)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, users)
@@ -199,7 +199,7 @@ func deleteUserEp(us core.UserController) *httpx.Endpoint {
 
 		err := us.Remove(etx.Request().Context(), id)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return etx.String(http.StatusOK, strconv.FormatInt(id, 10))
@@ -235,7 +235,7 @@ func updatePasswordEp(us core.UserController) *httpx.Endpoint {
 			credx.OldPassword,
 			credx.NewPassword)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return etx.String(http.StatusOK, credx.UserId)
@@ -263,7 +263,7 @@ func initPasswordResetEp(us core.UserController) *httpx.Endpoint {
 
 		err := us.InitResetPassword(etx.Request().Context(), user)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return etx.String(http.StatusOK, user)
@@ -299,7 +299,7 @@ func resetPasswordEp(us core.UserController) *httpx.Endpoint {
 			credx.Token,
 			credx.NewPassword)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return etx.String(http.StatusOK, credx.UserId)
@@ -334,14 +334,14 @@ func approveEp(us core.UserController) *httpx.Endpoint {
 
 		err := us.Approve(etx.Request().Context(), user, role)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return etx.String(http.StatusOK, string(role))
 	}
 
 	return &httpx.Endpoint{
-		Method:      echo.PUT,
+		Method:      echo.PATCH,
 		Path:        "/user/:user/approve/:role",
 		Category:    "idx.user",
 		Desc:        "Approve a user with appropriate role",
@@ -364,7 +364,7 @@ func setStateEp(us core.UserController) *httpx.Endpoint {
 
 		err := us.SetState(etx.Request().Context(), user, state)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return etx.String(http.StatusOK, string(state))
@@ -391,7 +391,7 @@ func userExistsEp(us core.UserController) *httpx.Endpoint {
 
 		res, err := us.Exists(etx.Request().Context(), id)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, map[string]bool{
@@ -414,12 +414,12 @@ func userCountEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		filter, err := rest.GetFilter(etx)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		res, err := us.Count(etx.Request().Context(), filter)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, map[string]int64{

@@ -24,7 +24,7 @@ func (pcs *SecretStorage) SetPassword(
 	gtx context.Context, creds *core.Creds) error {
 	hash, err := pcs.hasher.Hash(creds.Password)
 	if err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 	const query = `
 		INSERT INTO credential (
@@ -52,12 +52,12 @@ func (pcs *SecretStorage) UpdatePassword(
 	gtx context.Context, creds *core.Creds, newPw string) error {
 
 	if err := pcs.Verify(gtx, creds); err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 
 	hash, err := pcs.hasher.Hash(newPw)
 	if err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 	const query = `
 			UPDATE credential SET
@@ -92,7 +92,7 @@ func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
 
 	ok, err := pcs.hasher.Verify(creds.Password, hash)
 	if err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 	if !ok {
 		return errx.Errf(err,

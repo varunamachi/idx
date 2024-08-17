@@ -42,7 +42,7 @@ func createServiceEp(ss core.ServiceController) *httpx.Endpoint {
 
 		serviceId, err := ss.Save(etx.Request().Context(), &service)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return httpx.SendJSON(etx, data.M{"serviceId": serviceId})
 	}
@@ -66,7 +66,7 @@ func updateServiceEp(ss core.ServiceController) *httpx.Endpoint {
 		}
 
 		if err := ss.Update(etx.Request().Context(), &service); err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return nil
 	}
@@ -92,7 +92,7 @@ func getServiceEp(ss core.ServiceController) *httpx.Endpoint {
 
 		service, err := ss.GetOne(etx.Request().Context(), id)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, service)
@@ -113,12 +113,12 @@ func getServicesEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		services, err := ss.Get(etx.Request().Context(), cmnParams)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, services)
@@ -145,7 +145,7 @@ func deleteServiceEp(ss core.ServiceController) *httpx.Endpoint {
 
 		err := ss.Remove(etx.Request().Context(), id)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return etx.String(http.StatusOK, strconv.FormatInt(id, 10))
@@ -172,7 +172,7 @@ func serviceExistsEp(ss core.ServiceController) *httpx.Endpoint {
 
 		exists, err := ss.Exists(etx.Request().Context(), name)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, map[string]bool{
@@ -195,12 +195,12 @@ func numServices(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		filter, err := rest.GetFilter(etx)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		services, err := ss.Count(etx.Request().Context(), filter)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, services)
@@ -227,7 +227,7 @@ func serviceByNameEp(ss core.ServiceController) *httpx.Endpoint {
 
 		srv, err := ss.GetByName(etx.Request().Context(), name)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, srv)
@@ -254,7 +254,7 @@ func servicesForOwnerEp(ss core.ServiceController) *httpx.Endpoint {
 
 		srv, err := ss.GetForOwner(etx.Request().Context(), owner)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, srv)
@@ -279,7 +279,7 @@ func addAdminToServiceEp(ss core.ServiceController) *httpx.Endpoint {
 
 		err := ss.AddAdmin(etx.Request().Context(), service, user)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return nil
 	}
@@ -303,7 +303,7 @@ func removeAdminFromServiceEp(ss core.ServiceController) *httpx.Endpoint {
 
 		err := ss.RemoveAdmin(etx.Request().Context(), service, user)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return nil
 	}
@@ -329,7 +329,7 @@ func getServiceAdminsEp(ss core.ServiceController) *httpx.Endpoint {
 
 		srv, err := ss.GetAdmins(etx.Request().Context(), service)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, srv)
@@ -357,7 +357,7 @@ func isServiceAdminEp(ss core.ServiceController) *httpx.Endpoint {
 
 		is, err := ss.IsAdmin(etx.Request().Context(), service, user)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, map[string]bool{
@@ -388,7 +388,7 @@ func getPermissionsForService(gs core.ServiceController) *httpx.Endpoint {
 		perms, err := gs.GetPermissionForService(
 			etx.Request().Context(), userId, serviceId)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, perms)

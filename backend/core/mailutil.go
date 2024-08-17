@@ -6,6 +6,7 @@ import (
 	"github.com/varunamachi/idx/mailtmpl"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/email"
+	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/rt"
 	"github.com/varunamachi/libx/str"
 )
@@ -20,7 +21,7 @@ func SendSimpleMail(
 
 	template, err := mailtmpl.ReadTemplate(templateName)
 	if err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 
 	content, err := str.SimpleTemplateExpand(&str.TemplateDesc{
@@ -29,7 +30,7 @@ func SendSimpleMail(
 		Html:     true,
 	})
 	if err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 
 	err = MailProvider(gtx).Send(&email.Message{
@@ -42,5 +43,5 @@ func SendSimpleMail(
 		Data:    data,
 	}, true)
 
-	return err
+	return errx.Wrap(err)
 }

@@ -39,7 +39,7 @@ func createGroupEp(gs core.GroupController) *httpx.Endpoint {
 
 		id, err := gs.Save(etx.Request().Context(), &group)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return httpx.SendJSON(etx, data.M{
 			"groupId": id,
@@ -65,7 +65,7 @@ func updateGroupEp(gs core.GroupController) *httpx.Endpoint {
 		}
 
 		if err := gs.Update(etx.Request().Context(), &group); err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return nil
 	}
@@ -91,7 +91,7 @@ func getGroupEp(gs core.GroupController) *httpx.Endpoint {
 
 		group, err := gs.GetOne(etx.Request().Context(), id)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, group)
@@ -112,12 +112,12 @@ func getGroupsEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		groups, err := gs.Get(etx.Request().Context(), cmnParams)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, groups)
@@ -144,7 +144,7 @@ func deleteGroupEp(gs core.GroupController) *httpx.Endpoint {
 
 		err := gs.Remove(etx.Request().Context(), id)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return etx.String(http.StatusOK, strconv.FormatInt(id, 10))
@@ -171,7 +171,7 @@ func groupExistsEp(gs core.GroupController) *httpx.Endpoint {
 
 		group, err := gs.Exists(etx.Request().Context(), id)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, group)
@@ -197,7 +197,7 @@ func getNumGroupsEp(gs core.GroupController) *httpx.Endpoint {
 
 		count, err := gs.Count(etx.Request().Context(), filter)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, map[string]int64{
@@ -232,7 +232,7 @@ func setGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
 
 		err := gs.SetPermissions(etx.Request().Context(), groupId, perms)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return nil
 	}
@@ -258,7 +258,7 @@ func getGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
 
 		perms, err := gs.GetPermissions(etx.Request().Context(), id)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, perms)
@@ -291,7 +291,7 @@ func addUserToGroups(gs core.GroupController) *httpx.Endpoint {
 
 		err := gs.AddToGroups(etx.Request().Context(), userId, groupIds...)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 		return nil
 	}
@@ -318,7 +318,7 @@ func removeUserFromGroup(gs core.GroupController) *httpx.Endpoint {
 
 		err := gs.RemoveFromGroup(etx.Request().Context(), userId, groupId)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return nil

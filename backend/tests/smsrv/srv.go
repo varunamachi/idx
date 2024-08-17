@@ -32,7 +32,11 @@ func (ms *MailService) sendEp() *httpx.Endpoint {
 
 		html := etx.QueryParam("html") == "true"
 		err := ms.fakeProvider.Send(&msg, html)
-		return err
+		if err != nil {
+			return errx.Wrap(err)
+		}
+		// ms.fakeProvider.Print()
+		return nil
 	}
 
 	return &httpx.Endpoint{
@@ -51,7 +55,7 @@ func (ms *MailService) getEp() *httpx.Endpoint {
 
 		msg, err := ms.Get(user, recepType, mailId)
 		if err != nil {
-			return err
+			return errx.Wrap(err)
 		}
 
 		return httpx.SendJSON(etx, msg)

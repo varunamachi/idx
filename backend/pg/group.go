@@ -99,7 +99,7 @@ func (pgs groupPgStorage) GetOne(
 func (pgs groupPgStorage) Remove(gtx context.Context, id int64) error {
 	err := pgs.gd.Delete(gtx, "idx_group", "id", id)
 	if err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 	return nil
 }

@@ -90,9 +90,11 @@ func (uc *userCtl) Register(
 	}
 
 	// Enable configured super user immediately
+	autoApproved := false
 	if role := mappedRole(user.UserId); role != auth.None {
 		user.State = core.Active
 		user.AuthzRole = role
+		autoApproved = true
 		user.SetProp("autoApproved", true)
 	} else {
 		user.State = core.Created
@@ -118,27 +120,25 @@ func (uc *userCtl) Register(
 		return id, nil
 	}
 
-	tok := core.NewToken(user.UserId, "verfiy_account", "idx_user")
-	if err := uc.credStore.StoreToken(gtx, tok); err != nil {
-		err = errx.Errf(err, "failed to store user verification token")
-		return id, evAdder.Commit(err)
-	}
+	if !autoApproved {
+		tok := core.NewToken(user.UserId, "verfiy_account", "idx_user")
+		if err := uc.credStore.StoreToken(gtx, tok); err != nil {
+			err = errx.Errf(err, "failed to store user verification token")
+			return id, evAdder.Commit(err)
+		}
 
-	// mailTemplate, err := mailtmpl.UserAccountVerificationTemplate()
-	// if err != nil {
-	// 	return evAdder.Commit(err)
-	// }
-
-	verificationUrl := core.ToFullUrl("user/verify", tok.Id, tok.Token)
-	err = core.SendSimpleMail(
-		gtx,
-		user.EmailId,
-		mailtmpl.UserAccountVerificationTemplate,
-		data.M{
-			"url": verificationUrl,
-		})
-	if err != nil {
-		return id, evAdder.Commit(err)
+		verificationUrl := core.ToFullUrl(
+			"api/v1/user/verify", tok.Id, tok.Token)
+		err = core.SendSimpleMail(
+			gtx,
+			user.EmailId,
+			mailtmpl.UserAccountVerificationTemplate,
+			data.M{
+				"url": verificationUrl,
+			})
+		if err != nil {
+			return id, evAdder.Commit(err)
+		}
 	}
 
 	return id, evAdder.Commit(nil)
@@ -172,7 +172,7 @@ func (uc *userCtl) Approve(
 	})
 	if err != nil {
 		err := errx.Errf(err, "failed to get approver information")
-		ev.Commit(err)
+		return errx.Wrap(ev.Commit(err))
 	}
 
 	if role == auth.Super {
@@ -186,12 +186,12 @@ func (uc *userCtl) Approve(
 			core.ErrUnauthorized,
 			"expect role 'admin' for approver, found '%v'",
 			approver.Role())
-		ev.Commit(err)
+		return ev.Commit(err)
 	}
 
 	user, err := uc.ustore.GetByUserId(gtx, userId)
 	if err != nil {
-		return ev.Commit(err)
+		return errx.Wrap(ev.Commit(err))
 	}
 
 	if user.State != core.Verfied {
@@ -234,7 +234,7 @@ func (uc *userCtl) InitResetPassword(
 	// Get user
 	user, err := uc.ustore.GetByUserId(gtx, userId)
 	if err != nil {
-		return ev.Commit(err)
+		return errx.Wrap(ev.Commit(err))
 	}
 
 	// Make sure user is in a state that allows password reset
@@ -258,7 +258,7 @@ func (uc *userCtl) InitResetPassword(
 	// }
 
 	// Send the verification mail
-	verificationUrl := core.ToFullUrl("user/pw/reset", tok.Id, tok.Token)
+	verificationUrl := core.ToFullUrl("api/v1/user/pw/reset", tok.Id, tok.Token)
 	err = core.SendSimpleMail(
 		gtx, user.EmailId, "PasswordResetInitTemplate",
 		data.M{

@@ -169,7 +169,7 @@ func (sc *svcCtl) AddAdmin(
 
 	curUser, err := core.GetUser(gtx)
 	if err != nil {
-		ev.Commit(err)
+		return ev.Commit(err)
 	}
 
 	isAdmin, err := sc.srvStore.IsAdmin(gtx, serviceId, curUser.SeqId())

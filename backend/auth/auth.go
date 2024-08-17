@@ -37,11 +37,11 @@ func (athn *authenticator) Authenticate(
 	gtx context.Context, authData auth.AuthData) error {
 	var creds core.Creds
 	if err := authData.Decode(&creds); err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 
 	if err := athn.cs.Verify(gtx, &creds); err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 	return nil
 }

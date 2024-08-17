@@ -18,7 +18,7 @@ var migs embed.FS
 
 func Init(gtx context.Context, initContext string) error {
 	if err := Create(gtx); err != nil {
-		return err
+		return errx.Wrap(err)
 	}
 	// Any other DB initialization logic can go here
 	return nil
