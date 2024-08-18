@@ -22,7 +22,7 @@ func UserEndpoints(gtx context.Context) []*httpx.Endpoint {
 		verifyUserEp(us),
 		updateUserEp(us),
 		getUserEp(us),
-		getUserByUserIdEp(us),
+		getUserByUsernameEp(us),
 		getUsersEp(us),
 		deleteUserEp(us),
 		updatePasswordEp(us),
@@ -63,20 +63,26 @@ func registerUserEp(us core.UserController) *httpx.Endpoint {
 
 func verifyUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		userId := etx.Param("userId")
-		verToken := etx.Param("toekn")
-		err := us.Verify(etx.Request().Context(), userId, verToken)
+		// userId := etx.Param("userId")
+		// verToken := etx.Param("toekn")
+		pmg := httpx.NewParamGetter(etx)
+		verToken := pmg.Str("token")
+		userName := pmg.Str("name")
+		if pmg.HasError() {
+			return pmg.BadReqError()
+		}
+		err := us.Verify(etx.Request().Context(), userName, verToken)
 		if err != nil {
 			return errx.Wrap(err)
 		}
 		return httpx.SendJSON(etx, data.M{
-			"userId": userId,
+			"userId": userName,
 		})
 	}
 
 	return &httpx.Endpoint{
 		Method:      echo.POST,
-		Path:        "/user/verify/:userId/:token",
+		Path:        "/user/verify/:name/:token",
 		Category:    "idx.user",
 		Desc:        "Verify user account",
 		Version:     "v1",
@@ -136,15 +142,15 @@ func getUserEp(us core.UserController) *httpx.Endpoint {
 	}
 }
 
-func getUserByUserIdEp(us core.UserController) *httpx.Endpoint {
+func getUserByUsernameEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
-		id := prmg.Str("id")
+		id := prmg.Str("name")
 		if prmg.HasError() {
 			return prmg.BadReqError()
 		}
 
-		user, err := us.GetByUserId(etx.Request().Context(), id)
+		user, err := us.ByUsername(etx.Request().Context(), id)
 		if err != nil {
 			return errx.Wrap(err)
 		}
@@ -154,7 +160,7 @@ func getUserByUserIdEp(us core.UserController) *httpx.Endpoint {
 
 	return &httpx.Endpoint{
 		Method:      echo.GET,
-		Path:        "/user/strid/:id",
+		Path:        "/user/strid/:name",
 		Category:    "idx.user",
 		Desc:        "Get info for a user identified by string id",
 		Version:     "v1",
@@ -220,7 +226,7 @@ func updatePasswordEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		credx := struct {
-			UserId      string `json:"userId"`
+			UserName    string `json:"username"`
 			OldPassword string `json:"oldPassword"`
 			NewPassword string `json:"newPassword"`
 		}{}
@@ -231,14 +237,14 @@ func updatePasswordEp(us core.UserController) *httpx.Endpoint {
 
 		err := us.UpdatePassword(
 			etx.Request().Context(),
-			credx.UserId,
+			credx.UserName,
 			credx.OldPassword,
 			credx.NewPassword)
 		if err != nil {
 			return errx.Wrap(err)
 		}
 
-		return etx.String(http.StatusOK, credx.UserId)
+		return etx.String(http.StatusOK, "updated")
 	}
 
 	return &httpx.Endpoint{
@@ -256,22 +262,22 @@ func initPasswordResetEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		prmg := httpx.NewParamGetter(etx)
-		user := prmg.Str("userId")
+		username := prmg.Str("name")
 		if prmg.HasError() {
 			return prmg.BadReqError()
 		}
 
-		err := us.InitResetPassword(etx.Request().Context(), user)
+		err := us.InitResetPassword(etx.Request().Context(), username)
 		if err != nil {
 			return errx.Wrap(err)
 		}
 
-		return etx.String(http.StatusOK, user)
+		return etx.String(http.StatusOK, "pwResetInitiated")
 	}
 
 	return &httpx.Endpoint{
 		Method:   echo.POST,
-		Path:     "/user/:user/password/reset/init",
+		Path:     "/user/:name/password/reset/init",
 		Category: "idx.user",
 		Desc:     "Update user password",
 		Version:  "v1",
@@ -284,7 +290,7 @@ func resetPasswordEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		credx := struct {
-			UserId      string `json:"userId"`
+			UserName    string `json:"username"`
 			Token       string `json:"token"`
 			NewPassword string `json:"newPassword"`
 		}{}
@@ -295,14 +301,14 @@ func resetPasswordEp(us core.UserController) *httpx.Endpoint {
 
 		err := us.ResetPassword(
 			etx.Request().Context(),
-			credx.UserId,
+			credx.UserName,
 			credx.Token,
 			credx.NewPassword)
 		if err != nil {
 			return errx.Wrap(err)
 		}
 
-		return etx.String(http.StatusOK, credx.UserId)
+		return etx.String(http.StatusOK, "passwordReset")
 	}
 
 	return &httpx.Endpoint{
@@ -319,8 +325,11 @@ func approveEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		pmg := httpx.NewParamGetter(etx)
-		user := pmg.Str("user")
+		user := pmg.Int64("user")
 		role := auth.Role(pmg.Str("role"))
+		if pmg.HasError() {
+			return pmg.BadReqError()
+		}
 
 		groupIds := make([]int64, 0, 100)
 		if err := etx.Bind(&groupIds); err != nil {

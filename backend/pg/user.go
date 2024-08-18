@@ -32,6 +32,7 @@ func (pgu *userPgStorage) Save(
 			user_id,
 			email,
 			auth,
+			state,
 			first_name,
 			last_name,
 			title,
@@ -44,6 +45,7 @@ func (pgu *userPgStorage) Save(
 			:user_id,
 			:email,
 			:auth,
+			:state,
 			:first_name,
 			:last_name,
 			:title,
@@ -54,6 +56,7 @@ func (pgu *userPgStorage) Save(
 				user_id = EXCLUDED.user_id,
 				email = EXCLUDED.email,
 				auth = EXCLUDED.auth,
+				state = EXCLUDED.state,
 				first_name = EXCLUDED.first_name,
 				last_name = EXCLUDED.last_name,
 				title = EXCLUDED.title,
@@ -117,7 +120,7 @@ func (pgu *userPgStorage) GetOne(
 	return &user, nil
 }
 
-func (pgu *userPgStorage) GetByUserId(
+func (pgu *userPgStorage) ByUsername(
 	gtx context.Context, id string) (*core.User, error) {
 	var user core.User
 	err := pgu.gd.GetOne(gtx, "idx_user", "user_id", id, &user)

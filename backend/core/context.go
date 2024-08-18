@@ -62,10 +62,10 @@ func MailProvider(gtx context.Context) email.Provider {
 }
 
 func NewEventAdder(gtx context.Context, op string, data data.M) *event.Adder {
-	userId := "N/A"
+	userId := int64(-1)
 	user, err := GetUser(gtx)
 	if err == nil {
-		userId = user.UserId
+		userId = user.Id()
 	}
 
 	return event.NewAdder(

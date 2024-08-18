@@ -38,7 +38,7 @@ var ValidUserStates = []UserState{
 
 type User struct {
 	DbItem
-	UserId    string    `json:"userId" db:"user_id"`
+	UName     string    `json:"userName" db:"user_name"`
 	EmailId   string    `json:"email" db:"email"`
 	AuthzRole auth.Role `json:"auth" db:"auth"`
 	State     UserState `json:"state" bson:"state"`
@@ -49,12 +49,12 @@ type User struct {
 	// Perms     auth.PermissionSet `json:"perms,omitempty" db:"perms"`
 }
 
-func (u *User) SeqId() int64 {
+func (u *User) Id() int64 {
 	return u.DbItem.Id
 }
 
-func (u *User) Id() string {
-	return u.UserId
+func (u *User) Username() string {
+	return u.UName
 }
 
 func (u *User) Email() string {
@@ -107,13 +107,13 @@ type UserStorage interface {
 	Save(gtx context.Context, user *User) (int64, error)
 	Update(gtx context.Context, user *User) error
 	GetOne(gtx context.Context, id int64) (*User, error)
-	GetByUserId(gtx context.Context, id string) (*User, error)
 	SetState(gtx context.Context, id int64, state UserState) error
 	Remove(gtx context.Context, id int64) error
 	Get(gtx context.Context, params *data.CommonParams) ([]*User, error)
-
-	Exists(gtx context.Context, id string) (bool, error)
 	Count(gtx context.Context, filter *data.Filter) (int64, error)
+
+	ByUsername(gtx context.Context, username string) (*User, error)
+	Exists(gtx context.Context, id string) (bool, error)
 }
 
 type UserController interface {
@@ -123,13 +123,17 @@ type UserController interface {
 	CredentialStorage() SecretStorage
 
 	Register(gtx context.Context, user *User, password string) (int64, error)
-	Verify(gtx context.Context, userId, verToken string) error
+	Verify(gtx context.Context, userName, verToken string) error
 	Approve(gtx context.Context,
-		userId string,
+		userId int64,
 		role auth.Role,
 		groups ...int64) error
-	InitResetPassword(gtx context.Context, userId string) error
-	ResetPassword(gtx context.Context, userId, token, newPassword string) error
+	InitResetPassword(gtx context.Context, userName string) error
+	ResetPassword(
+		gtx context.Context, userName, token, newPassword string) error
 	UpdatePassword(
-		gtx context.Context, userId, oldPassword, newPassword string) error
+		gtx context.Context,
+		userName,
+		oldPassword,
+		newPassword string) error
 }

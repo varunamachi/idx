@@ -39,11 +39,12 @@ func (pcs *SecretStorage) SetPassword(
 			UPDATE SET password_hash = EXCLUDED.password_hash;
 	
 	`
-	_, err = pg.Conn().ExecContext(gtx, query, creds.Id, creds.Type, hash)
+	_, err = pg.Conn().ExecContext(
+		gtx, query, creds.UniqueName, creds.Type, hash)
 	if err != nil {
 		return errx.Errf(err,
 			"failed to update password hash for '%s - %s' in DB",
-			creds.Id, creds.Type)
+			creds.UniqueName, creds.Type)
 	}
 	return nil
 }
@@ -67,11 +68,12 @@ func (pcs *SecretStorage) UpdatePassword(
 				item_id = $3
 			;
 		`
-	_, err = pg.Conn().ExecContext(gtx, query, hash, creds.Id, creds.Type)
+	_, err = pg.Conn().ExecContext(
+		gtx, query, hash, creds.UniqueName, creds.Type)
 	if err != nil {
 		return errx.Errf(err,
 			"failed to update password hash for '%s (%s)' in DB",
-			creds.Id, creds.Type)
+			creds.UniqueName, creds.Type)
 	}
 	return nil
 }
@@ -85,7 +87,8 @@ func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
 			item_type = $2
 	`
 	hash := ""
-	err := pg.Conn().GetContext(gtx, &hash, query, creds.Id, creds.Type)
+	err := pg.Conn().GetContext(
+		gtx, &hash, query, creds.UniqueName, creds.Type)
 	if err != nil {
 		return errx.Errf(err, "failed to get password info from DB")
 	}
@@ -96,7 +99,8 @@ func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
 	}
 	if !ok {
 		return errx.Errf(err,
-			"failed to verify password for '%s (%s)'", creds.Id, creds.Type)
+			"failed to verify password for '%s (%s)'",
+			creds.UniqueName, creds.Type)
 	}
 
 	return nil
@@ -120,13 +124,13 @@ func (pcs *SecretStorage) StoreToken(
 
 	if _, err := pg.Conn().NamedExecContext(gtx, query, token); err != nil {
 		return errx.Errf(err, "failed to create token for '%s:%s:%s",
-			token.AssocType, token.Operation, token.Id)
+			token.AssocType, token.Operation, token.UniqueName)
 	}
 	return nil
 }
 
 func (pcs *SecretStorage) VerifyToken(
-	gtx context.Context, operation, id, token string) error {
+	gtx context.Context, id, operation, token string) error {
 	const query = `
 		SELECT EXISTS( 
 			SELECT 1 

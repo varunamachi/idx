@@ -37,11 +37,11 @@ type DbItem struct {
 }
 
 type Token struct {
-	Token     string `db:"token" json:"token"`
-	Id        string `db:"id" json:"id"`
-	AssocType string `db:"assoc_type" json:"assocType"`
-	Operation string `db:"operation" json:"operation"`
-	Created   string `db:"created" json:"created"`
+	Token      string `db:"token" json:"token"`
+	UniqueName string `db:"uniqueName" json:"unique_name"`
+	AssocType  string `db:"assoc_type" json:"assocType"`
+	Operation  string `db:"operation" json:"operation"`
+	Created    string `db:"created" json:"created"`
 }
 
 type AuthEntity string
@@ -52,9 +52,9 @@ const (
 )
 
 type Creds struct {
-	Id       string     `json:"id"`
-	Password string     `json:"password"`
-	Type     AuthEntity `json:"type"`
+	UniqueName string     `json:"uniqueName" db:"unique_name"`
+	Password   string     `json:"password" db:"password"`
+	Type       AuthEntity `json:"type" db:"type"`
 }
 
 type Hasher interface {
@@ -68,14 +68,14 @@ type SecretStorage interface {
 	Verify(gtx context.Context, creds *Creds) error
 
 	StoreToken(gtx context.Context, token *Token) error
-	VerifyToken(gtx context.Context, operation, id, token string) error
+	VerifyToken(gtx context.Context, id, operation, token string) error
 }
 
-func NewToken(id, operation, assocType string) *Token {
+func NewToken(uname, operation, assocType string) *Token {
 	return &Token{
-		Id:        id,
-		Operation: operation,
-		AssocType: assocType,
-		Token:     uuid.NewString(),
+		UniqueName: uname,
+		Operation:  operation,
+		AssocType:  assocType,
+		Token:      uuid.NewString(),
 	}
 }

@@ -57,5 +57,5 @@ func (athn *authenticator) GetUser(
 		return nil, errx.Errf(errors.New("invalid user for auth"),
 			"entity '%s' of type '%s' cannot be authenticated as a user")
 	}
-	return athn.us.GetByUserId(gtx, creds.Id)
+	return athn.us.ByUsername(gtx, creds.UniqueName)
 }

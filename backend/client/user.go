@@ -140,9 +140,9 @@ func (c *IdxClient) Login(
 	gtx context.Context, userId, password string) (*core.User, error) {
 
 	creds := core.Creds{
-		Id:       userId,
-		Password: password,
-		Type:     core.AuthUser,
+		UniqueName: userId,
+		Password:   password,
+		Type:       core.AuthUser,
 	}
 	apiRes := c.build().Path("/api/v1/authenticate").Post(gtx, creds)
 
@@ -162,7 +162,7 @@ func (c *IdxClient) Login(
 func (c *IdxClient) UpdateUser(gtx context.Context, user *core.User) error {
 	apiRes := c.build().Path("/user").Put(gtx, user)
 	if err := apiRes.Close(); err != nil {
-		return errx.Errf(err, "failed to update user: '%s'", user.UserId)
+		return errx.Errf(err, "failed to update user: '%s'", user.Username())
 	}
 	return nil
 }

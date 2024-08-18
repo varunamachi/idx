@@ -6,9 +6,10 @@ CREATE TABLE IF NOT EXISTS idx_user (
     created_by VARCHAR NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_by VARCHAR NOT NULL,
-    user_id VARCHAR NOT NULL UNIQUE,
+    user_name VARCHAR NOT NULL UNIQUE,
     email VARCHAR NOT NULL UNIQUE,
     auth VARCHAR NOT NULL,
+    state VARCHAR NOT NULL DEFAULT "",
     first_name VARCHAR NOT NULL,
     last_name VARCHAR NOT NULL,
     title VARCHAR NOT NULL,
@@ -58,7 +59,7 @@ CREATE TABLE IF NOT EXISTS idx_event(
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     op VARCHAR NOT NULL,
     ev_type VARCHAR NOT NULL,
-    user_id VARCHAR NOT NULL,
+    user_id INT NOT NULL,
     created_on TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     errors VARCHAR [] DEFAULT '{}',
     metadata JSONB
@@ -80,7 +81,7 @@ CREATE TABLE IF NOT EXISTS group_to_perm (
 );
 
 CREATE TABLE IF NOT EXISTS credential (
-    id VARCHAR,
+    unique_name VARCHAR,
     item_type VARCHAR,
     password_hash VARCHAR NOT NULL,
     PRIMARY KEY(id, item_type)
@@ -88,7 +89,7 @@ CREATE TABLE IF NOT EXISTS credential (
 
 CREATE TABLE IF NOT EXISTS idx_token (
     token VARCHAR NOT NULL,
-    id VARCHAR NOT NULL,
+    unique_name VARCHAR NOT NULL,
     assoc_type VARCHAR NOT NULL,
     -- user or service
     operation VARCHAR NOT NULL,

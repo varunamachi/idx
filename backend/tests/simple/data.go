@@ -16,7 +16,7 @@ var super = userAndPassword{
 
 	user: &core.User{
 		DbItem:    core.DbItem{},
-		UserId:    "super",
+		UName:     "super",
 		EmailId:   "super@example.com",
 		AuthzRole: auth.Super,
 		State:     core.Active,
@@ -40,7 +40,7 @@ var users = []userAndPassword{
 				UpdatedAt: time.Time{},
 				UpdatedBy: 0,
 			},
-			UserId:    "admin_1",
+			UName:     "admin_1",
 			EmailId:   "admin1@example.com",
 			AuthzRole: auth.Admin,
 			State:     core.None,
@@ -62,7 +62,7 @@ var users = []userAndPassword{
 				UpdatedAt: time.Time{},
 				UpdatedBy: 0,
 			},
-			UserId:    "",
+			UName:     "",
 			EmailId:   "user2@example.com",
 			AuthzRole: auth.Admin,
 			State:     core.None,

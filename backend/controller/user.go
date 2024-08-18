@@ -25,20 +25,23 @@ func mappedRole(userId string) auth.Role {
 	if len(roleMapping) == 0 {
 		fields := strings.Split(roleEnv, ",")
 		for _, f := range fields {
+
 			asocs := strings.Split(f, ":")
 			if len(asocs) < 2 {
 				log.Error().Str("field", f).Msg("invalid role association")
 				continue
 			}
+			u := asocs[0]
+			r := asocs[1]
 
-			role := auth.ToRole(asocs[0])
+			role := auth.ToRole(r)
 			if role == auth.None {
-				log.Error().Str("roleStr", asocs[0]).
+				log.Error().Str("roleStr", r).
 					Msg("invalid role association")
 				continue
 			}
 
-			roleMapping[asocs[1]] = role
+			roleMapping[u] = role
 		}
 
 	}
@@ -80,18 +83,18 @@ func (uc *userCtl) Register(
 	evAdder := core.NewEventAdder(gtx, "user.register", data.M{
 		"user": user,
 	})
-	exists, err := uc.ustore.Exists(gtx, user.UserId)
+	exists, err := uc.ustore.Exists(gtx, user.UName)
 	if err != nil {
 		return -1, evAdder.Commit(err)
 	}
 	if exists {
-		err = errx.Errf(core.ErrEntityExists, "user '%s' exists", user.UserId)
+		err = errx.Errf(core.ErrEntityExists, "user '%s' exists", user.UName)
 		return -1, evAdder.Commit(err)
 	}
 
 	// Enable configured super user immediately
 	autoApproved := false
-	if role := mappedRole(user.UserId); role != auth.None {
+	if role := mappedRole(user.UName); role != auth.None {
 		user.State = core.Active
 		user.AuthzRole = role
 		autoApproved = true
@@ -107,9 +110,9 @@ func (uc *userCtl) Register(
 	}
 
 	creds := &core.Creds{
-		Id:       user.UserId,
-		Password: password,
-		Type:     "user",
+		UniqueName: user.UName,
+		Password:   password,
+		Type:       "user",
 	}
 	if err := uc.credStore.SetPassword(gtx, creds); err != nil {
 		return id, evAdder.Commit(err)
@@ -121,14 +124,14 @@ func (uc *userCtl) Register(
 	}
 
 	if !autoApproved {
-		tok := core.NewToken(user.UserId, "verfiy_account", "idx_user")
+		tok := core.NewToken(user.UName, "verfiy_account", "idx_user")
 		if err := uc.credStore.StoreToken(gtx, tok); err != nil {
 			err = errx.Errf(err, "failed to store user verification token")
 			return id, evAdder.Commit(err)
 		}
 
 		verificationUrl := core.ToFullUrl(
-			"api/v1/user/verify", tok.Id, tok.Token)
+			tok.UniqueName, "api/v1/user/verify", tok.Token)
 		err = core.SendSimpleMail(
 			gtx,
 			user.EmailId,
@@ -145,15 +148,18 @@ func (uc *userCtl) Register(
 }
 
 func (uc *userCtl) Verify(
-	gtx context.Context, userId, verToken string) error {
+	gtx context.Context, userName, verToken string) error {
 	evtAdder := core.NewEventAdder(gtx, "user.verify", data.M{
-		"userId": userId,
+		"userId": userName,
 	})
 
-	err := uc.credStore.VerifyToken(gtx, "verify_account", userId, verToken)
+	err := uc.credStore.VerifyToken(gtx, userName, "verify_account", verToken)
 	if err != nil {
 		return evtAdder.Commit(err)
 	}
+
+	// set the state
+	// err := uc.ustore.SetState(gtx)
 
 	// Is a mail required here?
 	return evtAdder.Commit(nil)
@@ -161,13 +167,13 @@ func (uc *userCtl) Verify(
 
 func (uc *userCtl) Approve(
 	gtx context.Context,
-	userId string,
+	userId int64,
 	role auth.Role,
 	groups ...int64) error {
 
 	approver, err := core.GetUser(gtx)
 	ev := core.NewEventAdder(gtx, "user.approve", data.M{
-		"approver": data.Qop(approver != nil, approver.UserId, "N/A"),
+		"approver": data.Qop(approver != nil, approver.Id(), -1),
 		"userId":   userId,
 	})
 	if err != nil {
@@ -189,7 +195,7 @@ func (uc *userCtl) Approve(
 		return ev.Commit(err)
 	}
 
-	user, err := uc.ustore.GetByUserId(gtx, userId)
+	user, err := uc.ustore.GetOne(gtx, userId)
 	if err != nil {
 		return errx.Wrap(ev.Commit(err))
 	}
@@ -226,13 +232,13 @@ func (uc *userCtl) Approve(
 }
 
 func (uc *userCtl) InitResetPassword(
-	gtx context.Context, userId string) error {
+	gtx context.Context, userName string) error {
 	ev := core.NewEventAdder(gtx, "user.pwReset.init", data.M{
-		"userId": userId,
+		"userId": userName,
 	})
 
 	// Get user
-	user, err := uc.ustore.GetByUserId(gtx, userId)
+	user, err := uc.ustore.ByUsername(gtx, userName)
 	if err != nil {
 		return errx.Wrap(ev.Commit(err))
 	}
@@ -246,7 +252,7 @@ func (uc *userCtl) InitResetPassword(
 	}
 
 	// Generate a password reset token
-	tok := core.NewToken(user.UserId, "password_reset", "idx_user")
+	tok := core.NewToken(user.UName, "password_reset", "idx_user")
 	if err := uc.credStore.StoreToken(gtx, tok); err != nil {
 		return ev.Errf(err, "failed to store user password reset token")
 	}
@@ -258,7 +264,10 @@ func (uc *userCtl) InitResetPassword(
 	// }
 
 	// Send the verification mail
-	verificationUrl := core.ToFullUrl("api/v1/user/pw/reset", tok.Id, tok.Token)
+	verificationUrl := core.ToFullUrl(
+		"api/v1/user/pw/reset",
+		tok.UniqueName,
+		tok.Token)
 	err = core.SendSimpleMail(
 		gtx, user.EmailId, "PasswordResetInitTemplate",
 		data.M{
@@ -272,20 +281,20 @@ func (uc *userCtl) InitResetPassword(
 }
 
 func (uc *userCtl) ResetPassword(
-	gtx context.Context, userId, token, newPassword string) error {
+	gtx context.Context, userName, token, newPassword string) error {
 	evtAdder := core.NewEventAdder(gtx, "user.pw.reset", data.M{
-		"userId": userId,
+		"userId": userName,
 	})
 
-	err := uc.credStore.VerifyToken(gtx, "password_reset", userId, token)
+	err := uc.credStore.VerifyToken(gtx, userName, "password_reset", token)
 	if err != nil {
 		return evtAdder.Commit(err)
 	}
 
 	err = uc.credStore.SetPassword(gtx, &core.Creds{
-		Id:       userId,
-		Password: newPassword,
-		Type:     core.AuthUser,
+		UniqueName: userName,
+		Password:   newPassword,
+		Type:       core.AuthUser,
 	})
 	if err != nil {
 		return evtAdder.Commit(err)
@@ -296,24 +305,24 @@ func (uc *userCtl) ResetPassword(
 }
 
 func (uc *userCtl) UpdatePassword(gtx context.Context,
-	userId, oldPassword, newPassword string) error {
+	userName, oldPassword, newPassword string) error {
 	evtAdder := core.NewEventAdder(gtx, "user.pw.update", data.M{
-		"userId": userId,
+		"userId": userName,
 	})
 
 	err := uc.credStore.Verify(gtx, &core.Creds{
-		Id:       userId,
-		Password: oldPassword,
-		Type:     core.AuthUser,
+		UniqueName: userName,
+		Password:   oldPassword,
+		Type:       core.AuthUser,
 	})
 	if err != nil {
 		return evtAdder.Commit(err)
 	}
 
 	err = uc.credStore.SetPassword(gtx, &core.Creds{
-		Id:       userId,
-		Password: newPassword,
-		Type:     core.AuthUser,
+		UniqueName: userName,
+		Password:   newPassword,
+		Type:       core.AuthUser,
 	})
 	if err != nil {
 		return evtAdder.Commit(err)
@@ -346,9 +355,9 @@ func (uc *userCtl) GetOne(
 	return out, err
 }
 
-func (uc *userCtl) GetByUserId(
+func (uc *userCtl) ByUsername(
 	gtx context.Context, id string) (*core.User, error) {
-	out, err := uc.ustore.GetByUserId(gtx, id)
+	out, err := uc.ustore.ByUsername(gtx, id)
 	if err != nil {
 		core.NewEventAdder(gtx, "user.getByUserId", data.M{"userId": id}).
 			Commit(err)

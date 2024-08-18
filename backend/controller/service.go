@@ -46,7 +46,7 @@ func (sc svcCtl) Save(
 			"service '%d:%s' already exists", service.Id, service.Name)
 	}
 
-	service.CreatedBy, service.UpdatedBy = user.SeqId(), user.SeqId()
+	service.CreatedBy, service.UpdatedBy = user.Id(), user.Id()
 
 	id, err := sc.srvStore.Save(gtx, service)
 	if err != nil {
@@ -54,7 +54,7 @@ func (sc svcCtl) Save(
 	}
 
 	// Make the owner admin
-	if err = sc.srvStore.AddAdmin(gtx, service.Id, user.SeqId()); err != nil {
+	if err = sc.srvStore.AddAdmin(gtx, service.Id, user.Id()); err != nil {
 		return id, ev.Commit(err)
 	}
 
@@ -67,7 +67,7 @@ func (sc svcCtl) Update(gtx context.Context, service *core.Service) error {
 	})
 	user := core.MustGetUser(gtx)
 
-	isAdmin, err := sc.srvStore.IsAdmin(gtx, service.Id, user.SeqId())
+	isAdmin, err := sc.srvStore.IsAdmin(gtx, service.Id, user.Id())
 	if err != nil {
 		return ev.Commit(err)
 	}
@@ -75,11 +75,11 @@ func (sc svcCtl) Update(gtx context.Context, service *core.Service) error {
 	if !isAdmin {
 		return ev.Errf(core.ErrUnauthorized,
 			"an user '%s' is not authorized to update service '%s'",
-			user.UserId, service.Name,
+			user.Username, service.Name,
 		)
 	}
 
-	service.UpdatedBy, service.UpdatedAt = user.SeqId(), time.Now()
+	service.UpdatedBy, service.UpdatedAt = user.Id(), time.Now()
 	if err := sc.srvStore.Update(gtx, service); err != nil {
 		return ev.Commit(err)
 	}
@@ -172,7 +172,7 @@ func (sc *svcCtl) AddAdmin(
 		return ev.Commit(err)
 	}
 
-	isAdmin, err := sc.srvStore.IsAdmin(gtx, serviceId, curUser.SeqId())
+	isAdmin, err := sc.srvStore.IsAdmin(gtx, serviceId, curUser.Id())
 	if err != nil {
 		return ev.Commit(err)
 	}

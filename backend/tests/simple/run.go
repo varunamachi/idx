@@ -29,11 +29,11 @@ func Run(gtx context.Context) error {
 	}
 
 	// Login as super super
-	super, err := cnt.Login(gtx, super.user.UserId, super.password)
+	super, err := cnt.Login(gtx, super.user.UName, super.password)
 	if err != nil {
 		return errx.Wrap(err)
 	}
-	log.Info().Str("userId", super.UserId).Msg("logged in")
+	log.Info().Str("userId", super.UName).Msg("logged in")
 
 	for _, up := range users {
 		uclient := client.New("http://localhost:8888").
@@ -63,19 +63,19 @@ func Run(gtx context.Context) error {
 			return errx.Wrap(err)
 		}
 
-		log.Info().Str("user", up.user.UserId).Msg("verified")
+		log.Info().Str("user", up.user.UName).Msg("verified")
 
-		err = cnt.Approve(gtx, up.user.UserId, up.user.Role())
+		err = cnt.Approve(gtx, up.user.UName, up.user.Role())
 		if err != nil {
 			return errx.Wrap(err)
 		}
 
-		lu, err := uclient.Login(gtx, up.user.UserId, up.password)
+		lu, err := uclient.Login(gtx, up.user.UName, up.password)
 		if err != nil {
 			return errx.Wrap(err)
 		}
 
-		log.Info().Str("user", lu.UserId).Msg("logged in")
+		log.Info().Str("user", lu.UName).Msg("logged in")
 
 		// TODO - may be logout??
 	}

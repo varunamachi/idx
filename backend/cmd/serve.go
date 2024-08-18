@@ -72,7 +72,7 @@ type userRetriever struct {
 func (ug *userRetriever) GetUser(
 	gtx context.Context, userId string) (auth.User, error) {
 	ctl := core.UserCtlr(gtx)
-	return ctl.GetByUserId(gtx, userId)
+	return ctl.ByUsername(gtx, userId)
 }
 
 func contextMiddleware(gtx context.Context) echo.MiddlewareFunc {
