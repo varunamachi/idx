@@ -131,7 +131,7 @@ func (uc *userCtl) Register(
 		}
 
 		verificationUrl := core.ToFullUrl(
-			tok.UniqueName, "api/v1/user/verify", tok.Token)
+			"/api/v1/user/verify", tok.UniqueName, tok.Token)
 		err = core.SendSimpleMail(
 			gtx,
 			user.EmailId,
@@ -150,18 +150,25 @@ func (uc *userCtl) Register(
 func (uc *userCtl) Verify(
 	gtx context.Context, userName, verToken string) error {
 	evtAdder := core.NewEventAdder(gtx, "user.verify", data.M{
-		"userId": userName,
+		"username": userName,
 	})
 
 	err := uc.credStore.VerifyToken(gtx, userName, "verify_account", verToken)
 	if err != nil {
-		return evtAdder.Commit(err)
+		return errx.Wrap(evtAdder.Commit(err))
 	}
 
-	// set the state
-	// err := uc.ustore.SetState(gtx)
+	id, err := uc.ustore.GetId(gtx, userName)
+	if err != nil {
+		return errx.Wrap(evtAdder.Commit(err))
+	}
 
-	// Is a mail required here?
+	err = uc.ustore.SetState(gtx, id, core.Verfied)
+	if err != nil {
+		return errx.Wrap(evtAdder.Commit(err))
+	}
+
+	// TODO: Is a mail required here?
 	return evtAdder.Commit(nil)
 }
 
@@ -222,7 +229,7 @@ func (uc *userCtl) Approve(
 	// 	return ev.Commit(err)
 	// }
 	err = core.SendSimpleMail(
-		gtx, user.EmailId, "UserAccountApprovedTemplate",
+		gtx, user.EmailId, mailtmpl.UserAccountApprovedTemplate,
 		data.M{"loginUrl": core.ToFullUrl("/login")})
 	if err != nil {
 		return errx.Errf(err, "failed to notify (email) user about approval")
@@ -364,6 +371,21 @@ func (uc *userCtl) ByUsername(
 
 	}
 	return out, err
+}
+
+func (uc *userCtl) GetId(
+	gtx context.Context, username string) (int64, error) {
+	id, err := uc.ustore.GetId(gtx, username)
+	if err != nil {
+		core.NewEventAdder(
+			gtx,
+			"user.getIdForUsername", data.M{
+				"username": username,
+			}).
+			Commit(err)
+
+	}
+	return id, err
 }
 
 func (uc *userCtl) SetState(

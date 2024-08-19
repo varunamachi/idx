@@ -38,7 +38,7 @@ type DbItem struct {
 
 type Token struct {
 	Token      string `db:"token" json:"token"`
-	UniqueName string `db:"uniqueName" json:"unique_name"`
+	UniqueName string `db:"unique_name" json:"uniqueName"`
 	AssocType  string `db:"assoc_type" json:"assocType"`
 	Operation  string `db:"operation" json:"operation"`
 	Created    string `db:"created" json:"created"`

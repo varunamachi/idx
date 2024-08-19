@@ -41,6 +41,7 @@ func authenticateEp(athr auth.UserAuthenticator) *httpx.Endpoint {
 
 		token := jwt.New(jwt.SigningMethodHS256)
 		claims := token.Claims.(jwt.MapClaims)
+		claims["username"] = user.Username()
 		claims["userId"] = user.Id()
 
 		// TODO - get from application configuration

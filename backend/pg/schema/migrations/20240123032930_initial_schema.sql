@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS idx_user (
     user_name VARCHAR NOT NULL UNIQUE,
     email VARCHAR NOT NULL UNIQUE,
     auth VARCHAR NOT NULL,
-    state VARCHAR NOT NULL DEFAULT "",
+    state VARCHAR NOT NULL,
     first_name VARCHAR NOT NULL,
     last_name VARCHAR NOT NULL,
     title VARCHAR NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS credential (
     unique_name VARCHAR,
     item_type VARCHAR,
     password_hash VARCHAR NOT NULL,
-    PRIMARY KEY(id, item_type)
+    PRIMARY KEY(unique_name, item_type)
 );
 
 CREATE TABLE IF NOT EXISTS idx_token (
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS idx_token (
     operation VARCHAR NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY(token),
-    UNIQUE(token, id, assoc_type, operation)
+    UNIQUE(token, unique_name, assoc_type, operation)
 );
 
 -- +goose StatementEnd

@@ -88,7 +88,7 @@ func (c *IdxClient) UpdatePassword(
 		"oldPassword": oldPwd,
 		"newPassword": newPwd,
 	}
-	apiRes := c.build().Path("/user/password").Put(gtx, data)
+	apiRes := c.build().Path("/api/v1/user/password").Put(gtx, data)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to update password for user '%s'", userId)
 	}
@@ -124,14 +124,14 @@ func (c *IdxClient) ResetPassword(
 
 func (c *IdxClient) Approve(
 	gtx context.Context,
-	userId string,
+	userId int64,
 	role auth.Role,
 	groupIds ...int64) error {
 	apiRes := c.build().
 		Path("/api/v1/user", userId, "approve", string(role)).
 		Patch(gtx, groupIds)
 	if err := apiRes.Close(); err != nil {
-		return errx.Errf(err, "failed to set approve user '%s'", userId)
+		return errx.Errf(err, "failed to set approve user '%d'", userId)
 	}
 	return nil
 }
@@ -152,7 +152,7 @@ func (c *IdxClient) Login(
 	}{}
 
 	if err := apiRes.LoadClose(&authResult); err != nil {
-		return nil, errx.Errf(err, "failed to authenticate user '%s'", userId)
+		return nil, errx.Errf(err, "failed to authenticate user '%d'", userId)
 	}
 	c.SetUser(authResult.User).SetToken(authResult.Token)
 
@@ -160,7 +160,7 @@ func (c *IdxClient) Login(
 }
 
 func (c *IdxClient) UpdateUser(gtx context.Context, user *core.User) error {
-	apiRes := c.build().Path("/user").Put(gtx, user)
+	apiRes := c.build().Path("/api/v1/user").Put(gtx, user)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to update user: '%s'", user.Username())
 	}
@@ -170,7 +170,7 @@ func (c *IdxClient) UpdateUser(gtx context.Context, user *core.User) error {
 func (c *IdxClient) GetUser(
 	gtx context.Context, id int64) (*core.User, error) {
 	var user core.User
-	apiRes := c.build().Path("/user", id).Get(gtx)
+	apiRes := c.build().Path("/api/v1/user", id).Get(gtx)
 	if err := apiRes.LoadClose(&user); err != nil {
 		return nil, errx.Errf(err, "failed to get user '%d'", id)
 	}
@@ -180,7 +180,7 @@ func (c *IdxClient) GetUser(
 func (c *IdxClient) GetByUserId(
 	gtx context.Context, id string) (*core.User, error) {
 	var user core.User
-	apiRes := c.build().Path("/user/strid/", id).Get(gtx)
+	apiRes := c.build().Path("/api/v1/user/strid/", id).Get(gtx)
 	if err := apiRes.LoadClose(&user); err != nil {
 		return nil, errx.Errf(err, "failed to get user '%d'", id)
 	}
@@ -189,7 +189,7 @@ func (c *IdxClient) GetByUserId(
 
 func (c *IdxClient) SetUserState(
 	gtx context.Context, id int64, state core.UserState) error {
-	apiRes := c.build().Path("/user", id, "state", state).Put(gtx, nil)
+	apiRes := c.build().Path("/api/v1/user", id, "state", state).Put(gtx, nil)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err,
 			"failed to set state '%s' for user '%d'", id, state)
@@ -198,7 +198,7 @@ func (c *IdxClient) SetUserState(
 }
 
 func (c *IdxClient) RemoveUser(gtx context.Context, id int64) error {
-	apiRes := c.build().Path("/user", id).Delete(gtx)
+	apiRes := c.build().Path("/api/v1/user", id).Delete(gtx)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to delete user '%d'", id)
 	}
@@ -207,7 +207,7 @@ func (c *IdxClient) RemoveUser(gtx context.Context, id int64) error {
 
 func (c *IdxClient) GetUsers(
 	gtx context.Context, params *data.CommonParams) ([]*core.User, error) {
-	apiRes := c.build().Path("/user").CmnParam(params).Get(gtx)
+	apiRes := c.build().Path("/api/v1/user").CmnParam(params).Get(gtx)
 	users := make([]*core.User, 0, params.PageSize)
 	if err := apiRes.LoadClose(&users); err != nil {
 		return nil, errx.Errf(err, "failed to get user list")
@@ -216,7 +216,7 @@ func (c *IdxClient) GetUsers(
 }
 
 func (c *IdxClient) UserExists(gtx context.Context, id string) (bool, error) {
-	apiRes := c.build().Path("/user", id, "exists").Get(gtx)
+	apiRes := c.build().Path("/api/v1/user", id, "exists").Get(gtx)
 	res := map[string]bool{"exists": false}
 	if err := apiRes.LoadClose(&res); err != nil {
 		return false, errx.Errf(err, "failed to check if user exists: '%s'", id)
@@ -226,7 +226,7 @@ func (c *IdxClient) UserExists(gtx context.Context, id string) (bool, error) {
 
 func (c *IdxClient) UserCount(
 	gtx context.Context, filter *data.Filter) (int64, error) {
-	apiRes := c.build().Path("/user").Filter(filter).Get(gtx)
+	apiRes := c.build().Path("/api/v1/user").Filter(filter).Get(gtx)
 	res := map[string]int64{"count": 0}
 	if err := apiRes.LoadClose(&res); err != nil {
 		return 0, errx.Errf(err, "failed to get user count for filter")

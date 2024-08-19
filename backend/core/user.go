@@ -113,7 +113,8 @@ type UserStorage interface {
 	Count(gtx context.Context, filter *data.Filter) (int64, error)
 
 	ByUsername(gtx context.Context, username string) (*User, error)
-	Exists(gtx context.Context, id string) (bool, error)
+	Exists(gtx context.Context, username string) (bool, error)
+	GetId(gtx context.Context, username string) (int64, error)
 }
 
 type UserController interface {

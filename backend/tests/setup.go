@@ -27,7 +27,7 @@ type TestConfig struct {
 	DestroySchema     bool
 }
 
-const pgUrl = "postgresql://idx:idxp@localhost:5432/test-data?sslmode=disable"
+const pgUrl = "postgresql://idx:idxp@localhost:5432/idx-test?sslmode=disable"
 
 func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 

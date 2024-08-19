@@ -2,7 +2,6 @@ package simple
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -43,7 +42,7 @@ func Run(gtx context.Context) error {
 		if err != nil {
 			return errx.Wrap(err)
 		}
-		fmt.Printf("received id: %d", id)
+		up.user.DbItem.Id = id
 
 		mailId := up.user.EmailId + ":" +
 			mailtmpl.UserAccountVerificationTemplate
@@ -65,7 +64,7 @@ func Run(gtx context.Context) error {
 
 		log.Info().Str("user", up.user.UName).Msg("verified")
 
-		err = cnt.Approve(gtx, up.user.UName, up.user.Role())
+		err = cnt.Approve(gtx, up.user.Id(), up.user.Role())
 		if err != nil {
 			return errx.Wrap(err)
 		}
@@ -79,15 +78,6 @@ func Run(gtx context.Context) error {
 
 		// TODO - may be logout??
 	}
-
-	// Register a user
-	// Use fake email provider
-	// Get the mail fro provider
-	// Verify
-	// Try to login
-	// Logout
-	// Change password
-	// Login Again
 
 	log.Info().Msg("simple test successful")
 	return nil

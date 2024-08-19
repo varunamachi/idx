@@ -2,8 +2,8 @@ package pg
 
 import (
 	"context"
-	"log/slog"
 
+	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
@@ -28,14 +28,14 @@ func (pcs *SecretStorage) SetPassword(
 	}
 	const query = `
 		INSERT INTO credential (
-			id,
+			unique_name,
 			item_type,
 			password_hash
 		) VALUES (
 			$1,
 			$2,
 			$3
-		) ON CONFLICT(id, item_type) DO
+		) ON CONFLICT(unique_name, item_type) DO
 			UPDATE SET password_hash = EXCLUDED.password_hash;
 	
 	`
@@ -64,7 +64,7 @@ func (pcs *SecretStorage) UpdatePassword(
 			UPDATE credential SET
 				password_hash = $1
 			WHERE 
-				id = $2,
+				unique_name = $2,
 				item_id = $3
 			;
 		`
@@ -83,7 +83,7 @@ func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
 		SELECT password_hash 
 		FROM credential
 		WHERE 
-			id = $1 AND
+			unique_name = $1 AND
 			item_type = $2
 	`
 	hash := ""
@@ -111,12 +111,12 @@ func (pcs *SecretStorage) StoreToken(
 	const query = `
 		INSERT INTO idx_token(
 			token,
-			id,
+			unique_name,
 			assoc_type,
 			operation		
 		) VALUES (
 			:token,
-			:id,
+			:unique_name,
 			:assoc_type,
 			:operation					
 		) 
@@ -130,34 +130,34 @@ func (pcs *SecretStorage) StoreToken(
 }
 
 func (pcs *SecretStorage) VerifyToken(
-	gtx context.Context, id, operation, token string) error {
+	gtx context.Context, un, operation, token string) error {
 	const query = `
 		SELECT EXISTS( 
 			SELECT 1 
 			FROM idx_token 
 			WHERE 
 				token = $1 AND 
-				id = $2 AND 
+				unique_name = $2 AND 
 				operation = $3
 			)
 	`
 	exists := false
-	err := pg.Conn().GetContext(gtx, &exists, query, token, id, operation)
+	err := pg.Conn().GetContext(gtx, &exists, query, token, un, operation)
 	if err != nil {
 		return errx.Errf(err,
-			"failed to verify toke for %s (%s)", id, operation)
+			"failed to verify toke for %s (%s)", un, operation)
 	}
 
 	const dquery = `
 		DELETE FROM idx_token 
 		WHERE 
 			token = $1 AND 
-			id = $2 AND 
+			unique_name = $2 AND 
 			operation = $3`
-	_, err = pg.Conn().ExecContext(gtx, dquery, token, id, operation)
+	_, err = pg.Conn().ExecContext(gtx, dquery, token, un, operation)
 	if err != nil {
-		id := id + ":" + operation
-		slog.Error("failed to delete verified token", "tokenId", id)
+		id := un + ":" + operation
+		log.Error().Str("token", id).Msg("failed to delete verified token")
 	}
 
 	return nil
