@@ -9,20 +9,21 @@ import (
 	"github.com/varunamachi/idx/mailtmpl"
 	"github.com/varunamachi/idx/tests/smsrv"
 	"github.com/varunamachi/libx/errx"
-	"github.com/varunamachi/libx/netx"
 )
 
 func Run(gtx context.Context) error {
 
 	// Wait for the app server and create a client
-	err := netx.WaitForPorts(gtx, "localhost:8888", 10*time.Second)
-	if err != nil {
-		return errx.Wrap(err)
-	}
+	// err := netx.WaitForPorts(gtx, "localhost:8888", 10*time.Second)
+	// if err != nil {
+	// 	return errx.Wrap(err)
+	// }
+
+	// It is expected that server is running before reaching this point
 	cnt := client.New("http://localhost:8888").WithTimeout(5 * time.Minute)
 
 	// Create a super user
-	_, err = cnt.Register(gtx, super.user, super.password)
+	_, err := cnt.Register(gtx, super.user, super.password)
 	if err != nil {
 		return errx.Wrap(err)
 	}
@@ -59,7 +60,7 @@ func Run(gtx context.Context) error {
 
 		err = uclient.VerifyWithUrl(gtx, urlStr)
 		if err != nil {
-			return errx.Wrap(err)
+			return errx.Errf(err, "failed to verify user '%s'", up.user.UName)
 		}
 
 		log.Info().Str("user", up.user.UName).Msg("verified")

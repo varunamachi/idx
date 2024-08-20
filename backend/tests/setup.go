@@ -36,13 +36,6 @@ func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		// Wait for externally launched postgres server
-		log.Info().Msg("waiting for postgres at port 5432 (max wait = 2m)")
-		err := netx.WaitForPorts(gtx, "localhost:5432", 2*time.Minute)
-		if err != nil {
-			return nil, errx.Errf(err, "could not connect to postgres server")
-		}
 	}
 
 	// init is done during server start
