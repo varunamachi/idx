@@ -1,33 +1,34 @@
-package controller
+package grpdx
 
 import (
 	"context"
 
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/svcdx"
 	"github.com/varunamachi/libx/data"
 )
 
 type groupCtl struct {
-	gstore   core.GroupStorage
-	svcStore core.ServiceStorage
+	gstore   GroupStorage
+	svcStore svcdx.ServiceStorage
 }
 
 func NewGroupController(
-	gstore core.GroupStorage,
-	svcStore core.ServiceStorage) core.GroupController {
+	gstore GroupStorage,
+	svcStore svcdx.ServiceStorage) GroupController {
 	return &groupCtl{
 		gstore:   gstore,
 		svcStore: svcStore,
 	}
 }
 
-func (gc *groupCtl) Storage() core.GroupStorage {
+func (gc *groupCtl) Storage() GroupStorage {
 	return gc.gstore
 }
 
 func (gc *groupCtl) Save(
 	gtx context.Context,
-	group *core.Group) (int64, error) {
+	group *Group) (int64, error) {
 
 	ev := core.NewEventAdder(gtx, "group.save", data.M{
 		"group": group,
@@ -46,7 +47,7 @@ func (gc *groupCtl) Save(
 
 func (gc *groupCtl) SaveWithPerms(
 	gtx context.Context,
-	group *core.Group,
+	group *Group,
 	perms []string) (int64, error) {
 
 	ev := core.NewEventAdder(gtx, "group.save", data.M{
@@ -65,7 +66,7 @@ func (gc *groupCtl) SaveWithPerms(
 	return id, ev.Commit(nil)
 }
 
-func (gc *groupCtl) Update(gtx context.Context, group *core.Group) error {
+func (gc *groupCtl) Update(gtx context.Context, group *Group) error {
 	ev := core.NewEventAdder(gtx, "group.update", data.M{
 		"group": group,
 	})
@@ -75,7 +76,7 @@ func (gc *groupCtl) Update(gtx context.Context, group *core.Group) error {
 	return ev.Commit(nil)
 }
 
-func (gc *groupCtl) GetOne(gtx context.Context, id int64) (*core.Group, error) {
+func (gc *groupCtl) GetOne(gtx context.Context, id int64) (*Group, error) {
 	group, err := gc.gstore.GetOne(gtx, id)
 	if err != nil {
 		return nil, core.NewEventAdder(gtx, "group.getOne", data.M{
@@ -97,7 +98,7 @@ func (gc *groupCtl) Remove(gtx context.Context, id int64) error {
 
 func (gc *groupCtl) Get(
 	gtx context.Context,
-	params *data.CommonParams) ([]*core.Group, error) {
+	params *data.CommonParams) ([]*Group, error) {
 
 	group, err := gc.gstore.Get(gtx, params)
 	if err != nil {

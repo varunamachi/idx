@@ -1,4 +1,4 @@
-package controller
+package svcdx
 
 import (
 	"context"
@@ -6,32 +6,31 @@ import (
 	"time"
 
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx/data"
 )
 
 // TODO - implement
 type svcCtl struct {
-	srvStore   core.ServiceStorage
-	userStore  core.UserStorage
-	groupStore core.GroupStorage
+	srvStore  ServiceStorage
+	userStore userdx.UserStorage
 }
 
 func NewServiceController(
-	ss core.ServiceStorage,
-	us core.UserStorage,
-	gs core.GroupStorage) core.ServiceController {
+	ss ServiceStorage,
+	us userdx.UserStorage) ServiceController {
 	return &svcCtl{
 		srvStore: ss,
 	}
 }
 
-func (sc svcCtl) Storage() core.ServiceStorage {
+func (sc svcCtl) Storage() ServiceStorage {
 	return sc.srvStore
 }
 
 func (sc svcCtl) Save(
-	gtx context.Context, service *core.Service) (int64, error) {
-	user, err := core.GetUser(gtx)
+	gtx context.Context, service *Service) (int64, error) {
+	user, err := userdx.GetUser(gtx)
 	if err != nil {
 		return -1, err
 	}
@@ -61,11 +60,11 @@ func (sc svcCtl) Save(
 	return id, ev.Commit(err)
 }
 
-func (sc svcCtl) Update(gtx context.Context, service *core.Service) error {
+func (sc svcCtl) Update(gtx context.Context, service *Service) error {
 	ev := core.NewEventAdder(gtx, "service.update", data.M{
 		"service": service,
 	})
-	user := core.MustGetUser(gtx)
+	user := userdx.MustGetUser(gtx)
 
 	isAdmin, err := sc.srvStore.IsAdmin(gtx, service.Id, user.Id())
 	if err != nil {
@@ -88,7 +87,7 @@ func (sc svcCtl) Update(gtx context.Context, service *core.Service) error {
 }
 
 func (sc svcCtl) GetOne(
-	gtx context.Context, id int64) (*core.Service, error) {
+	gtx context.Context, id int64) (*Service, error) {
 	s, err := sc.srvStore.GetOne(gtx, id)
 	if err != nil {
 		return nil, core.NewEventAdder(gtx, "service.getOne", data.M{
@@ -107,7 +106,7 @@ func (sc svcCtl) Remove(gtx context.Context, id int64) error {
 }
 
 func (sc svcCtl) Get(
-	gtx context.Context, params *data.CommonParams) ([]*core.Service, error) {
+	gtx context.Context, params *data.CommonParams) ([]*Service, error) {
 	s, err := sc.srvStore.Get(gtx, params)
 	if err != nil {
 		return nil, core.NewEventAdder(gtx, "service.get", data.M{
@@ -139,7 +138,7 @@ func (sc svcCtl) Count(
 }
 
 func (sc *svcCtl) GetByName(
-	gtx context.Context, name string) (*core.Service, error) {
+	gtx context.Context, name string) (*Service, error) {
 	s, err := sc.srvStore.GetByName(gtx, name)
 	if err != nil {
 		return nil, core.NewEventAdder(gtx, "service.getByName", data.M{
@@ -150,7 +149,7 @@ func (sc *svcCtl) GetByName(
 }
 
 func (sc *svcCtl) GetForOwner(
-	gtx context.Context, ownerId string) ([]*core.Service, error) {
+	gtx context.Context, ownerId string) ([]*Service, error) {
 	s, err := sc.srvStore.GetForOwner(gtx, ownerId)
 	if err != nil {
 		return nil, core.NewEventAdder(gtx, "service.getForOwner", data.M{
@@ -167,7 +166,7 @@ func (sc *svcCtl) AddAdmin(
 		"adminId":   userId,
 	})
 
-	curUser, err := core.GetUser(gtx)
+	curUser, err := userdx.GetUser(gtx)
 	if err != nil {
 		return ev.Commit(err)
 	}
@@ -186,7 +185,7 @@ func (sc *svcCtl) AddAdmin(
 		return ev.Commit(err)
 	}
 
-	if !slices.Contains(perms, core.PermServiceAdmin) {
+	if !slices.Contains(perms, PermServiceAdmin) {
 		return ev.Errf(core.ErrUnauthorized,
 			"only user with 'idx.serviceAdmin' permission can be "+
 				"added as admin")
@@ -200,7 +199,7 @@ func (sc *svcCtl) AddAdmin(
 }
 
 func (sc *svcCtl) GetAdmins(
-	gtx context.Context, serviceId int64) ([]*core.User, error) {
+	gtx context.Context, serviceId int64) ([]*userdx.User, error) {
 	admins, err := sc.srvStore.GetAdmins(gtx, serviceId)
 	if err != nil {
 		return nil, core.NewEventAdder(gtx, "service.addAdmin", data.M{

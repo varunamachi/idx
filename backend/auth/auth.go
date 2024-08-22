@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/errx"
 )
@@ -20,12 +21,12 @@ import (
 // }
 
 type authenticator struct {
-	us core.UserStorage
+	us userdx.UserStorage
 	cs core.SecretStorage
 }
 
 func NewAuthenticator(
-	us core.UserStorage, cs core.SecretStorage) auth.UserAuthenticator {
+	us userdx.UserStorage, cs core.SecretStorage) auth.UserAuthenticator {
 	return &authenticator{
 		cs: cs,
 		us: us,

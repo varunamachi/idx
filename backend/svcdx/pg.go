@@ -1,9 +1,9 @@
-package pg
+package svcdx
 
 import (
 	"context"
 
-	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
@@ -13,14 +13,14 @@ type svcPgStorage struct {
 	gd data.GetterDeleter
 }
 
-func NewServiceStorage(gd data.GetterDeleter) core.ServiceStorage {
+func NewServiceStorage(gd data.GetterDeleter) ServiceStorage {
 	return &svcPgStorage{
 		gd: gd,
 	}
 }
 
 func (pss *svcPgStorage) Save(
-	gtx context.Context, service *core.Service) (int64, error) {
+	gtx context.Context, service *Service) (int64, error) {
 	query := `
 		INSERT INTO idx_service (
 			created_by,
@@ -66,7 +66,7 @@ func (pss *svcPgStorage) Save(
 
 func (pss *svcPgStorage) Update(
 	gtx context.Context,
-	service *core.Service) error {
+	service *Service) error {
 	query := `
 		UPDATE idx_service SET
 			created_by = :created_by,
@@ -86,8 +86,8 @@ func (pss *svcPgStorage) Update(
 
 func (pss *svcPgStorage) GetOne(
 	gtx context.Context,
-	id int64) (*core.Service, error) {
-	var service core.Service
+	id int64) (*Service, error) {
+	var service Service
 	err := pss.gd.GetOne(gtx, "idx_service", "id", id, &service)
 	if err != nil {
 		return nil, err
@@ -106,8 +106,8 @@ func (pss *svcPgStorage) Remove(
 
 func (pss *svcPgStorage) Get(
 	gtx context.Context,
-	params *data.CommonParams) ([]*core.Service, error) {
-	out := make([]*core.Service, 0, params.PageSize)
+	params *data.CommonParams) ([]*Service, error) {
+	out := make([]*Service, 0, params.PageSize)
 
 	if err := pss.gd.Get(gtx, "idx_service", params, &out); err != nil {
 		return nil, err
@@ -126,8 +126,8 @@ func (pss *svcPgStorage) Count(
 }
 
 func (pss *svcPgStorage) GetByName(
-	gtx context.Context, name string) (*core.Service, error) {
-	var service core.Service
+	gtx context.Context, name string) (*Service, error) {
+	var service Service
 	err := pss.gd.GetOne(gtx, "idx_service", "name", name, &service)
 	if err != nil {
 		return nil, errx.Errf(err, "failed to get service with name '%s'", name)
@@ -136,7 +136,7 @@ func (pss *svcPgStorage) GetByName(
 }
 
 func (pss *svcPgStorage) GetForOwner(
-	gtx context.Context, ownerId string) ([]*core.Service, error) {
+	gtx context.Context, ownerId string) ([]*Service, error) {
 	const query = `
 		SELECT * 
 		FROM idx_service
@@ -144,7 +144,7 @@ func (pss *svcPgStorage) GetForOwner(
 		ORDER BY updated_at DESC
 	`
 
-	services := make([]*core.Service, 0, 100)
+	services := make([]*Service, 0, 100)
 	err := pg.Conn().SelectContext(gtx, &services, query, ownerId)
 	if err != nil {
 		return nil, errx.Errf(err, "failed to get services for owner '%s'")
@@ -173,7 +173,7 @@ func (pss *svcPgStorage) AddAdmin(
 }
 
 func (pss *svcPgStorage) GetAdmins(
-	gtx context.Context, serviceId int64) ([]*core.User, error) {
+	gtx context.Context, serviceId int64) ([]*userdx.User, error) {
 	const query = `
 		SELECT u.* 
 		FROM idx_user u
@@ -182,7 +182,7 @@ func (pss *svcPgStorage) GetAdmins(
 		ORDER BY admin_id DESC
 	`
 
-	admins := make([]*core.User, 0, 100)
+	admins := make([]*userdx.User, 0, 100)
 	err := pg.Conn().SelectContext(gtx, &admins, query, serviceId)
 	if err != nil {
 		return nil, errx.Errf(err, "failed to get admins for %d", serviceId)

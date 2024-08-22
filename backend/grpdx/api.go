@@ -1,4 +1,4 @@
-package restapi
+package grpdx
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
@@ -14,7 +14,7 @@ import (
 )
 
 func GroupEndpoints(gtx context.Context) []*httpx.Endpoint {
-	gs := core.GroupCtlr(gtx)
+	gs := GroupCtlr(gtx)
 	return []*httpx.Endpoint{
 		createGroupEp(gs),
 		updateGroupEp(gs),
@@ -30,9 +30,9 @@ func GroupEndpoints(gtx context.Context) []*httpx.Endpoint {
 	}
 }
 
-func createGroupEp(gs core.GroupController) *httpx.Endpoint {
+func createGroupEp(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var group core.Group
+		var group Group
 		if err := etx.Bind(&group); err != nil {
 			return errx.BadReq("failed to read group info from request", err)
 		}
@@ -52,14 +52,14 @@ func createGroupEp(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Create a group",
 		Version:     "v1",
-		Permissions: []string{core.PermCreateUser},
+		Permissions: []string{userdx.PermCreateUser},
 		Handler:     handler,
 	}
 }
 
-func updateGroupEp(gs core.GroupController) *httpx.Endpoint {
+func updateGroupEp(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var group core.Group
+		var group Group
 		if err := etx.Bind(&group); err != nil {
 			return errx.BadReq("failed to read group info from request", err)
 		}
@@ -76,12 +76,12 @@ func updateGroupEp(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Update a group",
 		Version:     "v1",
-		Permissions: []string{core.PermCreateGroup},
+		Permissions: []string{PermCreateGroup},
 		Handler:     handler,
 	}
 }
 
-func getGroupEp(gs core.GroupController) *httpx.Endpoint {
+func getGroupEp(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -103,12 +103,12 @@ func getGroupEp(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Get info for a group",
 		Version:     "v1",
-		Permissions: []string{core.PermGetGroup},
+		Permissions: []string{PermGetGroup},
 		Handler:     handler,
 	}
 }
 
-func getGroupsEp(gs core.GroupController) *httpx.Endpoint {
+func getGroupsEp(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -129,12 +129,12 @@ func getGroupsEp(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Get group list",
 		Version:     "v1",
-		Permissions: []string{core.PermGetGroup},
+		Permissions: []string{PermGetGroup},
 		Handler:     handler,
 	}
 }
 
-func deleteGroupEp(gs core.GroupController) *httpx.Endpoint {
+func deleteGroupEp(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -156,12 +156,12 @@ func deleteGroupEp(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Delete a group",
 		Version:     "v1",
-		Permissions: []string{core.PermDeleteGroup},
+		Permissions: []string{PermDeleteGroup},
 		Handler:     handler,
 	}
 }
 
-func groupExistsEp(gs core.GroupController) *httpx.Endpoint {
+func groupExistsEp(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -183,12 +183,12 @@ func groupExistsEp(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Check if a group exists",
 		Version:     "v1",
-		Permissions: []string{core.PermGetGroup},
+		Permissions: []string{PermGetGroup},
 		Handler:     handler,
 	}
 }
 
-func getNumGroupsEp(gs core.GroupController) *httpx.Endpoint {
+func getNumGroupsEp(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		filter, err := rest.GetFilter(etx)
 		if err != nil {
@@ -211,12 +211,12 @@ func getNumGroupsEp(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Get number of groups, selected by given filter",
 		Version:     "v1",
-		Permissions: []string{core.PermGetGroup},
+		Permissions: []string{PermGetGroup},
 		Handler:     handler,
 	}
 }
 
-func setGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
+func setGroupPermissionsEp(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		pmg := httpx.NewParamGetter(etx)
@@ -243,12 +243,12 @@ func setGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Set permissions for a group",
 		Version:     "v1",
-		Permissions: []string{core.PermModifyGroupPerm},
+		Permissions: []string{PermModifyGroupPerm},
 		Handler:     handler,
 	}
 }
 
-func getGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
+func getGroupPermissionsEp(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("groupId")
@@ -270,12 +270,12 @@ func getGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Get permissions of a group",
 		Version:     "v1",
-		Permissions: []string{core.PermGetGroup},
+		Permissions: []string{PermGetGroup},
 		Handler:     handler,
 	}
 }
 
-func addUserToGroups(gs core.GroupController) *httpx.Endpoint {
+func addUserToGroups(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		pmg := httpx.NewParamGetter(etx)
@@ -302,12 +302,12 @@ func addUserToGroups(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Add user to ne or more groups",
 		Version:     "v1",
-		Permissions: []string{core.PermModifyGroupPerm},
+		Permissions: []string{PermModifyGroupPerm},
 		Handler:     handler,
 	}
 }
 
-func removeUserFromGroup(gs core.GroupController) *httpx.Endpoint {
+func removeUserFromGroup(gs GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		groupId := prmg.Int64("groupId")
@@ -330,7 +330,7 @@ func removeUserFromGroup(gs core.GroupController) *httpx.Endpoint {
 		Category:    "idx.group",
 		Desc:        "Delete a group",
 		Version:     "v1",
-		Permissions: []string{core.PermDeleteGroup},
+		Permissions: []string{PermDeleteGroup},
 		Handler:     handler,
 	}
 }

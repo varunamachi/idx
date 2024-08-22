@@ -1,11 +1,10 @@
-package pg
+package grpdx
 
 import (
 	"context"
 	"database/sql"
 
 	"github.com/rs/zerolog/log"
-	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
@@ -15,14 +14,14 @@ type groupPgStorage struct {
 	gd data.GetterDeleter
 }
 
-func NewGroupStorage(gd data.GetterDeleter) core.GroupStorage {
+func NewGroupStorage(gd data.GetterDeleter) GroupStorage {
 	return &groupPgStorage{
 		gd: gd,
 	}
 }
 
 func (pgs groupPgStorage) Save(
-	gtx context.Context, group *core.Group) (int64, error) {
+	gtx context.Context, group *Group) (int64, error) {
 	query := `
 		INSERT INTO idx_group (
 			created_by,
@@ -67,7 +66,7 @@ func (pgs groupPgStorage) Save(
 	// return 0, nil
 }
 
-func (pgs groupPgStorage) Update(gtx context.Context, group *core.Group) error {
+func (pgs groupPgStorage) Update(gtx context.Context, group *Group) error {
 	query := `
 		UPDATE idx_group SET
 			created_by = :created_by,
@@ -87,8 +86,8 @@ func (pgs groupPgStorage) Update(gtx context.Context, group *core.Group) error {
 }
 
 func (pgs groupPgStorage) GetOne(
-	gtx context.Context, id int64) (*core.Group, error) {
-	var group core.Group
+	gtx context.Context, id int64) (*Group, error) {
+	var group Group
 	err := pgs.gd.GetOne(gtx, "idx_group", "id", id, &group)
 	if err != nil {
 		return nil, err
@@ -105,8 +104,8 @@ func (pgs groupPgStorage) Remove(gtx context.Context, id int64) error {
 }
 
 func (pgs groupPgStorage) Get(
-	gtx context.Context, params *data.CommonParams) ([]*core.Group, error) {
-	groups := make([]*core.Group, 0, params.PageSize)
+	gtx context.Context, params *data.CommonParams) ([]*Group, error) {
+	groups := make([]*Group, 0, params.PageSize)
 	err := pgs.gd.Get(gtx, "idx_group", params, &groups)
 	if err != nil {
 		return nil, err

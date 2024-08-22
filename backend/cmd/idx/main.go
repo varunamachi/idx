@@ -7,9 +7,11 @@ import (
 	"github.com/varunamachi/idx/auth"
 	idxAuth "github.com/varunamachi/idx/auth"
 	"github.com/varunamachi/idx/cmd"
-	"github.com/varunamachi/idx/controller"
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/grpdx"
 	idxpg "github.com/varunamachi/idx/pg"
+	"github.com/varunamachi/idx/svcdx"
+	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/email"
@@ -34,26 +36,40 @@ func main() {
 	evtSrv := idxpg.NewEventService()
 
 	gd := pg.NewGetterDeleter()
-	userStore := idxpg.NewUserStorage(gd)
-	groupStore := idxpg.NewGroupStorage(gd)
-	serviceStore := idxpg.NewServiceStorage(gd)
+	userStore := userdx.NewUserStorage(gd)
+	serviceStore := svcdx.NewServiceStorage(gd)
+	groupStore := grpdx.NewGroupStorage(gd)
 
 	hasher := auth.NewArgon2Hasher()
-	credStorage := idxpg.NewCredentialStorage(hasher)
+	credStorage := userdx.NewCredentialStorage(hasher)
 
 	authr := idxAuth.NewAuthenticator(userStore, credStorage)
-	uctlr := controller.NewUserController(userStore, credStorage, emailProvider)
-	gctlr := controller.NewGroupController(groupStore, serviceStore)
-	sctlr := controller.NewServiceController(
-		serviceStore, userStore, groupStore)
+	uctlr := userdx.NewUserController(userStore, credStorage, emailProvider)
+	sctlr := svcdx.NewServiceController(serviceStore, userStore)
+	gctlr := grpdx.NewGroupController(groupStore, serviceStore)
+
+	// gtx = core.NewContext(gtx, &core.Services{
+	// 	UserCtlr:      uctlr,
+	// 	ServiceCtlr:   sctlr,
+	// 	GroupCtlr:     gctlr,
+	// 	Authenticator: authr,
+	// 	MailProvider:  emailProvider,
+	// 	EventService:  evtSrv,
+	// })
 
 	gtx = core.NewContext(gtx, &core.Services{
-		UserCtlr:      uctlr,
-		ServiceCtlr:   sctlr,
-		GroupCtlr:     gctlr,
-		Authenticator: authr,
-		MailProvider:  emailProvider,
-		EventService:  evtSrv,
+		EventService: evtSrv,
+		MailProvider: emailProvider,
+	})
+	gtx = userdx.NewContext(gtx, &userdx.Services{
+		UserCtlr: uctlr,
+		Authr:    authr,
+	})
+	gtx = svcdx.NewContext(gtx, &svcdx.Services{
+		ServiceCtlr: sctlr,
+	})
+	gtx = grpdx.NewContext(gtx, &grpdx.Services{
+		GroupCtlr: gctlr,
 	})
 
 	app := libx.NewApp(

@@ -4,22 +4,26 @@ import (
 	"time"
 
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/grpdx"
+	"github.com/varunamachi/idx/svcdx"
+	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx/auth"
 )
 
 type userAndPassword struct {
-	user     *core.User
-	password string
+	user        *userdx.User
+	password    string
+	newPassword string
 }
 
 var super = userAndPassword{
 
-	user: &core.User{
+	user: &userdx.User{
 		DbItem:    core.DbItem{},
 		UName:     "super",
 		EmailId:   "super@example.com",
 		AuthzRole: auth.Super,
-		State:     core.Active,
+		State:     userdx.Active,
 		FirstName: "Super",
 		LastName:  "User",
 		Title:     "Dr",
@@ -27,12 +31,13 @@ var super = userAndPassword{
 			"initialUser": true,
 		},
 	},
-	password: "onetwothree",
+	password:    "onetwothree",
+	newPassword: "threetwoone",
 }
 
 var users = []userAndPassword{
 	{
-		user: &core.User{
+		user: &userdx.User{
 			DbItem: core.DbItem{
 				Id:        0,
 				CreatedAt: time.Time{},
@@ -43,7 +48,7 @@ var users = []userAndPassword{
 			UName:     "admin_1",
 			EmailId:   "admin1@example.com",
 			AuthzRole: auth.Admin,
-			State:     core.None,
+			State:     userdx.None,
 			FirstName: "Admin",
 			LastName:  "One",
 			Title:     "Mr",
@@ -51,10 +56,11 @@ var users = []userAndPassword{
 				"test": "test",
 			},
 		},
-		password: "onetwothree",
+		password:    "onetwothree",
+		newPassword: "threetwoone",
 	},
 	{
-		user: &core.User{
+		user: &userdx.User{
 			DbItem: core.DbItem{
 				Id:        0,
 				CreatedAt: time.Time{},
@@ -65,7 +71,7 @@ var users = []userAndPassword{
 			UName:     "normal_1",
 			EmailId:   "normal_1@example.com",
 			AuthzRole: auth.Admin,
-			State:     core.None,
+			State:     userdx.None,
 			FirstName: "Normal",
 			LastName:  "One",
 			Title:     "Ms",
@@ -73,11 +79,12 @@ var users = []userAndPassword{
 				"test": "test",
 			},
 		},
-		password: "onetwothree",
+		password:    "onetwothree",
+		newPassword: "threetwoone",
 	},
 }
 
-var services = []*core.Service{
+var services = []*svcdx.Service{
 	{
 		DbItem: core.DbItem{
 			Id:        0,
@@ -133,7 +140,7 @@ var services = []*core.Service{
 	},
 }
 
-var groups = []*core.Group{
+var groups = []*grpdx.Group{
 	{
 		DbItem: core.DbItem{
 			Id:        0,

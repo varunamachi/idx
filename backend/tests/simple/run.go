@@ -77,6 +77,12 @@ func Run(gtx context.Context) error {
 
 		log.Info().Str("user", lu.UName).Msg("logged in")
 
+		// Update password
+
+		// Reset password
+
+		// Login Again
+
 		// TODO - may be logout??
 	}
 

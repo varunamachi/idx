@@ -3,14 +3,14 @@ package client
 import (
 	"context"
 
-	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/grpdx"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
 )
 
 func (c *IdxClient) CreateGroup(
 	gtx context.Context,
-	group *core.Group) (int64, error) {
+	group *grpdx.Group) (int64, error) {
 	// apiRes := c.Post(gtx, group, "/api/v1/group")
 	apiRes := c.build().Path("/api/v1/group").Post(gtx, group)
 
@@ -21,7 +21,7 @@ func (c *IdxClient) CreateGroup(
 	return res["groupId"], nil
 }
 
-func (c *IdxClient) UpdateGroup(gtx context.Context, group *core.Group) error {
+func (c *IdxClient) UpdateGroup(gtx context.Context, group *grpdx.Group) error {
 	// apiRes := c.Put(gtx, group, "/api/v1/group")
 	apiRes := c.build().Path("/api/v1/group").Put(gtx, group)
 	if err := apiRes.Close(); err != nil {
@@ -32,8 +32,8 @@ func (c *IdxClient) UpdateGroup(gtx context.Context, group *core.Group) error {
 }
 
 func (c *IdxClient) GetGroup(
-	gtx context.Context, id int64) (*core.Group, error) {
-	var group core.Group
+	gtx context.Context, id int64) (*grpdx.Group, error) {
+	var group grpdx.Group
 	// apiRes := c.Get(gtx, "/api/v1/group", strconv.FormatInt(id, 10))
 	apiRes := c.build().Path("/api/v1/group", id).Get(gtx)
 	if err := apiRes.LoadClose(&group); err != nil {
@@ -53,10 +53,10 @@ func (c *IdxClient) RemoveGroup(gtx context.Context, id int64) error {
 
 func (c *IdxClient) GetGroups(
 	gtx context.Context,
-	params *data.CommonParams) ([]*core.Group, error) {
+	params *data.CommonParams) ([]*grpdx.Group, error) {
 	// TODO -ClientV2 for encoding common params
 
-	groups := make([]*core.Group, 0, 25)
+	groups := make([]*grpdx.Group, 0, 25)
 	// apiRes := c.Get(gtx, "/api/v1/group")
 	apiRes := c.build().Path("/api/v1/group").CmnParam(params).Get(gtx)
 	if err := apiRes.LoadClose(&groups); err != nil {

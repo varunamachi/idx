@@ -1,4 +1,4 @@
-package restapi
+package userdx
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
-	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
@@ -14,7 +13,7 @@ import (
 )
 
 func AuthEndpoints(gtx context.Context) []*httpx.Endpoint {
-	athr := core.Authenticator(gtx)
+	athr := Authenticator(gtx)
 	return []*httpx.Endpoint{
 		authenticateEp(athr),
 		logout(athr),

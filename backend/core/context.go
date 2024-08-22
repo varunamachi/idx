@@ -7,28 +7,23 @@ import (
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/event"
 	"github.com/varunamachi/libx/email"
-	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 )
 
 type Services struct {
-	UserCtlr      UserController
-	ServiceCtlr   ServiceController
-	GroupCtlr     GroupController
-	Authenticator auth.UserAuthenticator
-	EventService  event.Service
-	MailProvider  email.Provider
+	EventService event.Service
+	MailProvider email.Provider
 }
 
 type serviceHolderKey string
 
-const servicesKey = serviceHolderKey("services")
+const servicesKey = serviceHolderKey("core-services")
 
 func NewContext(gtx context.Context, services *Services) context.Context {
 	return context.WithValue(gtx, servicesKey, services)
 }
 
-func GetCoreServices(gtx context.Context) *Services {
+func srvs(gtx context.Context) *Services {
 	svs := gtx.Value(servicesKey).(*Services)
 	if svs == nil {
 		panic("failed get service holder from context")
@@ -37,34 +32,19 @@ func GetCoreServices(gtx context.Context) *Services {
 
 }
 
-func UserCtlr(gtx context.Context) UserController {
-	return GetCoreServices(gtx).UserCtlr
-}
-
-func ServiceCtlr(gtx context.Context) ServiceController {
-	return GetCoreServices(gtx).ServiceCtlr
-}
-
-func GroupCtlr(gtx context.Context) GroupController {
-	return GetCoreServices(gtx).GroupCtlr
-}
-
-func Authenticator(gtx context.Context) auth.UserAuthenticator {
-	return GetCoreServices(gtx).Authenticator
+func MailProvider(gtx context.Context) email.Provider {
+	return srvs(gtx).MailProvider
 }
 
 func EventService(gtx context.Context) event.Service {
-	return GetCoreServices(gtx).EventService
-}
-
-func MailProvider(gtx context.Context) email.Provider {
-	return GetCoreServices(gtx).MailProvider
+	return srvs(gtx).EventService
 }
 
 func NewEventAdder(gtx context.Context, op string, data data.M) *event.Adder {
+
+	user := httpx.GetUser[auth.User](gtx)
 	userId := int64(-1)
-	user, err := GetUser(gtx)
-	if err == nil {
+	if user != nil {
 		userId = user.Id()
 	}
 
@@ -72,18 +52,7 @@ func NewEventAdder(gtx context.Context, op string, data data.M) *event.Adder {
 		gtx, EventService(gtx), op, userId, data)
 }
 
-func MustGetUser(gtx context.Context) *User {
-	user := httpx.GetUser[*User](gtx)
-	if user == nil {
-		panic("failed get user from context")
-	}
-	return user
-}
-
-func GetUser(gtx context.Context) (*User, error) {
-	user := httpx.GetUser[*User](gtx)
-	if user == nil {
-		return nil, errx.Fmt("failed get user from context")
-	}
-	return user, nil
+func CopyServices(source, target context.Context) context.Context {
+	s := srvs(source)
+	return context.WithValue(target, servicesKey, s)
 }

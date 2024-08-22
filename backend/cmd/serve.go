@@ -7,7 +7,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/varunamachi/idx/core"
+	"github.com/varunamachi/idx/grpdx"
 	"github.com/varunamachi/idx/pg/schema"
+	"github.com/varunamachi/idx/svcdx"
+	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
@@ -15,7 +18,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
-	"github.com/varunamachi/idx/restapi"
 	"github.com/varunamachi/libx"
 )
 
@@ -40,10 +42,10 @@ func ServeCommand() *cli.Command {
 					httpx.NewServer(os.Stdout, &userRetriever{}).
 						WithRootMiddlewares(contextMiddleware(gtx)).
 						PrintAllAccess(false).
-						WithAPIs(restapi.AuthEndpoints(gtx)...).
-						WithAPIs(restapi.UserEndpoints(gtx)...).
-						WithAPIs(restapi.GroupEndpoints(gtx)...).
-						WithAPIs(restapi.ServiceEndpoints(gtx)...))
+						WithAPIs(userdx.AuthEndpoints(gtx)...).
+						WithAPIs(userdx.UserEndpoints(gtx)...).
+						WithAPIs(grpdx.GroupEndpoints(gtx)...).
+						WithAPIs(svcdx.ServiceEndpoints(gtx)...))
 
 			// Create schema if required
 			if err := schema.Init(gtx, "test"); err != nil {
@@ -71,7 +73,7 @@ type userRetriever struct {
 
 func (ug *userRetriever) GetUser(
 	gtx context.Context, userId string) (auth.User, error) {
-	ctl := core.UserCtlr(gtx)
+	ctl := userdx.UserCtlr(gtx)
 	return ctl.ByUsername(gtx, userId)
 }
 
@@ -79,9 +81,12 @@ func contextMiddleware(gtx context.Context) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return func(etx echo.Context) error {
-			services := core.GetCoreServices(gtx)
 			newGtx := etx.Request().Context()
-			newGtx = core.NewContext(newGtx, services)
+			newGtx = core.CopyServices(gtx, newGtx)
+			newGtx = userdx.CopyServices(gtx, newGtx)
+			newGtx = svcdx.CopyServices(gtx, newGtx)
+			newGtx = grpdx.CopyServices(gtx, newGtx)
+
 			etx.SetRequest(etx.Request().WithContext(newGtx))
 			// fmt.Println("set")
 			return next(etx)

@@ -1,4 +1,4 @@
-package restapi
+package svcdx
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
@@ -14,7 +13,7 @@ import (
 )
 
 func ServiceEndpoints(gtx context.Context) []*httpx.Endpoint {
-	ss := core.ServiceCtlr(gtx)
+	ss := ServiceCtlr(gtx)
 	return []*httpx.Endpoint{
 		createServiceEp(ss),
 		updateServiceEp(ss),
@@ -33,9 +32,9 @@ func ServiceEndpoints(gtx context.Context) []*httpx.Endpoint {
 	}
 }
 
-func createServiceEp(ss core.ServiceController) *httpx.Endpoint {
+func createServiceEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var service core.Service
+		var service Service
 		if err := etx.Bind(&service); err != nil {
 			return errx.BadReq("failed to read service info from request", err)
 		}
@@ -53,14 +52,14 @@ func createServiceEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Create a service",
 		Version:     "v1",
-		Permissions: []string{core.PermCreateService},
+		Permissions: []string{PermCreateService},
 		Handler:     handler,
 	}
 }
 
-func updateServiceEp(ss core.ServiceController) *httpx.Endpoint {
+func updateServiceEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var service core.Service
+		var service Service
 		if err := etx.Bind(&service); err != nil {
 			return errx.BadReq("failed to read service info from request", err)
 		}
@@ -77,12 +76,12 @@ func updateServiceEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Update a service",
 		Version:     "v1",
-		Permissions: []string{core.PermCreateService},
+		Permissions: []string{PermCreateService},
 		Handler:     handler,
 	}
 }
 
-func getServiceEp(ss core.ServiceController) *httpx.Endpoint {
+func getServiceEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -104,12 +103,12 @@ func getServiceEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Get info for a service",
 		Version:     "v1",
-		Permissions: []string{core.PermGetService},
+		Permissions: []string{PermGetService},
 		Handler:     handler,
 	}
 }
 
-func getServicesEp(ss core.ServiceController) *httpx.Endpoint {
+func getServicesEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -130,12 +129,12 @@ func getServicesEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Get service list",
 		Version:     "v1",
-		Permissions: []string{core.PermGetService},
+		Permissions: []string{PermGetService},
 		Handler:     handler,
 	}
 }
 
-func deleteServiceEp(ss core.ServiceController) *httpx.Endpoint {
+func deleteServiceEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -157,12 +156,12 @@ func deleteServiceEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Delete a service",
 		Version:     "v1",
-		Permissions: []string{core.PermDeleteService},
+		Permissions: []string{PermDeleteService},
 		Handler:     handler,
 	}
 }
 
-func serviceExistsEp(ss core.ServiceController) *httpx.Endpoint {
+func serviceExistsEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		name := prmg.Str("name")
@@ -186,12 +185,12 @@ func serviceExistsEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Check if service exists",
 		Version:     "v1",
-		Permissions: []string{core.PermGetService},
+		Permissions: []string{PermGetService},
 		Handler:     handler,
 	}
 }
 
-func numServices(ss core.ServiceController) *httpx.Endpoint {
+func numServices(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		filter, err := rest.GetFilter(etx)
 		if err != nil {
@@ -212,12 +211,12 @@ func numServices(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Get service count for the filter",
 		Version:     "v1",
-		Permissions: []string{core.PermGetService},
+		Permissions: []string{PermGetService},
 		Handler:     handler,
 	}
 }
 
-func serviceByNameEp(ss core.ServiceController) *httpx.Endpoint {
+func serviceByNameEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		name := prmg.Str("name")
@@ -239,12 +238,12 @@ func serviceByNameEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Get service by name ",
 		Version:     "v1",
-		Permissions: []string{core.PermGetService},
+		Permissions: []string{PermGetService},
 		Handler:     handler,
 	}
 }
 
-func servicesForOwnerEp(ss core.ServiceController) *httpx.Endpoint {
+func servicesForOwnerEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		owner := prmg.Str("owner")
@@ -266,12 +265,12 @@ func servicesForOwnerEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Get services for an owner",
 		Version:     "v1",
-		Permissions: []string{core.PermGetService},
+		Permissions: []string{PermGetService},
 		Handler:     handler,
 	}
 }
 
-func addAdminToServiceEp(ss core.ServiceController) *httpx.Endpoint {
+func addAdminToServiceEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		pmg := httpx.NewParamGetter(etx)
 		service := pmg.Int64("service")
@@ -290,12 +289,12 @@ func addAdminToServiceEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Add an admin to a service",
 		Version:     "v1",
-		Permissions: []string{core.PermServiceManageAdmins},
+		Permissions: []string{PermServiceManageAdmins},
 		Handler:     handler,
 	}
 }
 
-func removeAdminFromServiceEp(ss core.ServiceController) *httpx.Endpoint {
+func removeAdminFromServiceEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		pmg := httpx.NewParamGetter(etx)
 		service := pmg.Int64("service")
@@ -314,12 +313,12 @@ func removeAdminFromServiceEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Remove an admin from a service",
 		Version:     "v1",
-		Permissions: []string{core.PermServiceManageAdmins},
+		Permissions: []string{PermServiceManageAdmins},
 		Handler:     handler,
 	}
 }
 
-func getServiceAdminsEp(ss core.ServiceController) *httpx.Endpoint {
+func getServiceAdminsEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		service := prmg.Int64("service")
@@ -341,12 +340,12 @@ func getServiceAdminsEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Get admins of a service",
 		Version:     "v1",
-		Permissions: []string{core.PermGetService},
+		Permissions: []string{PermGetService},
 		Handler:     handler,
 	}
 }
 
-func isServiceAdminEp(ss core.ServiceController) *httpx.Endpoint {
+func isServiceAdminEp(ss ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		service := prmg.Int64("service")
@@ -371,12 +370,12 @@ func isServiceAdminEp(ss core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Check if user is an admin of a service",
 		Version:     "v1",
-		Permissions: []string{core.PermGetService},
+		Permissions: []string{PermGetService},
 		Handler:     handler,
 	}
 }
 
-func getPermissionsForService(gs core.ServiceController) *httpx.Endpoint {
+func getPermissionsForService(gs ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		userId := prmg.Int64("userId")
@@ -400,7 +399,7 @@ func getPermissionsForService(gs core.ServiceController) *httpx.Endpoint {
 		Category:    "idx.service",
 		Desc:        "Get permissions of a service for a user",
 		Version:     "v1",
-		Permissions: []string{core.PermGetService},
+		Permissions: []string{PermGetService},
 		Handler:     handler,
 	}
 }
