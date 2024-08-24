@@ -73,7 +73,7 @@ type userRetriever struct {
 
 func (ug *userRetriever) GetUser(
 	gtx context.Context, userId string) (auth.User, error) {
-	ctl := userdx.UserCtlr(gtx)
+	ctl := core.UserCtlr(gtx)
 	return ctl.ByUsername(gtx, userId)
 }
 
@@ -83,9 +83,6 @@ func contextMiddleware(gtx context.Context) echo.MiddlewareFunc {
 		return func(etx echo.Context) error {
 			newGtx := etx.Request().Context()
 			newGtx = core.CopyServices(gtx, newGtx)
-			newGtx = userdx.CopyServices(gtx, newGtx)
-			newGtx = svcdx.CopyServices(gtx, newGtx)
-			newGtx = grpdx.CopyServices(gtx, newGtx)
 
 			etx.SetRequest(etx.Request().WithContext(newGtx))
 			// fmt.Println("set")

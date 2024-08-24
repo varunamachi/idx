@@ -7,12 +7,18 @@ import (
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/event"
 	"github.com/varunamachi/libx/email"
+	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
 )
 
 type Services struct {
-	EventService event.Service
-	MailProvider email.Provider
+	EventService      event.Service
+	MailProvider      email.Provider
+	UserStorage       UserStorage
+	UserController    UserController
+	UserAuthenticator auth.UserAuthenticator
+	ServiceController ServiceController
+	GroupController   GroupController
 }
 
 type serviceHolderKey string
@@ -50,6 +56,38 @@ func NewEventAdder(gtx context.Context, op string, data data.M) *event.Adder {
 
 	return event.NewAdder(
 		gtx, EventService(gtx), op, userId, data)
+}
+
+func UserCtlr(gtx context.Context) UserController {
+	return srvs(gtx).UserController
+}
+
+func Authenticator(gtx context.Context) auth.UserAuthenticator {
+	return srvs(gtx).UserAuthenticator
+}
+
+func MustGetUser(gtx context.Context) *User {
+	user := httpx.GetUser[*User](gtx)
+	if user == nil {
+		panic("failed get user from context")
+	}
+	return user
+}
+
+func GetUser(gtx context.Context) (*User, error) {
+	user := httpx.GetUser[*User](gtx)
+	if user == nil {
+		return nil, errx.Fmt("failed get user from context")
+	}
+	return user, nil
+}
+
+func ServiceCtlr(gtx context.Context) ServiceController {
+	return srvs(gtx).ServiceController
+}
+
+func GroupCtlr(gtx context.Context) GroupController {
+	return srvs(gtx).GroupController
 }
 
 func CopyServices(source, target context.Context) context.Context {

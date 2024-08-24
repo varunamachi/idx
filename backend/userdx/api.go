@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
@@ -15,7 +16,7 @@ import (
 
 func UserEndpoints(gtx context.Context) []*httpx.Endpoint {
 
-	us := UserCtlr(gtx)
+	us := core.UserCtlr(gtx)
 	return []*httpx.Endpoint{
 		registerUserEp(us),
 		verifyUserEp(us),
@@ -34,9 +35,9 @@ func UserEndpoints(gtx context.Context) []*httpx.Endpoint {
 	}
 }
 
-func registerUserEp(us UserController) *httpx.Endpoint {
+func registerUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var up UserWithPassword
+		var up core.UserWithPassword
 		if err := etx.Bind(&up); err != nil {
 			return errx.BadReqX(err, "failed to read user info from request")
 		}
@@ -60,7 +61,7 @@ func registerUserEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func verifyUserEp(us UserController) *httpx.Endpoint {
+func verifyUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		// userId := etx.Param("userId")
 		// verToken := etx.Param("toekn")
@@ -90,9 +91,9 @@ func verifyUserEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func updateUserEp(us UserController) *httpx.Endpoint {
+func updateUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var user User
+		var user core.User
 		if err := etx.Bind(&user); err != nil {
 			return errx.BadReqX(err, "failed to read user info from request")
 		}
@@ -114,7 +115,7 @@ func updateUserEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func getUserEp(us UserController) *httpx.Endpoint {
+func getUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -141,7 +142,7 @@ func getUserEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func getUserByUsernameEp(us UserController) *httpx.Endpoint {
+func getUserByUsernameEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Str("name")
@@ -159,7 +160,7 @@ func getUserByUsernameEp(us UserController) *httpx.Endpoint {
 
 	return &httpx.Endpoint{
 		Method:      echo.GET,
-		Path:        "/user/strid/:name",
+		Path:        "/ucore.UserContrser/strid/:name",
 		Category:    "idx.user",
 		Desc:        "Get info for a user identified by string id",
 		Version:     "v1",
@@ -168,7 +169,7 @@ func getUserByUsernameEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func getUsersEp(us UserController) *httpx.Endpoint {
+func getUsersEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -194,7 +195,7 @@ func getUsersEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func deleteUserEp(us UserController) *httpx.Endpoint {
+func deleteUserEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -221,7 +222,7 @@ func deleteUserEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func updatePasswordEp(us UserController) *httpx.Endpoint {
+func updatePasswordEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		credx := struct {
@@ -257,7 +258,7 @@ func updatePasswordEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func initPasswordResetEp(us UserController) *httpx.Endpoint {
+func initPasswordResetEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		prmg := httpx.NewParamGetter(etx)
@@ -284,7 +285,7 @@ func initPasswordResetEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func resetPasswordEp(us UserController) *httpx.Endpoint {
+func resetPasswordEp(us core.UserController) *httpx.Endpoint {
 
 	handler := func(etx echo.Context) error {
 
@@ -320,7 +321,7 @@ func resetPasswordEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func approveEp(us UserController) *httpx.Endpoint {
+func approveEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		pmg := httpx.NewParamGetter(etx)
@@ -359,14 +360,14 @@ func approveEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func setStateEp(us UserController) *httpx.Endpoint {
+func setStateEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		pmg := httpx.NewParamGetter(etx)
 		user := pmg.Int64("user")
-		state := UserState(pmg.Str("state"))
+		state := core.UserState(pmg.Str("state"))
 
-		if !data.OneOf(state, ValidUserStates...) {
+		if !data.OneOf(state, core.ValidUserStates...) {
 			return errx.BadReq("invalid user state '%s' provided", state)
 		}
 
@@ -389,7 +390,7 @@ func setStateEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func userExistsEp(us UserController) *httpx.Endpoint {
+func userExistsEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Str("userId")
@@ -418,7 +419,7 @@ func userExistsEp(us UserController) *httpx.Endpoint {
 	}
 }
 
-func userCountEp(us UserController) *httpx.Endpoint {
+func userCountEp(us core.UserController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		filter, err := rest.GetFilter(etx)
 		if err != nil {

@@ -47,8 +47,9 @@ func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 	}
 
 	smsrv.GetMailService().Start(gtx)
+
 	if !testConfig.SkipAppServer {
-		process, err := BuildAndRunServer()
+		process, err := BuildAndRunServer(gtx)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +79,7 @@ func Destroy(
 		log.Info().Msg("docker-compose shutdown complete")
 	}
 
-	if !testConfig.SkipAppServer {
+	if !testConfig.SkipAppServer && serverProcess != nil {
 		if err := serverProcess.Signal(os.Interrupt); err != nil {
 			return errx.Errf(err, "failed to send SIGINT to server process")
 		}
@@ -119,7 +120,7 @@ func RunDockerCompose(op, dcFilePath string) error {
 	return execCmd("docker", args...)
 }
 
-func BuildAndRunServer() (*os.Process, error) {
+func BuildAndRunServer(gtx context.Context) (*os.Process, error) {
 	fxRootPath := MustGetSourceRoot()
 	goArch := runtime.GOARCH
 
@@ -146,11 +147,17 @@ func BuildAndRunServer() (*os.Process, error) {
 		WithEnv("IDX_SIMPLE_SRV_SEND_URL", "http://localhost:9999/api/v1/send").
 		WithEnv("IDX_ROLE_MAPPING", "super:Super")
 
+	// Wait for fake mail service
+	err := netx.WaitForPorts(gtx, "localhost:9999", 2*time.Minute)
+	if err != nil {
+		return nil, errx.Errf(err, "could not connect to app server")
+	}
+
 	process, err := builder.Start()
 	if err != nil {
 		return nil, errx.Errf(err, "server exited with an error")
 	}
-	log.Info().Msg("server exited normally")
+	// log.Info().Msg("server exited normally")
 
 	return process, nil
 }

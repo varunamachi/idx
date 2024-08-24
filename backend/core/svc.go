@@ -1,16 +1,14 @@
-package svcdx
+package core
 
 import (
 	"context"
 
-	"github.com/varunamachi/idx/core"
-	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 )
 
 type Service struct {
-	core.DbItem
+	DbItem
 	Name        string              `db:"name" json:"name"`
 	OwnerId     int64               `db:"owner_id" json:"ownerId"`
 	DisplayName string              `db:"display_name" json:"displayName"`
@@ -27,7 +25,7 @@ type ServiceStorage interface {
 	Get(gtx context.Context, params *data.CommonParams) ([]*Service, error)
 
 	AddAdmin(gtx context.Context, serviceId, userId int64) error
-	GetAdmins(gtx context.Context, serviceId int64) ([]*userdx.User, error)
+	GetAdmins(gtx context.Context, serviceId int64) ([]*User, error)
 	RemoveAdmin(gtx context.Context, serviceId, userId int64) error
 	IsAdmin(gtx context.Context, serviceId, userId int64) (bool, error)
 

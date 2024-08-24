@@ -3,8 +3,7 @@ package client
 import (
 	"context"
 
-	"github.com/varunamachi/idx/svcdx"
-	"github.com/varunamachi/idx/userdx"
+	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
 )
@@ -15,7 +14,7 @@ func (c *IdxClient) GetPerms(
 }
 
 func (c *IdxClient) CreateService(
-	gtx context.Context, srv *svcdx.Service) (int64, error) {
+	gtx context.Context, srv *core.Service) (int64, error) {
 
 	apiRes := c.build().Path("/api/v1/service").Post(gtx, srv)
 	res := map[string]int64{"serviceId": int64(-1)}
@@ -26,7 +25,7 @@ func (c *IdxClient) CreateService(
 }
 
 func (c *IdxClient) UpdateService(
-	gtx context.Context, srv *svcdx.Service) error {
+	gtx context.Context, srv *core.Service) error {
 	apiRes := c.build().Path("/api/v1/service").Put(gtx, srv)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to update service: '%s'", srv.Name)
@@ -35,9 +34,9 @@ func (c *IdxClient) UpdateService(
 }
 
 func (c *IdxClient) GetService(
-	gtx context.Context, id int64) (*svcdx.Service, error) {
+	gtx context.Context, id int64) (*core.Service, error) {
 	apiRes := c.build().Path("/api/v1/service", id).Get(gtx)
-	var service svcdx.Service
+	var service core.Service
 	if err := apiRes.LoadClose(&service); err != nil {
 		return nil, errx.Errf(err, "failed to get service: '%d'", id)
 	}
@@ -45,11 +44,11 @@ func (c *IdxClient) GetService(
 }
 
 func (c *IdxClient) GetServices(
-	gtx context.Context, params *data.CommonParams) ([]*svcdx.Service, error) {
+	gtx context.Context, params *data.CommonParams) ([]*core.Service, error) {
 
 	// TODO - use common params as JSON query param
 	apiRes := c.build().Path("/api/v1/service").CmnParam(params).Get(gtx)
-	services := make([]*svcdx.Service, 0, params.PageSize)
+	services := make([]*core.Service, 0, params.PageSize)
 	if err := apiRes.LoadClose(&services); err != nil {
 		return nil, errx.Errf(err, "failed to get list of services")
 	}
@@ -94,10 +93,10 @@ func (c *IdxClient) NumServices(
 }
 
 func (c *IdxClient) GetServiceByName(
-	gtx context.Context, name string) (*svcdx.Service, error) {
+	gtx context.Context, name string) (*core.Service, error) {
 	// apiRes := c.Get(gtx, "/api/v1/service/named", name)
 	apiRes := c.build().Path("/api/v1/service/named", name).Get(gtx)
-	var service svcdx.Service
+	var service core.Service
 	if err := apiRes.LoadClose(&service); err != nil {
 		return nil, errx.Errf(err, "failed to get service: '%s'", name)
 	}
@@ -105,10 +104,10 @@ func (c *IdxClient) GetServiceByName(
 }
 
 func (c *IdxClient) GetServicesForOwner(
-	gtx context.Context, ownerId string) ([]*svcdx.Service, error) {
+	gtx context.Context, ownerId string) ([]*core.Service, error) {
 	// apiRes := c.Get(gtx, "/api/v1/service/owner", ownerId)
 	apiRes := c.build().Path("/api/v1/service/owner", ownerId).Get(gtx)
-	services := make([]*svcdx.Service, 0, 10)
+	services := make([]*core.Service, 0, 10)
 	if err := apiRes.LoadClose(&services); err != nil {
 		return nil, errx.Errf(
 			err, "failed to get services owned by '%s'", ownerId)
@@ -135,12 +134,12 @@ func (c *IdxClient) AddAdminToService(
 }
 
 func (c *IdxClient) GetServiceAdmins(
-	gtx context.Context, serviceId int64) ([]*userdx.User, error) {
+	gtx context.Context, serviceId int64) ([]*core.User, error) {
 	// apiRes := c.Get(gtx, "/api/v1/service/", strconv.FormatInt(serviceId, 10),
 	// 	"admin")
 
 	apiRes := c.build().Path(gtx, "/api/v1/service/", serviceId).Get(gtx)
-	admins := make([]*userdx.User, 0, 10)
+	admins := make([]*core.User, 0, 10)
 	if err := apiRes.LoadClose(&admins); err != nil {
 		return nil, errx.Errf(
 			err, "failed to get admins of service '%d'", serviceId)

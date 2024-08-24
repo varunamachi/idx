@@ -48,28 +48,13 @@ func main() {
 	sctlr := svcdx.NewServiceController(serviceStore, userStore)
 	gctlr := grpdx.NewGroupController(groupStore, serviceStore)
 
-	// gtx = core.NewContext(gtx, &core.Services{
-	// 	UserCtlr:      uctlr,
-	// 	ServiceCtlr:   sctlr,
-	// 	GroupCtlr:     gctlr,
-	// 	Authenticator: authr,
-	// 	MailProvider:  emailProvider,
-	// 	EventService:  evtSrv,
-	// })
-
 	gtx = core.NewContext(gtx, &core.Services{
-		EventService: evtSrv,
-		MailProvider: emailProvider,
-	})
-	gtx = userdx.NewContext(gtx, &userdx.Services{
-		UserCtlr: uctlr,
-		Authr:    authr,
-	})
-	gtx = svcdx.NewContext(gtx, &svcdx.Services{
-		ServiceCtlr: sctlr,
-	})
-	gtx = grpdx.NewContext(gtx, &grpdx.Services{
-		GroupCtlr: gctlr,
+		UserController:    uctlr,
+		ServiceController: sctlr,
+		GroupController:   gctlr,
+		UserAuthenticator: authr,
+		MailProvider:      emailProvider,
+		EventService:      evtSrv,
 	})
 
 	app := libx.NewApp(

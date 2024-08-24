@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
@@ -14,7 +15,7 @@ import (
 )
 
 func GroupEndpoints(gtx context.Context) []*httpx.Endpoint {
-	gs := GroupCtlr(gtx)
+	gs := core.GroupCtlr(gtx)
 	return []*httpx.Endpoint{
 		createGroupEp(gs),
 		updateGroupEp(gs),
@@ -30,9 +31,9 @@ func GroupEndpoints(gtx context.Context) []*httpx.Endpoint {
 	}
 }
 
-func createGroupEp(gs GroupController) *httpx.Endpoint {
+func createGroupEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var group Group
+		var group core.Group
 		if err := etx.Bind(&group); err != nil {
 			return errx.BadReq("failed to read group info from request", err)
 		}
@@ -57,9 +58,9 @@ func createGroupEp(gs GroupController) *httpx.Endpoint {
 	}
 }
 
-func updateGroupEp(gs GroupController) *httpx.Endpoint {
+func updateGroupEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var group Group
+		var group core.Group
 		if err := etx.Bind(&group); err != nil {
 			return errx.BadReq("failed to read group info from request", err)
 		}
@@ -81,7 +82,7 @@ func updateGroupEp(gs GroupController) *httpx.Endpoint {
 	}
 }
 
-func getGroupEp(gs GroupController) *httpx.Endpoint {
+func getGroupEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -108,7 +109,7 @@ func getGroupEp(gs GroupController) *httpx.Endpoint {
 	}
 }
 
-func getGroupsEp(gs GroupController) *httpx.Endpoint {
+func getGroupsEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -134,7 +135,7 @@ func getGroupsEp(gs GroupController) *httpx.Endpoint {
 	}
 }
 
-func deleteGroupEp(gs GroupController) *httpx.Endpoint {
+func deleteGroupEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -161,7 +162,7 @@ func deleteGroupEp(gs GroupController) *httpx.Endpoint {
 	}
 }
 
-func groupExistsEp(gs GroupController) *httpx.Endpoint {
+func groupExistsEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -188,7 +189,7 @@ func groupExistsEp(gs GroupController) *httpx.Endpoint {
 	}
 }
 
-func getNumGroupsEp(gs GroupController) *httpx.Endpoint {
+func getNumGroupsEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		filter, err := rest.GetFilter(etx)
 		if err != nil {
@@ -216,7 +217,7 @@ func getNumGroupsEp(gs GroupController) *httpx.Endpoint {
 	}
 }
 
-func setGroupPermissionsEp(gs GroupController) *httpx.Endpoint {
+func setGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		pmg := httpx.NewParamGetter(etx)
@@ -248,7 +249,7 @@ func setGroupPermissionsEp(gs GroupController) *httpx.Endpoint {
 	}
 }
 
-func getGroupPermissionsEp(gs GroupController) *httpx.Endpoint {
+func getGroupPermissionsEp(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("groupId")
@@ -275,7 +276,7 @@ func getGroupPermissionsEp(gs GroupController) *httpx.Endpoint {
 	}
 }
 
-func addUserToGroups(gs GroupController) *httpx.Endpoint {
+func addUserToGroups(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 
 		pmg := httpx.NewParamGetter(etx)
@@ -307,7 +308,7 @@ func addUserToGroups(gs GroupController) *httpx.Endpoint {
 	}
 }
 
-func removeUserFromGroup(gs GroupController) *httpx.Endpoint {
+func removeUserFromGroup(gs core.GroupController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		groupId := prmg.Int64("groupId")

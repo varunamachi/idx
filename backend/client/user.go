@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/varunamachi/idx/core"
-	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
@@ -29,8 +28,8 @@ func (c *IdxClient) WithTimeout(timeout time.Duration) *IdxClient {
 	return c
 }
 
-func (c *IdxClient) CurrentUser() *userdx.User {
-	return c.User().(*userdx.User)
+func (c *IdxClient) CurrentUser() *core.User {
+	return c.User().(*core.User)
 }
 
 func (c *IdxClient) build() *httpx.RequestBuilder {
@@ -42,8 +41,8 @@ func (c *IdxClient) build() *httpx.RequestBuilder {
 }
 
 func (c *IdxClient) Register(
-	gtx context.Context, user *userdx.User, password string) (int64, error) {
-	up := userdx.UserWithPassword{User: user, Password: password}
+	gtx context.Context, user *core.User, password string) (int64, error) {
+	up := core.UserWithPassword{User: user, Password: password}
 
 	res := map[string]int64{"userId": int64(-1)}
 	apiRes := c.build().Path("/api/v1/user").Post(gtx, up)
@@ -138,7 +137,7 @@ func (c *IdxClient) Approve(
 }
 
 func (c *IdxClient) Login(
-	gtx context.Context, userId, password string) (*userdx.User, error) {
+	gtx context.Context, userId, password string) (*core.User, error) {
 
 	creds := core.Creds{
 		UniqueName: userId,
@@ -148,8 +147,8 @@ func (c *IdxClient) Login(
 	apiRes := c.build().Path("/api/v1/authenticate").Post(gtx, creds)
 
 	authResult := struct {
-		User  *userdx.User `json:"user"`
-		Token string       `json:"token"`
+		User  *core.User `json:"user"`
+		Token string     `json:"token"`
 	}{}
 
 	if err := apiRes.LoadClose(&authResult); err != nil {
@@ -160,7 +159,7 @@ func (c *IdxClient) Login(
 	return authResult.User, nil
 }
 
-func (c *IdxClient) UpdateUser(gtx context.Context, user *userdx.User) error {
+func (c *IdxClient) UpdateUser(gtx context.Context, user *core.User) error {
 	apiRes := c.build().Path("/api/v1/user").Put(gtx, user)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err, "failed to update user: '%s'", user.Username())
@@ -169,8 +168,8 @@ func (c *IdxClient) UpdateUser(gtx context.Context, user *userdx.User) error {
 }
 
 func (c *IdxClient) GetUser(
-	gtx context.Context, id int64) (*userdx.User, error) {
-	var user userdx.User
+	gtx context.Context, id int64) (*core.User, error) {
+	var user core.User
 	apiRes := c.build().Path("/api/v1/user", id).Get(gtx)
 	if err := apiRes.LoadClose(&user); err != nil {
 		return nil, errx.Errf(err, "failed to get user '%d'", id)
@@ -179,8 +178,8 @@ func (c *IdxClient) GetUser(
 }
 
 func (c *IdxClient) GetByUserId(
-	gtx context.Context, id string) (*userdx.User, error) {
-	var user userdx.User
+	gtx context.Context, id string) (*core.User, error) {
+	var user core.User
 	apiRes := c.build().Path("/api/v1/user/strid/", id).Get(gtx)
 	if err := apiRes.LoadClose(&user); err != nil {
 		return nil, errx.Errf(err, "failed to get user '%d'", id)
@@ -189,7 +188,7 @@ func (c *IdxClient) GetByUserId(
 }
 
 func (c *IdxClient) SetUserState(
-	gtx context.Context, id int64, state userdx.UserState) error {
+	gtx context.Context, id int64, state core.UserState) error {
 	apiRes := c.build().Path("/api/v1/user", id, "state", state).Put(gtx, nil)
 	if err := apiRes.Close(); err != nil {
 		return errx.Errf(err,
@@ -207,9 +206,9 @@ func (c *IdxClient) RemoveUser(gtx context.Context, id int64) error {
 }
 
 func (c *IdxClient) GetUsers(
-	gtx context.Context, params *data.CommonParams) ([]*userdx.User, error) {
+	gtx context.Context, params *data.CommonParams) ([]*core.User, error) {
 	apiRes := c.build().Path("/api/v1/user").CmnParam(params).Get(gtx)
-	users := make([]*userdx.User, 0, params.PageSize)
+	users := make([]*core.User, 0, params.PageSize)
 	if err := apiRes.LoadClose(&users); err != nil {
 		return nil, errx.Errf(err, "failed to get user list")
 	}

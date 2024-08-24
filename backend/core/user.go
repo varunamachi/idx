@@ -1,9 +1,8 @@
-package userdx
+package core
 
 import (
 	"context"
 
-	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
 )
@@ -38,7 +37,7 @@ var ValidUserStates = []UserState{
 }
 
 type User struct {
-	core.DbItem
+	DbItem
 	UName     string    `json:"userName" db:"user_name"`
 	EmailId   string    `json:"email" db:"email"`
 	AuthzRole auth.Role `json:"auth" db:"auth"`
@@ -122,7 +121,7 @@ type UserController interface {
 	UserStorage
 
 	Storage() UserStorage
-	CredentialStorage() core.SecretStorage
+	CredentialStorage() SecretStorage
 
 	Register(gtx context.Context, user *User, password string) (int64, error)
 	Verify(gtx context.Context, userName, verToken string) error

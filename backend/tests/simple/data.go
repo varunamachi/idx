@@ -4,26 +4,23 @@ import (
 	"time"
 
 	"github.com/varunamachi/idx/core"
-	"github.com/varunamachi/idx/grpdx"
-	"github.com/varunamachi/idx/svcdx"
-	"github.com/varunamachi/idx/userdx"
 	"github.com/varunamachi/libx/auth"
 )
 
 type userAndPassword struct {
-	user        *userdx.User
+	user        *core.User
 	password    string
 	newPassword string
 }
 
 var super = userAndPassword{
 
-	user: &userdx.User{
+	user: &core.User{
 		DbItem:    core.DbItem{},
 		UName:     "super",
 		EmailId:   "super@example.com",
 		AuthzRole: auth.Super,
-		State:     userdx.Active,
+		State:     core.Active,
 		FirstName: "Super",
 		LastName:  "User",
 		Title:     "Dr",
@@ -37,7 +34,7 @@ var super = userAndPassword{
 
 var users = []userAndPassword{
 	{
-		user: &userdx.User{
+		user: &core.User{
 			DbItem: core.DbItem{
 				Id:        0,
 				CreatedAt: time.Time{},
@@ -48,7 +45,7 @@ var users = []userAndPassword{
 			UName:     "admin_1",
 			EmailId:   "admin1@example.com",
 			AuthzRole: auth.Admin,
-			State:     userdx.None,
+			State:     core.None,
 			FirstName: "Admin",
 			LastName:  "One",
 			Title:     "Mr",
@@ -60,7 +57,7 @@ var users = []userAndPassword{
 		newPassword: "threetwoone",
 	},
 	{
-		user: &userdx.User{
+		user: &core.User{
 			DbItem: core.DbItem{
 				Id:        0,
 				CreatedAt: time.Time{},
@@ -71,7 +68,7 @@ var users = []userAndPassword{
 			UName:     "normal_1",
 			EmailId:   "normal_1@example.com",
 			AuthzRole: auth.Admin,
-			State:     userdx.None,
+			State:     core.None,
 			FirstName: "Normal",
 			LastName:  "One",
 			Title:     "Ms",
@@ -84,7 +81,7 @@ var users = []userAndPassword{
 	},
 }
 
-var services = []*svcdx.Service{
+var services = []*core.Service{
 	{
 		DbItem: core.DbItem{
 			Id:        0,
@@ -140,7 +137,7 @@ var services = []*svcdx.Service{
 	},
 }
 
-var groups = []*grpdx.Group{
+var groups = []*core.Group{
 	{
 		DbItem: core.DbItem{
 			Id:        0,

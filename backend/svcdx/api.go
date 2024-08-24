@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/httpx"
@@ -13,7 +14,7 @@ import (
 )
 
 func ServiceEndpoints(gtx context.Context) []*httpx.Endpoint {
-	ss := ServiceCtlr(gtx)
+	ss := core.ServiceCtlr(gtx)
 	return []*httpx.Endpoint{
 		createServiceEp(ss),
 		updateServiceEp(ss),
@@ -32,9 +33,9 @@ func ServiceEndpoints(gtx context.Context) []*httpx.Endpoint {
 	}
 }
 
-func createServiceEp(ss ServiceController) *httpx.Endpoint {
+func createServiceEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var service Service
+		var service core.Service
 		if err := etx.Bind(&service); err != nil {
 			return errx.BadReq("failed to read service info from request", err)
 		}
@@ -57,9 +58,9 @@ func createServiceEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func updateServiceEp(ss ServiceController) *httpx.Endpoint {
+func updateServiceEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
-		var service Service
+		var service core.Service
 		if err := etx.Bind(&service); err != nil {
 			return errx.BadReq("failed to read service info from request", err)
 		}
@@ -81,7 +82,7 @@ func updateServiceEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func getServiceEp(ss ServiceController) *httpx.Endpoint {
+func getServiceEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -108,7 +109,7 @@ func getServiceEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func getServicesEp(ss ServiceController) *httpx.Endpoint {
+func getServicesEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		cmnParams, err := rest.GetCommonParams(etx)
 		if err != nil {
@@ -134,7 +135,7 @@ func getServicesEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func deleteServiceEp(ss ServiceController) *httpx.Endpoint {
+func deleteServiceEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		id := prmg.Int64("id")
@@ -161,7 +162,7 @@ func deleteServiceEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func serviceExistsEp(ss ServiceController) *httpx.Endpoint {
+func serviceExistsEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		name := prmg.Str("name")
@@ -190,7 +191,7 @@ func serviceExistsEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func numServices(ss ServiceController) *httpx.Endpoint {
+func numServices(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		filter, err := rest.GetFilter(etx)
 		if err != nil {
@@ -216,7 +217,7 @@ func numServices(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func serviceByNameEp(ss ServiceController) *httpx.Endpoint {
+func serviceByNameEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		name := prmg.Str("name")
@@ -243,7 +244,7 @@ func serviceByNameEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func servicesForOwnerEp(ss ServiceController) *httpx.Endpoint {
+func servicesForOwnerEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		owner := prmg.Str("owner")
@@ -270,7 +271,7 @@ func servicesForOwnerEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func addAdminToServiceEp(ss ServiceController) *httpx.Endpoint {
+func addAdminToServiceEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		pmg := httpx.NewParamGetter(etx)
 		service := pmg.Int64("service")
@@ -294,7 +295,7 @@ func addAdminToServiceEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func removeAdminFromServiceEp(ss ServiceController) *httpx.Endpoint {
+func removeAdminFromServiceEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		pmg := httpx.NewParamGetter(etx)
 		service := pmg.Int64("service")
@@ -318,7 +319,7 @@ func removeAdminFromServiceEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func getServiceAdminsEp(ss ServiceController) *httpx.Endpoint {
+func getServiceAdminsEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		service := prmg.Int64("service")
@@ -345,7 +346,7 @@ func getServiceAdminsEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func isServiceAdminEp(ss ServiceController) *httpx.Endpoint {
+func isServiceAdminEp(ss core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		service := prmg.Int64("service")
@@ -375,7 +376,7 @@ func isServiceAdminEp(ss ServiceController) *httpx.Endpoint {
 	}
 }
 
-func getPermissionsForService(gs ServiceController) *httpx.Endpoint {
+func getPermissionsForService(gs core.ServiceController) *httpx.Endpoint {
 	handler := func(etx echo.Context) error {
 		prmg := httpx.NewParamGetter(etx)
 		userId := prmg.Int64("userId")

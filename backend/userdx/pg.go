@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
@@ -13,14 +14,14 @@ type userPgStorage struct {
 	gd data.GetterDeleter
 }
 
-func NewUserStorage(gd data.GetterDeleter) UserStorage {
+func NewUserStorage(gd data.GetterDeleter) core.UserStorage {
 	return &userPgStorage{
 		gd: gd,
 	}
 }
 
 func (pgu *userPgStorage) Save(
-	gtx context.Context, user *User) (int64, error) {
+	gtx context.Context, user *core.User) (int64, error) {
 
 	query := `
 		INSERT INTO idx_user (
@@ -84,7 +85,7 @@ func (pgu *userPgStorage) Save(
 }
 
 func (pgu *userPgStorage) Update(
-	gtx context.Context, user *User) error {
+	gtx context.Context, user *core.User) error {
 
 	user.UpdatedAt = time.Now()
 	query := `
@@ -110,8 +111,8 @@ func (pgu *userPgStorage) Update(
 }
 
 func (pgu *userPgStorage) GetOne(
-	gtx context.Context, id int64) (*User, error) {
-	var user User
+	gtx context.Context, id int64) (*core.User, error) {
+	var user core.User
 	err := pgu.gd.GetOne(gtx, "idx_user", "id", id, &user)
 	if err != nil {
 		return nil, errx.Wrap(err)
@@ -120,8 +121,8 @@ func (pgu *userPgStorage) GetOne(
 }
 
 func (pgu *userPgStorage) ByUsername(
-	gtx context.Context, un string) (*User, error) {
-	var user User
+	gtx context.Context, un string) (*core.User, error) {
+	var user core.User
 	err := pgu.gd.GetOne(gtx, "idx_user", "user_name", un, &user)
 	if err != nil {
 		return nil, errx.Wrap(err)
@@ -130,7 +131,7 @@ func (pgu *userPgStorage) ByUsername(
 }
 
 func (pgu *userPgStorage) SetState(
-	gtx context.Context, id int64, state UserState) error {
+	gtx context.Context, id int64, state core.UserState) error {
 	query := `
 		UPDATE idx_user SET
 			state = $2
@@ -159,9 +160,9 @@ func (pgu *userPgStorage) Remove(gtx context.Context, id int64) error {
 }
 
 func (pgu *userPgStorage) Get(
-	gtx context.Context, params *data.CommonParams) ([]*User, error) {
+	gtx context.Context, params *data.CommonParams) ([]*core.User, error) {
 
-	out := make([]*User, 0, params.PageSize)
+	out := make([]*core.User, 0, params.PageSize)
 
 	if err := pgu.gd.Get(gtx, "idx_user", params, &out); err != nil {
 		return nil, errx.Wrap(err)

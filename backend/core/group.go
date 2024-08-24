@@ -1,14 +1,13 @@
-package grpdx
+package core
 
 import (
 	"context"
 
-	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
 )
 
 type Group struct {
-	core.DbItem
+	DbItem
 	ServiceId   int      `db:"service_id" json:"service_id"`
 	Name        string   `db:"name" json:"name"`
 	DisplayName string   `db:"display_name" json:"displayName"`

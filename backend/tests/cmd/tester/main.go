@@ -17,6 +17,8 @@ func main() {
 		"idx-tester", "Simple Identity Service", "0.0.1", "varunamachi").
 		WithCommands(runCmd(), checkPgConnCmd(), cleanDBCmd())
 
+	log.Logger = log.With().Str("app", "tester").Logger()
+
 	if err := app.RunContext(gtx, os.Args); err != nil {
 		errx.PrintSomeStack(err)
 		log.Fatal().Err(err).Msg("exiting...")

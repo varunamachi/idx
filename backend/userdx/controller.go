@@ -53,15 +53,15 @@ func mappedRole(userId string) auth.Role {
 }
 
 type userCtl struct {
-	ustore        UserStorage
+	ustore        core.UserStorage
 	credStore     core.SecretStorage
 	emailProvider email.Provider
 }
 
 func NewUserController(
-	ustore UserStorage,
+	ustore core.UserStorage,
 	credStore core.SecretStorage,
-	emailProvider email.Provider) UserController {
+	emailProvider email.Provider) core.UserController {
 	return &userCtl{
 		ustore:        ustore,
 		credStore:     credStore,
@@ -69,7 +69,7 @@ func NewUserController(
 	}
 }
 
-func (uc *userCtl) Storage() UserStorage {
+func (uc *userCtl) Storage() core.UserStorage {
 	return uc.ustore
 }
 
@@ -78,7 +78,7 @@ func (uc *userCtl) CredentialStorage() core.SecretStorage {
 }
 
 func (uc *userCtl) Register(
-	gtx context.Context, user *User, password string) (int64, error) {
+	gtx context.Context, user *core.User, password string) (int64, error) {
 
 	evAdder := core.NewEventAdder(gtx, "user.register", data.M{
 		"user": user,
@@ -95,12 +95,12 @@ func (uc *userCtl) Register(
 	// Enable configured super user immediately
 	autoApproved := false
 	if role := mappedRole(user.UName); role != auth.None {
-		user.State = Active
+		user.State = core.Active
 		user.AuthzRole = role
 		autoApproved = true
 		user.SetProp("autoApproved", true)
 	} else {
-		user.State = Created
+		user.State = core.Created
 		user.AuthzRole = auth.Normal
 	}
 
@@ -119,7 +119,7 @@ func (uc *userCtl) Register(
 	}
 
 	// No need to verify auto approved accounts
-	if user.State == Active {
+	if user.State == core.Active {
 		return id, nil
 	}
 
@@ -163,7 +163,7 @@ func (uc *userCtl) Verify(
 		return errx.Wrap(evtAdder.Commit(err))
 	}
 
-	err = uc.ustore.SetState(gtx, id, Verfied)
+	err = uc.ustore.SetState(gtx, id, core.Verfied)
 	if err != nil {
 		return errx.Wrap(evtAdder.Commit(err))
 	}
@@ -178,7 +178,7 @@ func (uc *userCtl) Approve(
 	role auth.Role,
 	groups ...int64) error {
 
-	approver, err := GetUser(gtx)
+	approver, err := core.GetUser(gtx)
 	ev := core.NewEventAdder(gtx, "user.approve", data.M{
 		"approver": data.Qop(approver != nil, approver.DbItem.Id, -1),
 		"userId":   userId,
@@ -207,14 +207,14 @@ func (uc *userCtl) Approve(
 		return errx.Wrap(ev.Commit(err))
 	}
 
-	if user.State != Verfied {
+	if user.State != core.Verfied {
 		err := errx.Errf(core.ErrInvalidState,
 			"only user with state 'Verified' can be approved, found %v",
 			user.State)
 		return ev.Commit(err)
 	}
 
-	user.State = Active
+	user.State = core.Active
 	user.AuthzRole = role
 	if err := uc.ustore.Update(gtx, user); err != nil {
 		return ev.Commit(errx.Errf(err, "failed to approve user"))
@@ -251,9 +251,9 @@ func (uc *userCtl) InitResetPassword(
 	}
 
 	// Make sure user is in a state that allows password reset
-	if !data.OneOf(user.State, Active, Disabled) {
+	if !data.OneOf(user.State, core.Active, core.Disabled) {
 		return ev.Errf(core.ErrInvalidState,
-			"expected user state to be one of 'Active' or 'Disabled',"+
+			"expected user state to be one of 'core.Active' or 'Disabled',"+
 				" found '%s'",
 			user.State)
 	}
@@ -339,20 +339,20 @@ func (uc *userCtl) UpdatePassword(gtx context.Context,
 	return evtAdder.Commit(nil)
 }
 
-func (uc *userCtl) Save(gtx context.Context, user *User) (int64, error) {
+func (uc *userCtl) Save(gtx context.Context, user *core.User) (int64, error) {
 	adr := core.NewEventAdder(gtx, "user.save", data.M{"user": user})
 	id, err := uc.ustore.Save(gtx, user)
 	return id, adr.Commit(err)
 }
 
-func (uc *userCtl) Update(gtx context.Context, user *User) error {
+func (uc *userCtl) Update(gtx context.Context, user *core.User) error {
 	adr := core.NewEventAdder(gtx, "user.update", data.M{"user": user})
 	err := uc.ustore.Update(gtx, user)
 	return adr.Commit(err)
 }
 
 func (uc *userCtl) GetOne(
-	gtx context.Context, id int64) (*User, error) {
+	gtx context.Context, id int64) (*core.User, error) {
 	out, err := uc.ustore.GetOne(gtx, id)
 	if err != nil {
 		core.NewEventAdder(gtx, "user.getOne", data.M{"userId": id}).
@@ -363,7 +363,7 @@ func (uc *userCtl) GetOne(
 }
 
 func (uc *userCtl) ByUsername(
-	gtx context.Context, id string) (*User, error) {
+	gtx context.Context, id string) (*core.User, error) {
 	out, err := uc.ustore.ByUsername(gtx, id)
 	if err != nil {
 		core.NewEventAdder(gtx, "user.getByUserId", data.M{"userId": id}).
@@ -389,7 +389,7 @@ func (uc *userCtl) GetId(
 }
 
 func (uc *userCtl) SetState(
-	gtx context.Context, id int64, state UserState) error {
+	gtx context.Context, id int64, state core.UserState) error {
 	err := uc.ustore.SetState(gtx, id, state)
 	return core.NewEventAdder(gtx, "user.setState", data.M{
 		"userId": id,
@@ -406,7 +406,7 @@ func (uc *userCtl) Remove(gtx context.Context, id int64) error {
 }
 
 func (uc *userCtl) Get(
-	gtx context.Context, params *data.CommonParams) ([]*User, error) {
+	gtx context.Context, params *data.CommonParams) ([]*core.User, error) {
 	out, err := uc.ustore.Get(gtx, params)
 	if err != nil {
 		core.NewEventAdder(gtx, "user.getAll", data.M{"filter": params.Filter}).
