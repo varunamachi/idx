@@ -27,7 +27,13 @@ type TestConfig struct {
 	DestroySchema     bool
 }
 
-const pgUrl = "postgresql://idx:idxp@localhost:5432/idx-test?sslmode=disable"
+const pgUser = "idx"
+const pgPassword = "idxp"
+const pgDb = "idx-test"
+const pgPort = 5432
+
+var pgUrl = fmt.Sprintf("postgresql://%s:%s@localhost:%d/%s?sslmode=disable",
+	pgUser, pgPassword, pgPort, pgDb)
 
 func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 
@@ -163,6 +169,12 @@ func BuildAndRunServer(gtx context.Context) (*os.Process, error) {
 }
 
 func ConnectToTestDB(gtx context.Context) error {
+	// Wait for fake mail service
+	// err := netx.WaitForPorts(gtx, "localhost:5432", 2*time.Minute)
+	// if err != nil {
+	// 	return errx.Errf(err, "could not connect to app server")
+	// }
+
 	purl, err := url.Parse(pgUrl)
 	if err != nil {
 		return errx.Errf(err, "invalid pg-url in setup")
