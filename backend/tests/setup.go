@@ -30,9 +30,9 @@ type TestConfig struct {
 const pgUser = "idx"
 const pgPassword = "idxp"
 const pgDb = "idx-test"
-const pgPort = 5432
+const pgPort = "5432"
 
-var pgUrl = fmt.Sprintf("postgresql://%s:%s@localhost:%d/%s?sslmode=disable",
+var pgUrl = fmt.Sprintf("postgresql://%s:%s@localhost:%s/%s?sslmode=disable",
 	pgUser, pgPassword, pgPort, pgDb)
 
 func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
@@ -77,14 +77,6 @@ func Destroy(
 	testConfig *TestConfig,
 	serverProcess *os.Process) error {
 
-	if !testConfig.SkipDockerCompose {
-		err := RunDockerCompose("down", MustGetPgDockerComposePath())
-		if err != nil {
-			return errx.Wrap(err)
-		}
-		log.Info().Msg("docker-compose shutdown complete")
-	}
-
 	if !testConfig.SkipAppServer && serverProcess != nil {
 		if err := serverProcess.Signal(os.Interrupt); err != nil {
 			return errx.Errf(err, "failed to send SIGINT to server process")
@@ -110,20 +102,46 @@ func Destroy(
 		log.Info().Msg("schema delete complete")
 	}
 
+	if !testConfig.SkipDockerCompose {
+		err := RunDockerCompose("down", MustGetPgDockerComposePath())
+		if err != nil {
+			return errx.Wrap(err)
+		}
+		log.Info().Msg("docker-compose shutdown complete")
+	}
+
 	return nil
 }
 
 func RunDockerCompose(op, dcFilePath string) error {
-	args := []string{
-		"compose",
-		"-p",
-		"idx_test",
-		"-f",
-		dcFilePath,
-		op,
-		data.Qop(op == "up", "-d", ""),
+	// args := []string{
+	// 	"compose",
+	// 	"-p",
+	// 	"idx_test",
+	// 	"-f",
+	// 	dcFilePath,
+	// 	op,
+	// 	data.Qop(op == "up", "-d", ""),
+	// }
+	// return execCmd("docker", args...)
+
+	builder := rt.NewCmdBuilder("docker").
+		WithArgs(
+			"compose",
+			"-p", "idx_test",
+			"-f", dcFilePath,
+			op, data.Qop(op == "up", "-d", "")).
+		WithEnv("PG_USER", pgUser).
+		WithEnv("PG_PASSWORD", pgPassword).
+		WithEnv("PG_DB", pgDb).
+		WithEnv("PG_PORT", pgPort)
+
+	_, err := builder.Start()
+	if err != nil {
+		return errx.Errf(err, "docker compose exited with an error")
 	}
-	return execCmd("docker", args...)
+	return nil
+
 }
 
 func BuildAndRunServer(gtx context.Context) (*os.Process, error) {
