@@ -17,7 +17,7 @@ import (
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
 	"github.com/varunamachi/libx/netx"
-	"github.com/varunamachi/libx/rt"
+	"github.com/varunamachi/libx/proc"
 )
 
 type TestConfig struct {
@@ -125,7 +125,7 @@ func RunDockerCompose(op, dcFilePath string) error {
 	// }
 	// return execCmd("docker", args...)
 
-	builder := rt.NewCmdBuilder("docker").
+	builder := proc.NewCmdBuilder("docker").
 		WithArgs(
 			"compose",
 			"-p", "idx_test",
@@ -165,7 +165,7 @@ func BuildAndRunServer(gtx context.Context) (*os.Process, error) {
 		return nil, errx.Errf(err, msg)
 	}
 
-	builder := rt.NewCmdBuilder(output).
+	builder := proc.NewCmdBuilder(output).
 		WithArgs("serve", "--pg-url", pgUrl).
 		WithEnv("IDX_MAIL_PROVIDER", "IDX_SIMPLE_MAIL_SERVICE_CLIENT_PROVIDER").
 		WithEnv("IDX_SIMPLE_SRV_SEND_URL", "http://localhost:9999/api/v1/send").
