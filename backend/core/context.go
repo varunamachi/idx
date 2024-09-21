@@ -12,7 +12,7 @@ import (
 )
 
 type Services struct {
-	EventService      event.Service
+	EventService      event.Service[int64]
 	MailProvider      email.Provider
 	UserStorage       UserStorage
 	UserController    UserController
@@ -42,11 +42,12 @@ func MailProvider(gtx context.Context) email.Provider {
 	return srvs(gtx).MailProvider
 }
 
-func EventService(gtx context.Context) event.Service {
+func EventService(gtx context.Context) event.Service[int64] {
 	return srvs(gtx).EventService
 }
 
-func NewEventAdder(gtx context.Context, op string, data data.M) *event.Adder {
+func NewEventAdder(
+	gtx context.Context, op string, data data.M) *event.Adder[int64] {
 
 	user := httpx.GetUser[auth.User](gtx)
 	userId := int64(-1)

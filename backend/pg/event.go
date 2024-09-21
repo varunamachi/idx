@@ -12,13 +12,13 @@ import (
 type eventSrv struct {
 }
 
-func NewEventService() event.Service {
+func NewEventService() event.Service[int64] {
 	return &eventSrv{}
 }
 
 func (pes *eventSrv) AddEvent(
 	gtx context.Context,
-	event *event.Event) error {
+	event *event.Event[int64]) error {
 	query := `
 			INSERT INTO idx_event(
 				op,
