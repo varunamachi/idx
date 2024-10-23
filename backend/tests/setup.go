@@ -35,10 +35,14 @@ const pgPort = "5432"
 var pgUrl = fmt.Sprintf("postgresql://%s:%s@localhost:%s/%s?sslmode=disable",
 	pgUser, pgPassword, pgPort, pgDb)
 
-func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
+func Setup(
+	gtx context.Context,
+	procMan *proc.Manager,
+	testConfig *TestConfig) (*os.Process, error) {
 
 	if !testConfig.SkipDockerCompose {
-		err := RunDockerCompose("up", MustGetPgDockerComposePath())
+		err := RunDockerCompose(
+			procMan, "up", MustGetPgDockerComposePath())
 		if err != nil {
 			return nil, err
 		}
@@ -55,7 +59,7 @@ func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 	smsrv.GetMailService().Start(gtx)
 
 	if !testConfig.SkipAppServer {
-		process, err := BuildAndRunServer(gtx)
+		process, err := BuildAndRunServer(gtx, procMan)
 		if err != nil {
 			return nil, err
 		}
@@ -74,6 +78,7 @@ func Setup(gtx context.Context, testConfig *TestConfig) (*os.Process, error) {
 
 func Destroy(
 	gtx context.Context,
+	procMan *proc.Manager,
 	testConfig *TestConfig,
 	serverProcess *os.Process) error {
 
@@ -103,7 +108,7 @@ func Destroy(
 	}
 
 	if !testConfig.SkipDockerCompose {
-		err := RunDockerCompose("down", MustGetPgDockerComposePath())
+		err := RunDockerCompose(procMan, "down", MustGetPgDockerComposePath())
 		if err != nil {
 			return errx.Wrap(err)
 		}
@@ -113,7 +118,7 @@ func Destroy(
 	return nil
 }
 
-func RunDockerCompose(op, dcFilePath string) error {
+func RunDockerCompose(procMan *proc.Manager, op, dcFilePath string) error {
 	// args := []string{
 	// 	"compose",
 	// 	"-p",
@@ -136,7 +141,8 @@ func RunDockerCompose(op, dcFilePath string) error {
 		WithEnv("PG_DB", pgDb).
 		WithEnv("PG_PORT", pgPort)
 
-	_, err := builder.Start()
+	name := data.Qop(op == "up", "DoCom", "DC-"+op)
+	_, err := procMan.Add(builder.ToCmdDesc(name))
 	if err != nil {
 		return errx.Errf(err, "docker compose exited with an error")
 	}
@@ -144,7 +150,9 @@ func RunDockerCompose(op, dcFilePath string) error {
 
 }
 
-func BuildAndRunServer(gtx context.Context) (*os.Process, error) {
+func BuildAndRunServer(
+	gtx context.Context, procMan *proc.Manager) (*os.Process, error) {
+
 	fxRootPath := MustGetSourceRoot()
 	goArch := runtime.GOARCH
 
@@ -177,13 +185,16 @@ func BuildAndRunServer(gtx context.Context) (*os.Process, error) {
 		return nil, errx.Errf(err, "could not connect to app server")
 	}
 
-	process, err := builder.Start()
+	_, err = procMan.Add(builder.ToCmdDesc("IdxSrv"))
 	if err != nil {
 		return nil, errx.Errf(err, "server exited with an error")
 	}
-	// log.Info().Msg("server exited normally")
+	cmd = procMan.Get("IdxSrv")
+	if cmd == nil {
+		return nil, errx.Errf(proc.ErrProcessNotFound, "server cmd failed")
+	}
 
-	return process, nil
+	return cmd.Process, nil
 }
 
 func ConnectToTestDB(gtx context.Context) error {

@@ -15,7 +15,11 @@ func main() {
 
 	app := libx.NewApp(
 		"idx-tester", "Simple Identity Service", "0.0.1", "varunamachi").
-		WithCommands(runCmd(), checkPgConnCmd(), cleanDBCmd())
+		WithCommands(
+			runCmd(gtx),
+			checkPgConnCmd(gtx),
+			cleanDBCmd(),
+		)
 
 	log.Logger = log.With().Str("app", "tester").Logger()
 

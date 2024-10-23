@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/url"
 	"os"
 	"slices"
@@ -12,10 +13,13 @@ import (
 	"github.com/varunamachi/idx/tests/simple"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
+	"github.com/varunamachi/libx/proc"
 )
 
-func runCmd() *cli.Command {
-	var proc *os.Process
+func runCmd(gtx context.Context) *cli.Command {
+	var process *os.Process
+	procMan := proc.NewManager(gtx)
+
 	return &cli.Command{
 		Name:        "run",
 		Description: "Run tests",
@@ -39,7 +43,7 @@ func runCmd() *cli.Command {
 			testConfig := getConfig(ctx)
 
 			var err error
-			proc, err = tests.Setup(ctx.Context, &testConfig)
+			process, err = tests.Setup(ctx.Context, procMan, &testConfig)
 			if err != nil {
 				// log.Error().Err(err).Msg("initialization failed")
 				return errx.Errf(err, "initialization failed")
@@ -53,7 +57,7 @@ func runCmd() *cli.Command {
 			// time.Sleep(200 * time.Millisecond)
 
 			testConfig := getConfig(ctx)
-			err := tests.Destroy(ctx.Context, &testConfig, proc)
+			err := tests.Destroy(ctx.Context, procMan, &testConfig, process)
 			if err != nil {
 				// log.Error().Err(err).Msg("destruction failed")
 				errx.Errf(err, "failed to destroy test setup")
@@ -86,27 +90,33 @@ func simpleTestCmd() *cli.Command {
 	}
 }
 
-func checkPgConnCmd() *cli.Command {
+func checkPgConnCmd(gtx context.Context) *cli.Command {
+	procMan := proc.NewManager(gtx)
+
 	return &cli.Command{
 		Name:        "check",
 		Description: "Check something",
 		Usage:       "Check something",
 		Action: func(ctx *cli.Context) error {
-			err := tests.RunDockerCompose("up",
+			err := tests.RunDockerCompose(
+				procMan,
+				"up",
 				tests.MustGetPgDockerComposePath())
 			if err != nil {
 				return errx.Wrap(err)
 			}
 
 			defer func() {
-				err := tests.RunDockerCompose("down",
+				err := tests.RunDockerCompose(
+					procMan,
+					"down",
 					tests.MustGetPgDockerComposePath())
 				if err != nil {
 					log.Error().Err(err).Msg("failed to shutdown dc")
 				}
 			}()
 
-			const pgUrl = "postgresql://idx:idxp@localhost:5432/test-data?sslmode=disable"
+			const pgUrl = "postgresql://idx:idxp@localhost:5432/idx-test?sslmode=disable"
 			purl, err := url.Parse(pgUrl)
 			if err != nil {
 				return errx.Errf(err, "invalid pg-url in setup")
