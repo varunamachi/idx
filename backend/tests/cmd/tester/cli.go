@@ -101,7 +101,7 @@ func checkPgConnCmd(gtx context.Context) *cli.Command {
 			err := tests.RunDockerCompose(
 				procMan,
 				"up",
-				tests.MustGetPgDockerComposePath())
+				tests.MustGetPgComposePath())
 			if err != nil {
 				return errx.Wrap(err)
 			}
@@ -110,7 +110,7 @@ func checkPgConnCmd(gtx context.Context) *cli.Command {
 				err := tests.RunDockerCompose(
 					procMan,
 					"down",
-					tests.MustGetPgDockerComposePath())
+					tests.MustGetPgComposePath())
 				if err != nil {
 					log.Error().Err(err).Msg("failed to shutdown dc")
 				}

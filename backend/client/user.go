@@ -84,7 +84,7 @@ func (c *IdxClient) VerifyWithUrl(
 func (c *IdxClient) UpdatePassword(
 	gtx context.Context, userId, oldPwd, newPwd string) error {
 	data := map[string]string{
-		"userId":      userId,
+		"username":    userId,
 		"oldPassword": oldPwd,
 		"newPassword": newPwd,
 	}

@@ -75,16 +75,27 @@ func Run(gtx context.Context) error {
 		if err != nil {
 			return errx.Wrap(err)
 		}
-
 		log.Info().Str("user", lu.UName).Msg("logged in")
 
-		// Update password
+		log.Info().Str("user", lu.Username()).Msg("updating password")
+		err = uclient.UpdatePassword(
+			gtx, up.user.UName, up.password, up.newPassword)
+		if err != nil {
+			return errx.Wrap(err)
+		}
+
+		lu, err = uclient.Login(gtx, up.user.UName, up.newPassword)
+		if err != nil {
+			return errx.Errf(err, "failed to login after password update")
+		}
+		log.Info().Str("user", lu.UName).Msg("logged in after password update")
 
 		// Reset password
 
 		// Login Again
 
 		// TODO - may be logout??
+		log.Info().Str("user", lu.Username()).Msg("tested")
 	}
 
 	log.Info().Msg("simple test successful")

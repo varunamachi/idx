@@ -323,7 +323,7 @@ func (uc *userCtl) UpdatePassword(gtx context.Context,
 		Type:       core.AuthUser,
 	})
 	if err != nil {
-		return evtAdder.Commit(err)
+		return errx.Wrap(evtAdder.Commit(err))
 	}
 
 	err = uc.credStore.SetPassword(gtx, &core.Creds{
@@ -332,7 +332,7 @@ func (uc *userCtl) UpdatePassword(gtx context.Context,
 		Type:       core.AuthUser,
 	})
 	if err != nil {
-		return evtAdder.Commit(err)
+		return errx.Wrap(evtAdder.Commit(err))
 	}
 
 	// Is a mail required here?

@@ -40,11 +40,18 @@ func Setup(
 	procMan *proc.Manager,
 	testConfig *TestConfig) (*os.Process, error) {
 
+	skipPgCompose := netx.IsPortOpen(gtx, "5432")
+
 	if !testConfig.SkipDockerCompose {
-		err := RunDockerCompose(
-			procMan, "up", MustGetPgDockerComposePath())
-		if err != nil {
-			return nil, err
+
+		if !skipPgCompose {
+			err := RunDockerCompose(
+				procMan, "up", MustGetPgComposePath())
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			log.Info().Msg("using postgres running at :5432")
 		}
 	}
 
@@ -108,7 +115,7 @@ func Destroy(
 	}
 
 	if !testConfig.SkipDockerCompose {
-		err := RunDockerCompose(procMan, "down", MustGetPgDockerComposePath())
+		err := RunDockerCompose(procMan, "down", MustGetPgComposePath())
 		if err != nil {
 			return errx.Wrap(err)
 		}

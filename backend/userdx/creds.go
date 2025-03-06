@@ -52,9 +52,9 @@ func (pcs *SecretStorage) SetPassword(
 func (pcs *SecretStorage) UpdatePassword(
 	gtx context.Context, creds *core.Creds, newPw string) error {
 
-	if err := pcs.Verify(gtx, creds); err != nil {
-		return errx.Wrap(err)
-	}
+	// if err := pcs.Verify(gtx, creds); err != nil {
+	// 	return errx.Wrap(err)
+	// }
 
 	hash, err := pcs.hasher.Hash(newPw)
 	if err != nil {
@@ -90,7 +90,9 @@ func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
 	err := pg.Conn().GetContext(
 		gtx, &hash, query, creds.UniqueName, creds.Type)
 	if err != nil {
-		return errx.Errf(err, "failed to get password info from DB")
+		return errx.Errf(err,
+			"failed to get password info from DB for '%s'",
+			creds.UniqueName)
 	}
 
 	ok, err := pcs.hasher.Verify(creds.Password, hash)
@@ -98,7 +100,7 @@ func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
 		return errx.Wrap(err)
 	}
 	if !ok {
-		return errx.Errf(err,
+		return errx.Errf(ErrInvalidCredential,
 			"failed to verify password for '%s (%s)'",
 			creds.UniqueName, creds.Type)
 	}

@@ -8,9 +8,10 @@ import (
 )
 
 type userAndPassword struct {
-	user        *core.User
-	password    string
-	newPassword string
+	user          *core.User
+	password      string
+	newPassword   string
+	resetPassword string // TODO - implement
 }
 
 var super = userAndPassword{

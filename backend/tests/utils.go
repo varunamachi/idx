@@ -63,7 +63,7 @@ func MustGetSourceRoot() string {
 	return fxRootPath
 }
 
-func MustGetPgDockerComposePath() string {
+func MustGetPgComposePath() string {
 	return filepath.Join(MustGetSourceRoot(), "backend/tests/pg-dc.yaml")
 
 }
