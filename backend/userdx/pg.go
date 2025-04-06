@@ -10,17 +10,17 @@ import (
 	"github.com/varunamachi/libx/errx"
 )
 
-type userPgStorage struct {
+type PgUserStorage struct {
 	gd data.GetterDeleter
 }
 
-func NewUserStorage(gd data.GetterDeleter) core.UserStorage {
-	return &userPgStorage{
+func NewUserStorage(gd data.GetterDeleter) *PgUserStorage {
+	return &PgUserStorage{
 		gd: gd,
 	}
 }
 
-func (pgu *userPgStorage) Save(
+func (pgu *PgUserStorage) Save(
 	gtx context.Context, user *core.User) (int64, error) {
 
 	query := `
@@ -84,7 +84,7 @@ func (pgu *userPgStorage) Save(
 	// return 0, nil
 }
 
-func (pgu *userPgStorage) Update(
+func (pgu *PgUserStorage) Update(
 	gtx context.Context, user *core.User) error {
 
 	user.UpdatedAt = time.Now()
@@ -110,7 +110,7 @@ func (pgu *userPgStorage) Update(
 	return nil
 }
 
-func (pgu *userPgStorage) GetOne(
+func (pgu *PgUserStorage) GetOne(
 	gtx context.Context, id int64) (*core.User, error) {
 	var user core.User
 	err := pgu.gd.GetOne(gtx, "idx_user", "id", id, &user)
@@ -120,7 +120,7 @@ func (pgu *userPgStorage) GetOne(
 	return &user, nil
 }
 
-func (pgu *userPgStorage) ByUsername(
+func (pgu *PgUserStorage) ByUsername(
 	gtx context.Context, un string) (*core.User, error) {
 	var user core.User
 	err := pgu.gd.GetOne(gtx, "idx_user", "user_name", un, &user)
@@ -130,7 +130,7 @@ func (pgu *userPgStorage) ByUsername(
 	return &user, nil
 }
 
-func (pgu *userPgStorage) SetState(
+func (pgu *PgUserStorage) SetState(
 	gtx context.Context, id int64, state core.UserState) error {
 	query := `
 		UPDATE idx_user SET
@@ -147,7 +147,7 @@ func (pgu *userPgStorage) SetState(
 	return nil
 }
 
-func (pgu *userPgStorage) Remove(gtx context.Context, id int64) error {
+func (pgu *PgUserStorage) Remove(gtx context.Context, id int64) error {
 	query := `DELETE FROM idx_user WHERE id = $2`
 
 	_, err := pg.Conn().ExecContext(gtx, query, id)
@@ -159,7 +159,7 @@ func (pgu *userPgStorage) Remove(gtx context.Context, id int64) error {
 	return nil
 }
 
-func (pgu *userPgStorage) Get(
+func (pgu *PgUserStorage) Get(
 	gtx context.Context, params *data.CommonParams) ([]*core.User, error) {
 
 	out := make([]*core.User, 0, params.PageSize)
@@ -173,17 +173,17 @@ func (pgu *userPgStorage) Get(
 	return out, nil
 }
 
-func (pgu *userPgStorage) Exists(
+func (pgu *PgUserStorage) Exists(
 	gtx context.Context, username string) (bool, error) {
 	return pgu.gd.Exists(gtx, "idx_user", "user_name", username)
 }
 
-func (pgu *userPgStorage) Count(
+func (pgu *PgUserStorage) Count(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	return pgu.gd.Count(gtx, "idx_user", filter)
 }
 
-func (pgu *userPgStorage) GetId(
+func (pgu *PgUserStorage) GetId(
 	gtx context.Context, username string) (int64, error) {
 	query := `SELECT id FROM idx_user WHERE user_name =$1`
 	id := int64(0)

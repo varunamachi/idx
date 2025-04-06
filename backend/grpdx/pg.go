@@ -11,17 +11,17 @@ import (
 	"github.com/varunamachi/libx/errx"
 )
 
-type groupPgStorage struct {
+type PgGroupStorage struct {
 	gd data.GetterDeleter
 }
 
-func NewGroupStorage(gd data.GetterDeleter) core.GroupStorage {
-	return &groupPgStorage{
+func NewGroupStorage(gd data.GetterDeleter) *PgGroupStorage {
+	return &PgGroupStorage{
 		gd: gd,
 	}
 }
 
-func (pgs groupPgStorage) Save(
+func (pgs PgGroupStorage) Save(
 	gtx context.Context, group *core.Group) (int64, error) {
 	query := `
 		INSERT INTO idx_group (
@@ -67,7 +67,7 @@ func (pgs groupPgStorage) Save(
 	// return 0, nil
 }
 
-func (pgs groupPgStorage) Update(gtx context.Context, group *core.Group) error {
+func (pgs PgGroupStorage) Update(gtx context.Context, group *core.Group) error {
 	query := `
 		UPDATE idx_group SET
 			created_by = :created_by,
@@ -86,7 +86,7 @@ func (pgs groupPgStorage) Update(gtx context.Context, group *core.Group) error {
 	return nil
 }
 
-func (pgs groupPgStorage) GetOne(
+func (pgs PgGroupStorage) GetOne(
 	gtx context.Context, id int64) (*core.Group, error) {
 	var group core.Group
 	err := pgs.gd.GetOne(gtx, "idx_group", "id", id, &group)
@@ -96,7 +96,7 @@ func (pgs groupPgStorage) GetOne(
 	return &group, nil
 }
 
-func (pgs groupPgStorage) Remove(gtx context.Context, id int64) error {
+func (pgs PgGroupStorage) Remove(gtx context.Context, id int64) error {
 	err := pgs.gd.Delete(gtx, "idx_group", "id", id)
 	if err != nil {
 		return errx.Wrap(err)
@@ -104,7 +104,7 @@ func (pgs groupPgStorage) Remove(gtx context.Context, id int64) error {
 	return nil
 }
 
-func (pgs groupPgStorage) Get(
+func (pgs PgGroupStorage) Get(
 	gtx context.Context, params *data.CommonParams) ([]*core.Group, error) {
 	groups := make([]*core.Group, 0, params.PageSize)
 	err := pgs.gd.Get(gtx, "idx_group", params, &groups)
@@ -114,17 +114,17 @@ func (pgs groupPgStorage) Get(
 	return groups, nil
 }
 
-func (pgs *groupPgStorage) Exists(
+func (pgs *PgGroupStorage) Exists(
 	gtx context.Context, id int64) (bool, error) {
 	return pgs.gd.Exists(gtx, "idx_group", "id", id)
 }
 
-func (pgs *groupPgStorage) Count(
+func (pgs *PgGroupStorage) Count(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	return pgs.gd.Count(gtx, "idx_group", filter)
 }
 
-func (pgs *groupPgStorage) SetPermissions(
+func (pgs *PgGroupStorage) SetPermissions(
 	gtx context.Context,
 	groupId int64,
 	perms []string) error {
@@ -166,7 +166,7 @@ func (pgs *groupPgStorage) SetPermissions(
 	return nil
 }
 
-func (pgs *groupPgStorage) GetPermissions(
+func (pgs *PgGroupStorage) GetPermissions(
 	gtx context.Context,
 	groupId int64) ([]string, error) {
 	const query = `SELECT perm_id FROM group_to_perm WHERE group_id = $1`
@@ -180,7 +180,7 @@ func (pgs *groupPgStorage) GetPermissions(
 	return perms, nil
 }
 
-func (pgs *groupPgStorage) AddToGroups(
+func (pgs *PgGroupStorage) AddToGroups(
 	gtx context.Context, userId int64, groupIds ...int64) error {
 
 	query := `
@@ -221,7 +221,7 @@ func (pgs *groupPgStorage) AddToGroups(
 	return nil
 }
 
-func (pgs *groupPgStorage) RemoveFromGroup(
+func (pgs *PgGroupStorage) RemoveFromGroup(
 	gtx context.Context, userId, groupId int64) error {
 	query := `
 		DELETE FROM user_to_group WHERE user_id = $1 AND group_id = $2 	

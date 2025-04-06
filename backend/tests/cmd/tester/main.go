@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"net/http"
 	"os"
 
 	"github.com/charmbracelet/lipgloss"
@@ -43,7 +45,9 @@ func main() {
 	}
 
 	if err := app.RunContext(gtx, os.Args); err != nil {
-		errx.PrintSomeStack(err)
-		log.Fatal().Err(err).Msg("exiting...")
+		if !errors.Is(err, http.ErrServerClosed) {
+			errx.PrintSomeStack(err)
+			log.Fatal().Err(err).Msg("exiting...")
+		}
 	}
 }

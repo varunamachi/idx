@@ -9,17 +9,17 @@ import (
 	"github.com/varunamachi/libx/errx"
 )
 
-type svcPgStorage struct {
+type PgServiceStorage struct {
 	gd data.GetterDeleter
 }
 
-func NewServiceStorage(gd data.GetterDeleter) core.ServiceStorage {
-	return &svcPgStorage{
+func NewServiceStorage(gd data.GetterDeleter) *PgServiceStorage {
+	return &PgServiceStorage{
 		gd: gd,
 	}
 }
 
-func (pss *svcPgStorage) Save(
+func (pss *PgServiceStorage) Save(
 	gtx context.Context, service *core.Service) (int64, error) {
 	query := `
 		INSERT INTO idx_service (
@@ -64,7 +64,7 @@ func (pss *svcPgStorage) Save(
 	// }
 }
 
-func (pss *svcPgStorage) Update(
+func (pss *PgServiceStorage) Update(
 	gtx context.Context,
 	service *core.Service) error {
 	query := `
@@ -84,7 +84,7 @@ func (pss *svcPgStorage) Update(
 	return nil
 }
 
-func (pss *svcPgStorage) GetOne(
+func (pss *PgServiceStorage) GetOne(
 	gtx context.Context,
 	id int64) (*core.Service, error) {
 	var service core.Service
@@ -95,7 +95,7 @@ func (pss *svcPgStorage) GetOne(
 	return &service, nil
 }
 
-func (pss *svcPgStorage) Remove(
+func (pss *PgServiceStorage) Remove(
 	gtx context.Context,
 	id int64) error {
 	if err := pss.gd.Delete(gtx, "idx_service", "id"); err != nil {
@@ -104,7 +104,7 @@ func (pss *svcPgStorage) Remove(
 	return nil
 }
 
-func (pss *svcPgStorage) Get(
+func (pss *PgServiceStorage) Get(
 	gtx context.Context,
 	params *data.CommonParams) ([]*core.Service, error) {
 	out := make([]*core.Service, 0, params.PageSize)
@@ -115,17 +115,17 @@ func (pss *svcPgStorage) Get(
 	return out, nil
 }
 
-func (pss *svcPgStorage) Exists(
+func (pss *PgServiceStorage) Exists(
 	gtx context.Context, name string) (bool, error) {
 	return pss.gd.Exists(gtx, "idx_service", "name", name)
 }
 
-func (pss *svcPgStorage) Count(
+func (pss *PgServiceStorage) Count(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	return pss.gd.Count(gtx, "idx_service", filter)
 }
 
-func (pss *svcPgStorage) GetByName(
+func (pss *PgServiceStorage) GetByName(
 	gtx context.Context, name string) (*core.Service, error) {
 	var service core.Service
 	err := pss.gd.GetOne(gtx, "idx_service", "name", name, &service)
@@ -135,7 +135,7 @@ func (pss *svcPgStorage) GetByName(
 	return &service, nil
 }
 
-func (pss *svcPgStorage) GetForOwner(
+func (pss *PgServiceStorage) GetForOwner(
 	gtx context.Context, ownerId string) ([]*core.Service, error) {
 	const query = `
 		SELECT * 
@@ -152,7 +152,7 @@ func (pss *svcPgStorage) GetForOwner(
 	return services, nil
 }
 
-func (pss *svcPgStorage) AddAdmin(
+func (pss *PgServiceStorage) AddAdmin(
 	gtx context.Context, serviceId, userId int64) error {
 	const query = `
 		INSERT INTO service_to_owner(
@@ -172,7 +172,7 @@ func (pss *svcPgStorage) AddAdmin(
 	return nil
 }
 
-func (pss *svcPgStorage) GetAdmins(
+func (pss *PgServiceStorage) GetAdmins(
 	gtx context.Context, serviceId int64) ([]*core.User, error) {
 	const query = `
 		SELECT u.* 
@@ -191,7 +191,7 @@ func (pss *svcPgStorage) GetAdmins(
 	return nil, nil
 }
 
-func (pss *svcPgStorage) RemoveAdmin(
+func (pss *PgServiceStorage) RemoveAdmin(
 	gtx context.Context, serviceId, userId int64) error {
 	const query = `
 		DELETE FROM service_to_owner WHERE service_id = $1 AND admin_id = $2
@@ -208,7 +208,7 @@ func (pss *svcPgStorage) RemoveAdmin(
 	return nil
 }
 
-func (pss *svcPgStorage) IsAdmin(
+func (pss *PgServiceStorage) IsAdmin(
 	gtx context.Context, serviceId, adminId int64) (bool, error) {
 	const query = `
 		SELECT EXISTS( 
@@ -232,7 +232,7 @@ func (pss *svcPgStorage) IsAdmin(
 	return isAdmin, nil
 }
 
-func (pgs *svcPgStorage) GetPermissionForService(
+func (pgs *PgServiceStorage) GetPermissionForService(
 	gtx context.Context, userId, serviceId int64) ([]string, error) {
 	query := `
 		SELECT

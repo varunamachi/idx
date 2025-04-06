@@ -14,7 +14,6 @@ import (
 type Services struct {
 	EventService      event.Service[int64]
 	MailProvider      email.Provider
-	UserStorage       UserStorage
 	UserController    UserController
 	UserAuthenticator auth.UserAuthenticator
 	ServiceController ServiceController

@@ -6,6 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/varunamachi/libx"
+	"github.com/varunamachi/libx/auth"
+	"github.com/varunamachi/libx/data"
 )
 
 var GitTag = "--"
@@ -78,4 +80,63 @@ func NewToken(uname, operation, assocType string) *Token {
 		AssocType:  assocType,
 		Token:      uuid.NewString(),
 	}
+}
+
+type Group struct {
+	DbItem
+	ServiceId   int      `db:"service_id" json:"service_id"`
+	Name        string   `db:"name" json:"name"`
+	DisplayName string   `db:"display_name" json:"displayName"`
+	Description string   `db:"description" json:"description"`
+	Perms       []string `json:"perms"`
+}
+
+type GroupController interface {
+	Save(gtx context.Context, group *Group) (int64, error)
+	Update(gtx context.Context, group *Group) error
+	GetOne(gtx context.Context, id int64) (*Group, error)
+	Remove(gtx context.Context, id int64) error
+	Get(gtx context.Context, params *data.CommonParams) ([]*Group, error)
+
+	Exists(gtx context.Context, id int64) (bool, error)
+	Count(gtx context.Context, filter *data.Filter) (int64, error)
+
+	SetPermissions(gtx context.Context, groupId int64, perms []string) error
+	GetPermissions(gtx context.Context, groupId int64) ([]string, error)
+
+	AddToGroups(gtx context.Context, userId int64, groupIds ...int64) error
+	RemoveFromGroup(gtx context.Context, userId, groupId int64) error
+
+	// Storage() GroupStorage
+	SaveWithPerms(
+		gtx context.Context, group *Group, perms []string) (int64, error)
+}
+
+type Service struct {
+	DbItem
+	Name        string              `db:"name" json:"name"`
+	OwnerId     int64               `db:"owner_id" json:"ownerId"`
+	DisplayName string              `db:"display_name" json:"displayName"`
+	Permissions auth.PermissionTree `db:"permissions" json:"permissions"`
+}
+
+type ServiceController interface {
+	Save(gtx context.Context, service *Service) (int64, error)
+	Update(gtx context.Context, service *Service) error
+	GetOne(gtx context.Context, id int64) (*Service, error)
+	GetByName(gtx context.Context, name string) (*Service, error)
+	GetForOwner(gtx context.Context, ownerId string) ([]*Service, error)
+	Remove(gtx context.Context, id int64) error
+	Get(gtx context.Context, params *data.CommonParams) ([]*Service, error)
+
+	AddAdmin(gtx context.Context, serviceId, userId int64) error
+	GetAdmins(gtx context.Context, serviceId int64) ([]*User, error)
+	RemoveAdmin(gtx context.Context, serviceId, userId int64) error
+	IsAdmin(gtx context.Context, serviceId, userId int64) (bool, error)
+
+	Exists(gtx context.Context, name string) (bool, error)
+	Count(gtx context.Context, filter *data.Filter) (int64, error)
+
+	GetPermissionForService(
+		gtx context.Context, userId, serviceId int64) ([]string, error)
 }

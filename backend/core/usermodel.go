@@ -103,7 +103,7 @@ type UserWithPassword struct {
 	Password string `json:"password"`
 }
 
-type UserStorage interface {
+type UserController interface {
 	Save(gtx context.Context, user *User) (int64, error)
 	Update(gtx context.Context, user *User) error
 	GetOne(gtx context.Context, id int64) (*User, error)
@@ -115,12 +115,7 @@ type UserStorage interface {
 	ByUsername(gtx context.Context, username string) (*User, error)
 	Exists(gtx context.Context, username string) (bool, error)
 	GetId(gtx context.Context, username string) (int64, error)
-}
 
-type UserController interface {
-	UserStorage
-
-	Storage() UserStorage
 	CredentialStorage() SecretStorage
 
 	Register(gtx context.Context, user *User, password string) (int64, error)

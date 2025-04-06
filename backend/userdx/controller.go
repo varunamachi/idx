@@ -53,13 +53,13 @@ func mappedRole(userId string) auth.Role {
 }
 
 type userCtl struct {
-	ustore        core.UserStorage
+	ustore        *PgUserStorage
 	credStore     core.SecretStorage
 	emailProvider email.Provider
 }
 
 func NewUserController(
-	ustore core.UserStorage,
+	ustore *PgUserStorage,
 	credStore core.SecretStorage,
 	emailProvider email.Provider) core.UserController {
 	return &userCtl{
@@ -69,7 +69,7 @@ func NewUserController(
 	}
 }
 
-func (uc *userCtl) Storage() core.UserStorage {
+func (uc *userCtl) Storage() *PgUserStorage {
 	return uc.ustore
 }
 

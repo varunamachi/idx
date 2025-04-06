@@ -20,12 +20,12 @@ import (
 // }
 
 type authenticator struct {
-	us core.UserStorage
+	us core.UserController
 	cs core.SecretStorage
 }
 
 func NewAuthenticator(
-	us core.UserStorage, cs core.SecretStorage) auth.UserAuthenticator {
+	us core.UserController, cs core.SecretStorage) auth.UserAuthenticator {
 	return &authenticator{
 		cs: cs,
 		us: us,

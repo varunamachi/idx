@@ -11,19 +11,18 @@ import (
 
 // TODO - implement
 type svcCtl struct {
-	srvStore  core.ServiceStorage
-	userStore core.UserStorage
+	srvStore *PgServiceStorage
+	// userStore core.UserStorage
 }
 
 func NewServiceController(
-	ss core.ServiceStorage,
-	us core.UserStorage) core.ServiceController {
+	ss *PgServiceStorage) core.ServiceController {
 	return &svcCtl{
 		srvStore: ss,
 	}
 }
 
-func (sc svcCtl) Storage() core.ServiceStorage {
+func (sc svcCtl) Storage() *PgServiceStorage {
 	return sc.srvStore
 }
 

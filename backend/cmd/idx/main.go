@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"net/http"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -43,10 +45,10 @@ func main() {
 	hasher := auth.NewArgon2Hasher()
 	credStorage := userdx.NewCredentialStorage(hasher)
 
-	authr := idxAuth.NewAuthenticator(userStore, credStorage)
 	uctlr := userdx.NewUserController(userStore, credStorage, emailProvider)
-	sctlr := svcdx.NewServiceController(serviceStore, userStore)
-	gctlr := grpdx.NewGroupController(groupStore, serviceStore)
+	sctlr := svcdx.NewServiceController(serviceStore)
+	gctlr := grpdx.NewGroupController(groupStore)
+	authr := idxAuth.NewAuthenticator(uctlr, credStorage)
 
 	gtx = core.NewContext(gtx, &core.Services{
 		UserController:    uctlr,
@@ -62,7 +64,9 @@ func main() {
 		WithCommands(cmd.ServeCommand())
 
 	if err := app.RunContext(gtx, os.Args); err != nil {
-		log.Fatal().Err(err).Msg("exiting...")
+		if !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal().Err(err).Msg("exiting...")
+		}
 	}
 
 }

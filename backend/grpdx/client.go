@@ -1,14 +1,29 @@
-package client
+package grpdx
 
 import (
 	"context"
+	"time"
 
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data"
 	"github.com/varunamachi/libx/errx"
+	"github.com/varunamachi/libx/httpx"
 )
 
-func (c *IdxClient) CreateGroup(
+type Client struct {
+	*httpx.Client
+	Timeout time.Duration
+}
+
+func (c *Client) build() *httpx.RequestBuilder {
+	builder := c.Build()
+	if c.Timeout != 0 {
+		builder = builder.WithTimeout(c.Timeout)
+	}
+	return builder
+}
+
+func (c *Client) CreateGroup(
 	gtx context.Context,
 	group *core.Group) (int64, error) {
 	// apiRes := c.Post(gtx, group, "/api/v1/group")
@@ -21,7 +36,7 @@ func (c *IdxClient) CreateGroup(
 	return res["groupId"], nil
 }
 
-func (c *IdxClient) UpdateGroup(gtx context.Context, group *core.Group) error {
+func (c *Client) UpdateGroup(gtx context.Context, group *core.Group) error {
 	// apiRes := c.Put(gtx, group, "/api/v1/group")
 	apiRes := c.build().Path("/api/v1/group").Put(gtx, group)
 	if err := apiRes.Close(); err != nil {
@@ -31,7 +46,7 @@ func (c *IdxClient) UpdateGroup(gtx context.Context, group *core.Group) error {
 	return nil
 }
 
-func (c *IdxClient) GetGroup(
+func (c *Client) GetGroup(
 	gtx context.Context, id int64) (*core.Group, error) {
 	var group core.Group
 	// apiRes := c.Get(gtx, "/api/v1/group", strconv.FormatInt(id, 10))
@@ -42,7 +57,7 @@ func (c *IdxClient) GetGroup(
 	return &group, nil
 }
 
-func (c *IdxClient) RemoveGroup(gtx context.Context, id int64) error {
+func (c *Client) RemoveGroup(gtx context.Context, id int64) error {
 	// apiRes := c.Delete(gtx, "/api/v1/group", strconv.FormatInt(id, 10))
 	apiRes := c.build().Path("/api/v1/group", id).Delete(gtx)
 	if err := apiRes.Close(); err != nil {
@@ -51,7 +66,7 @@ func (c *IdxClient) RemoveGroup(gtx context.Context, id int64) error {
 	return nil
 }
 
-func (c *IdxClient) GetGroups(
+func (c *Client) GetGroups(
 	gtx context.Context,
 	params *data.CommonParams) ([]*core.Group, error) {
 	// TODO -ClientV2 for encoding common params
@@ -66,7 +81,7 @@ func (c *IdxClient) GetGroups(
 	return groups, nil
 }
 
-func (c *IdxClient) GroupExists(gtx context.Context, id int64) (bool, error) {
+func (c *Client) GroupExists(gtx context.Context, id int64) (bool, error) {
 	res := map[string]bool{
 		"exists": false,
 	}
@@ -80,7 +95,7 @@ func (c *IdxClient) GroupExists(gtx context.Context, id int64) (bool, error) {
 	return res["exists"], nil
 }
 
-func (c *IdxClient) NumGroups(
+func (c *Client) NumGroups(
 	gtx context.Context, filter *data.Filter) (int64, error) {
 	// TODO - ClientV2 include filter
 	res := map[string]int64{
@@ -94,7 +109,7 @@ func (c *IdxClient) NumGroups(
 	return res["count"], nil
 }
 
-func (c *IdxClient) SetGroupPermissions(
+func (c *Client) SetGroupPermissions(
 	gtx context.Context,
 	groupId int64,
 	perms []string) error {
@@ -109,7 +124,7 @@ func (c *IdxClient) SetGroupPermissions(
 	return nil
 }
 
-func (c *IdxClient) GetGroupPermissions(
+func (c *Client) GetGroupPermissions(
 	gtx context.Context,
 	groupId int64) ([]string, error) {
 	perms := make([]string, 0, 25)
@@ -123,13 +138,13 @@ func (c *IdxClient) GetGroupPermissions(
 	return perms, nil
 }
 
-func (c *IdxClient) AddUserToGroup(
+func (c *Client) AddUserToGroup(
 	gtx context.Context, uid, gid int64) error {
 	// TODO - implement
 	return nil
 }
 
-func (c *IdxClient) RemoveUserFromGroup(
+func (c *Client) RemoveUserFromGroup(
 	gtx context.Context, uid, gid int64) error {
 	// TODO - implement
 	return nil

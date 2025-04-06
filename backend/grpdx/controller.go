@@ -8,20 +8,18 @@ import (
 )
 
 type groupCtl struct {
-	gstore   core.GroupStorage
-	svcStore core.ServiceStorage
+	gstore *PgGroupStorage
 }
 
 func NewGroupController(
-	gstore core.GroupStorage,
-	svcStore core.ServiceStorage) core.GroupController {
+	gstore *PgGroupStorage) core.GroupController {
 	return &groupCtl{
-		gstore:   gstore,
-		svcStore: svcStore,
+		gstore: gstore,
+		// svcStore: svcStore,
 	}
 }
 
-func (gc *groupCtl) Storage() core.GroupStorage {
+func (gc *groupCtl) Storage() *PgGroupStorage {
 	return gc.gstore
 }
 
