@@ -59,6 +59,20 @@ type Creds struct {
 	Type       AuthEntity `json:"type" db:"type"`
 }
 
+type CredsAux struct {
+	CreatedAt     time.Time `json:"createdOn" db:"created_at"`
+	Retries       int       `json:"retries" db:"retries"`
+	PrevPasswords []string  `json:"prevPasswords" db:"prev_passwords"`
+}
+
+type CredPolicy struct {
+	ItemType   string        `db:"itemType" json:"item_type"`
+	Pattern    string        `db:"pattern" json:"pattern"`
+	Expiry     time.Duration `db:"expiry" json:"expiry"`
+	MaxRetries int           `db:"max_retries" json:"maxRetries"`
+	MaxReuse   int           `db:"max_reuse" json:"maxReuse"`
+}
+
 type Hasher interface {
 	Hash(pw string) (string, error)
 	Verify(pw, hash string) (bool, error)

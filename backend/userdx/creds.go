@@ -2,6 +2,7 @@ package userdx
 
 import (
 	"context"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/core"
@@ -10,14 +11,21 @@ import (
 )
 
 type SecretStorage struct {
-	hasher core.Hasher
+	hasher       core.Hasher
+	credPolicies map[string]*core.CredPolicy
+	policyLock   sync.Mutex
 }
 
 func NewCredentialStorage(
 	hasher core.Hasher) core.SecretStorage {
 	return &SecretStorage{
-		hasher: hasher,
+		hasher:       hasher,
+		credPolicies: make(map[string]*core.CredPolicy),
 	}
+}
+func (pcs *SecretStorage) SetCredentialPolicy(
+	gtx context.Context, policy *core.CredPolicy) error {
+	return nil
 }
 
 func (pcs *SecretStorage) SetPassword(
