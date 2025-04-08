@@ -85,19 +85,14 @@ CREATE TABLE IF NOT EXISTS credential (
     unique_name VARCHAR,
     item_type VARCHAR,
     password_hash VARCHAR NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    retries INTEGER,
+    prev_passwords VARCHAR [] DEFAULT '{}',
     PRIMARY KEY(unique_name, item_type)
 );
 
-CREATE TABLE IF NOT EXISTS creds_aux (
-    cred_id BIGINT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    retries INTEGER,
-    prev_password INTEGER,
-    PRIMARY KEY(cred_id),
-    CONSTRAINT fk_cred_aux FOREIGN KEY(cred_id) REFERENCES credential(id) ON DELETE CASCADE
-)
 
-CREATE TABLE IF NOT EXISTS creds_policy (
+CREATE TABLE IF NOT EXISTS credential_policy (
     item_type    VARCHAR NOT NULL,
     pattern VARCHAR NOT NULL,
     expiry  TIME NOT NULL,
@@ -117,15 +112,15 @@ CREATE TABLE IF NOT EXISTS idx_token (
     UNIQUE(token, unique_name, assoc_type, operation)
 );
 
+-- TODO - Add credential initial policy
+
 -- +goose StatementEnd
 --
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE idx_token;
 
-DROP TABLE creds_policy;
-
-DROP TABLE creds_aux;
+DROP TABLE credential_policy;
 
 DROP TABLE credential;
 

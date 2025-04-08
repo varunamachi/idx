@@ -11,25 +11,23 @@ import (
 )
 
 type SecretStorage struct {
-	hasher       core.Hasher
-	credPolicies map[string]*core.CredPolicy
-	policyLock   sync.Mutex
+	hasher     core.Hasher
+	pwPolicy   map[core.AuthEntity]*core.CredentialPolicy
+	policyLock sync.RWMutex
 }
 
 func NewCredentialStorage(
 	hasher core.Hasher) core.SecretStorage {
 	return &SecretStorage{
-		hasher:       hasher,
-		credPolicies: make(map[string]*core.CredPolicy),
+		hasher:   hasher,
+		pwPolicy: make(map[core.AuthEntity]*core.CredentialPolicy),
 	}
-}
-func (pcs *SecretStorage) SetCredentialPolicy(
-	gtx context.Context, policy *core.CredPolicy) error {
-	return nil
 }
 
 func (pcs *SecretStorage) SetPassword(
 	gtx context.Context, creds *core.Creds) error {
+	// TODO - verify password validity against policy
+
 	hash, err := pcs.hasher.Hash(creds.Password)
 	if err != nil {
 		return errx.Wrap(err)
@@ -64,6 +62,8 @@ func (pcs *SecretStorage) UpdatePassword(
 	// 	return errx.Wrap(err)
 	// }
 
+	// TODO - check if password matches the policy
+
 	hash, err := pcs.hasher.Hash(newPw)
 	if err != nil {
 		return errx.Wrap(err)
@@ -87,6 +87,9 @@ func (pcs *SecretStorage) UpdatePassword(
 }
 
 func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
+
+	// TODO check expiry and retries
+
 	const query = `
 		SELECT password_hash 
 		FROM credential
@@ -113,6 +116,20 @@ func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
 			creds.UniqueName, creds.Type)
 	}
 
+	return nil
+}
+
+func (pcs *SecretStorage) InitResetPassword(
+	gtx context.Context,
+	tp core.AuthEntity,
+	uniqueName string) (string, error) {
+	// TODO - implement
+	return "", nil
+}
+
+func (pcs *SecretStorage) ResetPassword(
+	gtx context.Context, creds *core.Creds, token string) error {
+	// TODO - implement
 	return nil
 }
 
@@ -170,5 +187,61 @@ func (pcs *SecretStorage) VerifyToken(
 		log.Error().Str("token", id).Msg("failed to delete verified token")
 	}
 
+	return nil
+}
+
+func (pcs *SecretStorage) CredentialPolicy(
+	gtx context.Context,
+	credType core.AuthEntity) (*core.CredentialPolicy, error) {
+	pcs.policyLock.RLock()
+	defer pcs.policyLock.RUnlock()
+
+	if policy, found := pcs.pwPolicy[credType]; found {
+		return policy, nil
+	}
+
+	const query = `SELECT * FROM credential_policy WHERE item_type = $1`
+	var policy core.CredentialPolicy
+	err := pg.Conn().SelectContext(gtx, &policy, query, credType)
+	if err != nil {
+		return nil, errx.Errf(err, "failed to retrieve cred policy from DB")
+	}
+
+	pcs.pwPolicy[credType] = &policy
+	return &policy, nil
+}
+
+func (pcs *SecretStorage) SetCredentialPolicy(
+	gtx context.Context,
+	cp *core.CredentialPolicy) error {
+
+	const query = `INSERT INTO 
+		credential_policy (
+			item_type,
+			pattern,
+			expiry,
+			max_retries,
+			max_reuse	
+		) VALUES (
+			:item_type,
+			:pattern,
+			:expiry,
+			:max_retries,
+			:max_reuse
+		) ON CONFLICT(item_type) DO UPDATE SET 
+		 	item_type = EXCLUDED.item_type,
+			pattern = EXCLUDED.pattern,
+			expiry = EXCLUDED.expiry,
+			max_retries = EXCLUDED.max_retries,
+			max_reuse = EXCLUDED.max_reuse
+		;`
+
+	if _, err := pg.Conn().NamedExecContext(gtx, query, &cp); err != nil {
+		return errx.Errf(err, "failed to create/update creds policy")
+	}
+
+	pcs.policyLock.Lock()
+	defer pcs.policyLock.Unlock()
+	pcs.pwPolicy[cp.ItemType] = cp
 	return nil
 }

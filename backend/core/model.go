@@ -59,14 +59,15 @@ type Creds struct {
 	Type       AuthEntity `json:"type" db:"type"`
 }
 
-type CredsAux struct {
+type CredsExt struct {
+	Creds
 	CreatedAt     time.Time `json:"createdOn" db:"created_at"`
 	Retries       int       `json:"retries" db:"retries"`
 	PrevPasswords []string  `json:"prevPasswords" db:"prev_passwords"`
 }
 
-type CredPolicy struct {
-	ItemType   string        `db:"itemType" json:"item_type"`
+type CredentialPolicy struct {
+	ItemType   AuthEntity    `db:"itemType" json:"item_type"`
 	Pattern    string        `db:"pattern" json:"pattern"`
 	Expiry     time.Duration `db:"expiry" json:"expiry"`
 	MaxRetries int           `db:"max_retries" json:"maxRetries"`
@@ -83,8 +84,17 @@ type SecretStorage interface {
 	UpdatePassword(gtx context.Context, creds *Creds, newPw string) error
 	Verify(gtx context.Context, creds *Creds) error
 
+	InitResetPassword(
+		gtx context.Context, tp AuthEntity, uniqueName string) (string, error)
+	ResetPassword(gtx context.Context, creds *Creds, token string) error
+
 	StoreToken(gtx context.Context, token *Token) error
 	VerifyToken(gtx context.Context, id, operation, token string) error
+
+	CredentialPolicy(
+		gtx context.Context, credType AuthEntity) (*CredentialPolicy, error)
+	SetCredentialPolicy(
+		gtx context.Context, cp *CredentialPolicy) error
 }
 
 func NewToken(uname, operation, assocType string) *Token {
