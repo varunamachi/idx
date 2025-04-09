@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS credential (
     item_type VARCHAR,
     password_hash VARCHAR NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    retries INTEGER,
+    retries INTEGER NOT NULL DEFAULT 0,
     prev_passwords VARCHAR [] DEFAULT '{}',
     PRIMARY KEY(unique_name, item_type)
 );

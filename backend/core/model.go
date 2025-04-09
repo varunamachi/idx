@@ -2,12 +2,20 @@ package core
 
 import (
 	"context"
+	"errors"
+	"regexp"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/varunamachi/libx"
 	"github.com/varunamachi/libx/auth"
 	"github.com/varunamachi/libx/data"
+	"github.com/varunamachi/libx/errx"
+)
+
+var (
+	ErrPwPatternMismatch = errors.New(
+		"password does not match required pattern")
 )
 
 var GitTag = "--"
@@ -72,6 +80,22 @@ type CredentialPolicy struct {
 	Expiry     time.Duration `db:"expiry" json:"expiry"`
 	MaxRetries int           `db:"max_retries" json:"maxRetries"`
 	MaxReuse   int           `db:"max_reuse" json:"maxReuse"`
+	pattern    *regexp.Regexp
+}
+
+func (cp *CredentialPolicy) MatchPattern(pw string) error {
+	if cp.pattern == nil {
+		var err error
+		if cp.pattern, err = regexp.Compile(cp.Pattern); err != nil {
+			return err
+		}
+	}
+
+	if !cp.pattern.MatchString(pw) {
+		return errx.Errf(ErrPwPatternMismatch,
+			"password does not match pattern defined by the policy")
+	}
+	return nil
 }
 
 type Hasher interface {
@@ -83,10 +107,6 @@ type SecretStorage interface {
 	SetPassword(gtx context.Context, creds *Creds) error
 	UpdatePassword(gtx context.Context, creds *Creds, newPw string) error
 	Verify(gtx context.Context, creds *Creds) error
-
-	InitResetPassword(
-		gtx context.Context, tp AuthEntity, uniqueName string) (string, error)
-	ResetPassword(gtx context.Context, creds *Creds, token string) error
 
 	StoreToken(gtx context.Context, token *Token) error
 	VerifyToken(gtx context.Context, id, operation, token string) error

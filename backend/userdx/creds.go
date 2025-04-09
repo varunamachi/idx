@@ -26,7 +26,15 @@ func NewCredentialStorage(
 
 func (pcs *SecretStorage) SetPassword(
 	gtx context.Context, creds *core.Creds) error {
-	// TODO - verify password validity against policy
+
+	policy, err := pcs.CredentialPolicy(gtx, creds.Type)
+	if err != nil {
+		return errx.Wrap(err)
+	}
+
+	if err = policy.MatchPattern(creds.Password); err != nil {
+		return errx.Wrap(err)
+	}
 
 	hash, err := pcs.hasher.Hash(creds.Password)
 	if err != nil {
@@ -41,10 +49,11 @@ func (pcs *SecretStorage) SetPassword(
 			$1,
 			$2,
 			$3
-		) ON CONFLICT(unique_name, item_type) DO
-			UPDATE SET password_hash = EXCLUDED.password_hash;
-	
-	`
+		) 
+		`
+	// ON CONFLICT(unique_name, item_type) DO
+	// UPDATE SET password_hash = EXCLUDED.password_hash;
+
 	_, err = pg.Conn().ExecContext(
 		gtx, query, creds.UniqueName, creds.Type, hash)
 	if err != nil {
@@ -119,20 +128,6 @@ func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
 	return nil
 }
 
-func (pcs *SecretStorage) InitResetPassword(
-	gtx context.Context,
-	tp core.AuthEntity,
-	uniqueName string) (string, error) {
-	// TODO - implement
-	return "", nil
-}
-
-func (pcs *SecretStorage) ResetPassword(
-	gtx context.Context, creds *core.Creds, token string) error {
-	// TODO - implement
-	return nil
-}
-
 func (pcs *SecretStorage) StoreToken(
 	gtx context.Context, token *core.Token) error {
 	const query = `
@@ -145,7 +140,7 @@ func (pcs *SecretStorage) StoreToken(
 			:token,
 			:unique_name,
 			:assoc_type,
-			:operation					
+			:operation
 		) 
 	`
 
