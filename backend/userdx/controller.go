@@ -114,7 +114,7 @@ func (uc *userCtl) Register(
 		Password:   password,
 		Type:       "user",
 	}
-	if err := uc.credStore.SetPassword(gtx, creds); err != nil {
+	if err := uc.credStore.CreatePassword(gtx, creds); err != nil {
 		return id, evAdder.Commit(err)
 	}
 
@@ -298,7 +298,7 @@ func (uc *userCtl) ResetPassword(
 		return evtAdder.Commit(err)
 	}
 
-	err = uc.credStore.SetPassword(gtx, &core.Creds{
+	err = uc.credStore.UpdatePassword(gtx, &core.Creds{
 		UniqueName: userName,
 		Password:   newPassword,
 		Type:       core.AuthUser,
@@ -317,7 +317,7 @@ func (uc *userCtl) UpdatePassword(gtx context.Context,
 		"userId": userName,
 	})
 
-	err := uc.credStore.Verify(gtx, &core.Creds{
+	err := uc.credStore.Authenticate(gtx, &core.Creds{
 		UniqueName: userName,
 		Password:   oldPassword,
 		Type:       core.AuthUser,
@@ -326,7 +326,7 @@ func (uc *userCtl) UpdatePassword(gtx context.Context,
 		return errx.Wrap(evtAdder.Commit(err))
 	}
 
-	err = uc.credStore.SetPassword(gtx, &core.Creds{
+	err = uc.credStore.UpdatePassword(gtx, &core.Creds{
 		UniqueName: userName,
 		Password:   newPassword,
 		Type:       core.AuthUser,

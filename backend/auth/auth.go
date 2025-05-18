@@ -40,7 +40,7 @@ func (athn *authenticator) Authenticate(
 		return errx.Wrap(err)
 	}
 
-	if err := athn.cs.Verify(gtx, &creds); err != nil {
+	if err := athn.cs.Authenticate(gtx, &creds); err != nil {
 		return errx.Wrap(err)
 	}
 	return nil

@@ -38,9 +38,9 @@ var users = []userAndPassword{
 		user: &core.User{
 			DbItem: core.DbItem{
 				Id:        0,
-				CreatedAt: time.Time{},
+				CreatedOn: time.Time{},
 				CreatedBy: 0,
-				UpdatedAt: time.Time{},
+				UpdatedOn: time.Time{},
 				UpdatedBy: 0,
 			},
 			UName:     "admin_1",
@@ -61,9 +61,9 @@ var users = []userAndPassword{
 		user: &core.User{
 			DbItem: core.DbItem{
 				Id:        0,
-				CreatedAt: time.Time{},
+				CreatedOn: time.Time{},
 				CreatedBy: 0,
-				UpdatedAt: time.Time{},
+				UpdatedOn: time.Time{},
 				UpdatedBy: 0,
 			},
 			UName:     "normal_1",
@@ -86,9 +86,9 @@ var services = []*core.Service{
 	{
 		DbItem: core.DbItem{
 			Id:        0,
-			CreatedAt: time.Time{},
+			CreatedOn: time.Time{},
 			CreatedBy: 0,
-			UpdatedAt: time.Time{},
+			UpdatedOn: time.Time{},
 			UpdatedBy: 0,
 		},
 		Name:        "svc1",
@@ -142,9 +142,9 @@ var groups = []*core.Group{
 	{
 		DbItem: core.DbItem{
 			Id:        0,
-			CreatedAt: time.Time{},
+			CreatedOn: time.Time{},
 			CreatedBy: 0,
-			UpdatedAt: time.Time{},
+			UpdatedOn: time.Time{},
 			UpdatedBy: 0,
 		},
 		ServiceId:   0,
@@ -159,9 +159,9 @@ var groups = []*core.Group{
 	{
 		DbItem: core.DbItem{
 			Id:        0,
-			CreatedAt: time.Time{},
+			CreatedOn: time.Time{},
 			CreatedBy: 0,
-			UpdatedAt: time.Time{},
+			UpdatedOn: time.Time{},
 			UpdatedBy: 0,
 		},
 		ServiceId:   0,

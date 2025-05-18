@@ -27,7 +27,7 @@ func (pgu *PgUserStorage) Save(
 		INSERT INTO idx_user (
 			created_at,
 			created_by,
-			updated_at,
+			updated_on,
 			updated_by,
 			user_name,
 			email,
@@ -40,7 +40,7 @@ func (pgu *PgUserStorage) Save(
 		) VALUES (
 			:created_at,
 			:created_by,
-			:updated_at,
+			:updated_on,
 			:updated_by,
 			:user_name,
 			:email,
@@ -51,7 +51,7 @@ func (pgu *PgUserStorage) Save(
 			:title,
 			:props	
 		) ON CONFLICT (id) DO UPDATE SET
-				updated_at = EXCLUDED.updated_at,
+				updated_on = EXCLUDED.updated_on,
 				updated_by = EXCLUDED.updated_by,
 				user_name = EXCLUDED.user_name,
 				email = EXCLUDED.email,
@@ -87,11 +87,11 @@ func (pgu *PgUserStorage) Save(
 func (pgu *PgUserStorage) Update(
 	gtx context.Context, user *core.User) error {
 
-	user.UpdatedAt = time.Now()
+	user.UpdatedOn = time.Now()
 	query := `
 		UPDATE idx_user SET
 			updated_by = :updated_by,
-			updated_at = :updated_at,
+			updated_on = :updated_on,
 			user_name = :user_name,
 			email = :email,
 			auth = :auth,

@@ -40,9 +40,9 @@ func GetBuildInfo() *libx.BuildInfo {
 
 type DbItem struct {
 	Id        int64     `db:"id" json:"id"`
-	CreatedAt time.Time `db:"created_at" json:"createdAt"`
+	CreatedOn time.Time `db:"created_on" json:"createdOn"`
 	CreatedBy int64     `db:"created_by" json:"createdBy"`
-	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`
+	UpdatedOn time.Time `db:"updated_on" json:"updatedOn"`
 	UpdatedBy int64     `db:"updated_by" json:"updatedBy"`
 }
 
@@ -51,7 +51,7 @@ type Token struct {
 	UniqueName string `db:"unique_name" json:"uniqueName"`
 	AssocType  string `db:"assoc_type" json:"assocType"`
 	Operation  string `db:"operation" json:"operation"`
-	Created    string `db:"created" json:"created"`
+	CreatedOn  string `db:"createdOn" json:"created_on"`
 }
 
 type AuthEntity string
@@ -67,20 +67,24 @@ type Creds struct {
 	Type       AuthEntity `json:"type" db:"type"`
 }
 
-type CredsExt struct {
-	Creds
-	CreatedAt     time.Time `json:"createdOn" db:"created_at"`
-	Retries       int       `json:"retries" db:"retries"`
-	PrevPasswords []string  `json:"prevPasswords" db:"prev_passwords"`
+type Secret struct {
+	UniqueName    string           `json:"uniqueName" db:"unique_name"`
+	PasswordHash  string           `json:"password_hash" db:"password_hash"`
+	Type          AuthEntity       `json:"type" db:"type"`
+	CreatedOn     time.Time        `json:"createdOn" db:"created_on"`
+	NumFailedAuth int              `json:"numFailedAuth" db:"num_failed_auth"`
+	LastFailedOn  time.Time        `json:"lastFailedOn" db:"last_failed_on"`
+	PrevPasswords data.Vec[string] `json:"prevPasswords" db:"prev_passwords"`
 }
 
 type CredentialPolicy struct {
-	ItemType   AuthEntity    `db:"itemType" json:"item_type"`
-	Pattern    string        `db:"pattern" json:"pattern"`
-	Expiry     time.Duration `db:"expiry" json:"expiry"`
-	MaxRetries int           `db:"max_retries" json:"maxRetries"`
-	MaxReuse   int           `db:"max_reuse" json:"maxReuse"`
-	pattern    *regexp.Regexp
+	ItemType       AuthEntity    `db:"itemType" json:"item_type"`
+	Pattern        string        `db:"pattern" json:"pattern"`
+	Expiry         time.Duration `db:"expiry" json:"expiry"`
+	MaxRetries     int           `db:"max_retries" json:"maxRetries"`
+	RetryResetDays int           `db:"retry_reset_days" json:"retryResetDays"`
+	MaxReuse       int           `db:"max_reuse" json:"maxReuse"`
+	pattern        *regexp.Regexp
 }
 
 func (cp *CredentialPolicy) MatchPattern(pw string) error {
@@ -100,13 +104,13 @@ func (cp *CredentialPolicy) MatchPattern(pw string) error {
 
 type Hasher interface {
 	Hash(pw string) (string, error)
-	Verify(pw, hash string) (bool, error)
+	Verify(pw, hash string) error
 }
 
 type SecretStorage interface {
-	SetPassword(gtx context.Context, creds *Creds) error
-	UpdatePassword(gtx context.Context, creds *Creds, newPw string) error
-	Verify(gtx context.Context, creds *Creds) error
+	CreatePassword(gtx context.Context, creds *Creds) error
+	UpdatePassword(gtx context.Context, creds *Creds) error
+	Authenticate(gtx context.Context, creds *Creds) error
 
 	StoreToken(gtx context.Context, token *Token) error
 	VerifyToken(gtx context.Context, id, operation, token string) error

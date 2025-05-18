@@ -141,7 +141,7 @@ func (pss *PgServiceStorage) GetForOwner(
 		SELECT * 
 		FROM idx_service
 		WHERE owner_id = $1
-		ORDER BY updated_at DESC
+		ORDER BY updated_on DESC
 	`
 
 	services := make([]*core.Service, 0, 100)

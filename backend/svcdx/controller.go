@@ -76,7 +76,7 @@ func (sc svcCtl) Update(gtx context.Context, service *core.Service) error {
 		)
 	}
 
-	service.UpdatedBy, service.UpdatedAt = user.Id(), time.Now()
+	service.UpdatedBy, service.UpdatedOn = user.Id(), time.Now()
 	if err := sc.srvStore.Update(gtx, service); err != nil {
 		return ev.Commit(err)
 	}

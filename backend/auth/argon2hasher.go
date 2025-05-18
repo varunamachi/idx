@@ -15,6 +15,8 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
+var ErrHashVerficationFailed = errors.New("hash verification failed")
+
 type Argon2Config struct {
 	Memory     uint32 `json:"memory"`
 	Iterations uint32 `json:"iterations"`
@@ -74,18 +76,18 @@ func (ah *argon2Hasher) Hash(pw string) (string, error) {
 }
 
 // Verify implements core.Hasher.
-func (*argon2Hasher) Verify(pw string, hashStr string) (bool, error) {
+func (*argon2Hasher) Verify(pw string, hashStr string) error {
 	comps := strings.Split(hashStr, "$")
 	if len(comps) != 6 {
-		return false, errors.New("invalid hash format given")
+		return errors.New("invalid hash format given")
 	}
 
 	version, config := 0, Argon2Config{}
 	if _, err := fmt.Sscanf(comps[2], "v=%d", &version); err != nil {
-		return false, errx.Errf(err, "invalid format for argon version id")
+		return errx.Errf(err, "invalid format for argon version id")
 	}
 	if argon2.Version != version {
-		return false, errx.Fmt("argon2 version mismatch, expected %d found %d",
+		return errx.Fmt("argon2 version mismatch, expected %d found %d",
 			argon2.Version, version)
 	}
 
@@ -94,18 +96,18 @@ func (*argon2Hasher) Verify(pw string, hashStr string) (bool, error) {
 		&config.Iterations,
 		&config.Threads)
 	if err != nil {
-		return false, errx.Errf(err, "argon2 config mismatch")
+		return errx.Errf(err, "argon2 config mismatch")
 	}
 
 	salt, err := base64.StdEncoding.Strict().DecodeString(comps[4])
 	if err != nil {
-		return false, errx.Errf(err, "invalid encoding detected for salt")
+		return errx.Errf(err, "invalid encoding detected for salt")
 	}
 	config.SaltLen = uint32(len(salt))
 
 	hash, err := base64.StdEncoding.Strict().DecodeString(comps[5])
 	if err != nil {
-		return false, errx.Errf(err, "invalid encoding detected for hash")
+		return errx.Errf(err, "invalid encoding detected for hash")
 	}
 	config.KeyLen = uint32(len(hash))
 
@@ -117,9 +119,9 @@ func (*argon2Hasher) Verify(pw string, hashStr string) (bool, error) {
 		config.Threads,
 		config.KeyLen)
 
-	if subtle.ConstantTimeCompare(hash, newHash) == 1 {
-		return true, nil
+	if subtle.ConstantTimeCompare(hash, newHash) != 1 {
+		return ErrHashVerficationFailed
 	}
-	return false, nil
+	return nil
 
 }

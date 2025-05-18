@@ -2,12 +2,29 @@ package userdx
 
 import (
 	"context"
+	"errors"
+	"slices"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/varunamachi/idx/core"
 	"github.com/varunamachi/libx/data/pg"
 	"github.com/varunamachi/libx/errx"
+)
+
+var (
+	ErrCodePasswordReuse = "idx.err.passwordReuse"
+	ErrPasswordReuse     = errors.New("password reused")
+
+	ErrCodePasswordExpired = "idx.err.passwordExpired"
+	ErrPasswordExpired     = errors.New("password expired")
+
+	ErrCodeTooManyFailedAttempts = "idx.err.tooManyFailedAttempts"
+	ErrTooManyFailedAttempts     = "too many failed login attempts"
+
+	ErrCodeInvalidCreds = "idx.err.invalidCreds"
+	ErrInvalidCreds     = "invalid credential provided"
 )
 
 type SecretStorage struct {
@@ -24,7 +41,7 @@ func NewCredentialStorage(
 	}
 }
 
-func (pcs *SecretStorage) SetPassword(
+func (pcs *SecretStorage) CreatePassword(
 	gtx context.Context, creds *core.Creds) error {
 
 	policy, err := pcs.CredentialPolicy(gtx, creds.Type)
@@ -44,15 +61,15 @@ func (pcs *SecretStorage) SetPassword(
 		INSERT INTO credential (
 			unique_name,
 			item_type,
-			password_hash
+			password_hash,
+			created_at,
+			retries,
 		) VALUES (
 			$1,
 			$2,
 			$3
 		) 
-		`
-	// ON CONFLICT(unique_name, item_type) DO
-	// UPDATE SET password_hash = EXCLUDED.password_hash;
+	`
 
 	_, err = pg.Conn().ExecContext(
 		gtx, query, creds.UniqueName, creds.Type, hash)
@@ -65,28 +82,62 @@ func (pcs *SecretStorage) SetPassword(
 }
 
 func (pcs *SecretStorage) UpdatePassword(
-	gtx context.Context, creds *core.Creds, newPw string) error {
+	gtx context.Context, creds *core.Creds) error {
 
-	// if err := pcs.Verify(gtx, creds); err != nil {
-	// 	return errx.Wrap(err)
-	// }
-
-	// TODO - check if password matches the policy
-
-	hash, err := pcs.hasher.Hash(newPw)
+	// check if password matches the policy
+	polocy, err := pcs.CredentialPolicy(gtx, creds.Type)
 	if err != nil {
 		return errx.Wrap(err)
 	}
+
+	if err := polocy.MatchPattern(creds.Password); err != nil {
+		return errx.Errf(err, "passwrod does not meet complexity requirement")
+	}
+
+	hash, err := pcs.hasher.Hash(creds.Password)
+	if err != nil {
+		return errx.Wrap(err)
+	}
+
+	cur, err := pcs.getStoredCreds(gtx, creds)
+	if err != nil {
+		return errx.Wrap(err)
+	}
+
+	if slices.Contains(cur.PrevPasswords, hash) {
+		return errx.Errfx(
+			ErrPasswordReuse, ErrCodePasswordReuse, "cannot reuse passwords")
+	}
+
+	cur.PrevPasswords = append(cur.PrevPasswords, hash)
+	pp := cur.PrevPasswords
+	if len(cur.PrevPasswords) > polocy.MaxReuse {
+		pp = cur.PrevPasswords[1:]
+	}
+
+	// TODO - Check if the new password is already is in prevPasswords...
+
+	// TODO - how to handle array
 	const query = `
 			UPDATE credential SET
-				password_hash = $1
+				password_hash = $1,
+				created_at = $2,
+				retries = 0,
+				prev_passwords = $3
 			WHERE 
-				unique_name = $2,
-				item_id = $3
+				unique_name = $4,
+				item_id = $5
 			;
 		`
 	_, err = pg.Conn().ExecContext(
-		gtx, query, hash, creds.UniqueName, creds.Type)
+		gtx,
+		query,
+		hash,
+		time.Now(),
+		pp,
+		creds.UniqueName,
+		creds.Type,
+	)
 	if err != nil {
 		return errx.Errf(err,
 			"failed to update password hash for '%s (%s)' in DB",
@@ -95,37 +146,89 @@ func (pcs *SecretStorage) UpdatePassword(
 	return nil
 }
 
-func (pcs *SecretStorage) Verify(gtx context.Context, creds *core.Creds) error {
+func (pcs *SecretStorage) Authenticate(
+	gtx context.Context, in *core.Creds) error {
 
-	// TODO check expiry and retries
-
-	const query = `
-		SELECT password_hash 
-		FROM credential
-		WHERE 
-			unique_name = $1 AND
-			item_type = $2
-	`
-	hash := ""
-	err := pg.Conn().GetContext(
-		gtx, &hash, query, creds.UniqueName, creds.Type)
-	if err != nil {
-		return errx.Errf(err,
-			"failed to get password info from DB for '%s'",
-			creds.UniqueName)
-	}
-
-	ok, err := pcs.hasher.Verify(creds.Password, hash)
+	secret, err := pcs.getStoredCreds(gtx, in)
 	if err != nil {
 		return errx.Wrap(err)
 	}
-	if !ok {
-		return errx.Errf(ErrInvalidCredential,
-			"failed to verify password for '%s (%s)'",
-			creds.UniqueName, creds.Type)
+
+	policy, err := pcs.CredentialPolicy(gtx, secret.Type)
+	if err != nil {
+		return errx.Wrap(err)
+	}
+
+	// Check if password has expired
+	if secret.CreatedOn.Add(policy.Expiry).After(time.Now()) {
+		return errx.Errfx(
+			ErrPasswordExpired,
+			ErrCodePasswordExpired,
+			"password has expired, please reset password")
+	}
+
+	if secret.NumFailedAuth > policy.MaxRetries {
+
+		resetInterval := time.Hour * time.Duration(policy.RetryResetDays*24)
+		resetTime := secret.LastFailedOn.Add(resetInterval)
+		if resetTime.After(time.Now()) {
+			return errx.Errfx(
+				ErrPasswordExpired,
+				ErrCodePasswordExpired,
+				"password has expired, please reset password")
+		}
+		//TODO  Reset the num_failed_auth
+		query := `
+			UPDATE credential SET 
+				num_failed_auth = num_failed_auth + 1,
+				last_failed_on = NOW()
+		`
+		if _, err = pg.Conn().ExecContext(gtx, query); err != nil {
+			return errx.Errf(err, "invalid credentials: '%s (%s)', "+
+				"failed to update failure count", in.UniqueName, in.Type)
+		}
+	}
+
+	if err = pcs.hasher.Verify(in.Password, secret.PasswordHash); err != nil {
+
+		query := `
+			UPDATE credential SET 
+				num_failed_auth = num_failed_auth + 1,
+				last_failed_on = NOW()
+		`
+		if _, err = pg.Conn().ExecContext(gtx, query); err != nil {
+			return errx.Errf(err, "invalid credentials: '%s (%s)', "+
+				"failed to update failure count", in.UniqueName, in.Type)
+		}
+
+		// TODO - execute the query
+
+		return errx.Errfx(err, ErrCodeInvalidCreds,
+			"invalid credentials: '%s (%s)'",
+			in.UniqueName, in.Type)
 	}
 
 	return nil
+}
+
+func (pcs *SecretStorage) getStoredCreds(
+	gtx context.Context, givenCreds *core.Creds) (*core.Secret, error) {
+	const query = `
+	SELECT * 
+	FROM credential
+	WHERE 
+		unique_name = $1 AND
+		item_type = $2
+	`
+	var creds core.Secret
+	err := pg.Conn().GetContext(
+		gtx, &creds, query, givenCreds.UniqueName, givenCreds.Type)
+	if err != nil {
+		return nil, errx.Errf(err,
+			"failed to get credential info from DB for '%s'",
+			creds.UniqueName)
+	}
+	return &creds, nil
 }
 
 func (pcs *SecretStorage) StoreToken(
